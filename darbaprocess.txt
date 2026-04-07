@@ -1,0 +1,124 @@
+php vajag thread safe https://www.php.net/downloads.php
+php mape php.ini faila nomainit rindinas:
+extension=fileinfo
+extension=mbstring
+extension=openssl
+extension=pdo_sqlite
+extension=curl
+extension=zip
+
+extension_dir = "C:\Proj\Php\ext"
+
+composer vajag cmd ierakstit: curl -o C:\Proj\Php\composer.phar https://getcomposer.org/composer.phar
+
+Paths:
+(šeit nevajag node.js jo jau ir)
+setx NODEJS_HOME "C:\Proj\Node"
+setx PATH "%PATH%;%NODEJS_HOME%"
+
+
+setx PHP_HOME "C:\Proj\Php"
+setx PATH "%PATH%;%PHP_HOME%"
+
+
+Powershell:
+composer create-project --prefer-dist laravel/laravel my-laravel-app
+
+
+Databse ir sqlite (COMMAND0LINE VERSIJU):
+https://sqlite.org/download.html
+
+PowerShell:
+C:\Proj\my-laravel-app> php artisan migrate
+
+Pec šī:
+npm install
+npm install vue@latest vue-router@latest @vitejs/plugin-vue
+
+Modify vite.config.js:
+
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import laravel from 'laravel-vite-plugin';
+
+export default defineConfig({
+    plugins: [
+        laravel({
+            input: ['resources/js/app.js'],
+            refresh: true,
+        }),
+        vue(),
+    ],
+});
+
+Modify resources/js/app.js:
+
+import { createApp } from 'vue';
+import App from './components/App.vue';
+import router from './router';
+
+createApp(App).use(router).mount('#app');
+
+
+Create resources/js/components/App.vue:
+
+<template>
+    <div>
+        <h1>Welcome to Laravel 12 with Vue 3</h1>
+    </div>
+</template>
+
+2.1.81 šo ievieto nakamaja linka (https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/latest)
+
+https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.81/win32-x64/claude.exe
+
+Before pushing to GitHub:
+
+php artisan db:seed-export
+git add database/seeders/DatabaseSeeder.php
+git commit -m "update seeds"
+git push
+
+
+
+Bootsrtap/CSS animations
+
+kad majas stradasu:
+composer install
+npm install
+npm run build
+php artisan serve
+
+when you want a backup:
+
+
+cp database/database.sqlite database/database.backup.sqlite
+And to restore:
+
+
+cp database/database.backup.sqlite database/database.sqlite
+
+set up on a new PC:
+
+composer install
+copy .env.example .env
+php artisan key:generate
+npm install
+npm run dev          (one terminal)
+php artisan serve    (another terminal)
+php artisan storage:link
+
+set up on a pc with npm and composer installed: 
+php artisan storage:link
+
+
+kad prezentesu skolaa:
+
+composer install
+copy .env.example .env
+php artisan key:generate
+php artisan storage:link
+npm install
+npm run build
+php artisan serve
+
