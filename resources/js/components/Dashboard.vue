@@ -132,12 +132,12 @@
       <!-- Grāmatu režģis -->
       <div v-if="!loading && books.length > 0" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
         <div v-for="book in books" :key="book.id" class="col">
-          <div class="card h-100 book-card border">
+          <div class="card h-100 book-card border" style="position:relative">
+            <div v-if="book.status === 'Pending'" class="pending-overlay"></div>
             <div class="book-card-cover" :style="!book.cover_image ? { background: coverColor(book) } : {}">
               <img v-if="book.cover_image" :src="'/storage/' + book.cover_image" :alt="book.title" class="book-card-cover-img" />
               <span class="book-card-genre">{{ book.genre }}</span>
-              <div v-if="book.status === 'Pending'" class="pending-overlay"></div>
-              <!-- edit/delete overlay -->
+              <!-- rediģēt / dzēst pogas -->
               <div class="dash-card-actions">
                 <button class="dash-action-btn" :aria-label="t('modal.editBook')" @click="openEditModal(book)">✏️</button>
                 <button class="dash-action-btn dash-action-btn--delete" :aria-label="t('modal.deleteTitle')" @click="confirmDelete(book)">🗑️</button>
@@ -247,7 +247,7 @@
 
 <script>
 import axios from 'axios'
-import { authStore, clearAuth } from '../authStore.js'
+import { authStore } from '../authStore.js'
 import { coverColor } from '../coverColor.js'
 import langMixin from '../langMixin.js'
 import AppNavbar from './AppNavbar.vue'
@@ -389,7 +389,7 @@ export default {
 
     statusClass(status) {
       if (status === 'accepted') return 'tag-green'
-      if (status === 'pending')  return 'tag-yellow'
+      if (status === 'pending') return 'tag-yellow'
       return ''
     },
 
@@ -543,14 +543,6 @@ export default {
       }
     },
 
-    async handleLogout() {
-      try {
-        await axios.post('/api/logout')
-      } finally {
-        clearAuth()
-        this.$router.push({ name: 'home' })
-      }
-    }
   }
 }
 </script>

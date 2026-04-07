@@ -136,11 +136,11 @@
       <!-- kartiņu skats -->
       <div v-else-if="viewMode === 'cards'" class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-3">
         <div v-for="book in books" :key="book.id" class="col">
-          <div class="card h-100 book-card border" style="cursor:pointer" @click="detailBook = book">
+          <div class="card h-100 book-card border" style="cursor:pointer; position:relative" @click="openDetail(book)">
+            <div v-if="book.status === 'Pending'" class="pending-overlay"></div>
             <div class="book-card-cover" :style="!book.cover_image ? { background: coverColor(book) } : {}">
               <img v-if="book.cover_image" :src="'/storage/' + book.cover_image" :alt="book.title" class="book-card-cover-img" />
               <span class="book-card-genre">{{ t('genre.' + book.genre) }}</span>
-              <div v-if="book.status === 'Pending'" class="pending-overlay"></div>
             </div>
             <div class="card-body d-flex flex-column p-3">
               <h3 class="book-card-title mb-1">{{ book.title }}</h3>
@@ -180,7 +180,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="book in sortedBooks" :key="book.id" style="cursor:pointer" @click="detailBook = book">
+            <tr v-for="book in sortedBooks" :key="book.id" style="cursor:pointer" @click="openDetail(book)">
               <td>{{ book.title }}</td>
               <td>{{ book.author }}</td>
               <td>{{ t('genre.' + book.genre) }}</td>
@@ -255,7 +255,8 @@
   <!-- Grāmatas detaļas modālis -->
   <BookDetailModal
     :book="detailBook"
-    @close="detailBook = null"
+    :blocked="detailBookBlocked"
+    @close="detailBook = null; detailBookBlocked = false"
     @swap="openSwap"
     @message="goToMessages"
     @profile="(user) => $router.push({ name: 'userProfile', params: { id: user.id } })"
@@ -314,6 +315,7 @@ export default {
       userSearch: '',
       loadingUsers: false,
       detailBook: null,
+      detailBookBlocked: false,
       swapModal: {
         open: false, wantedBook: null, myBooks: [],
         selectedBookId: null, sending: false, error: '',
@@ -382,21 +384,21 @@ export default {
 
   methods: {
     readRouteParams(q) {
-      this.searchQuery  = q.search    || ''
-      this.sortBy       = q.sort      || 'title_asc'
-      this.langFilters  = q.languages ? q.languages.split(',') : []
-      this.langSearch   = ''
-      this.genreFilters = q.genres    ? q.genres.split(',') : []
-      this.currentPage  = parseInt(q.page) || 1
+      this.searchQuery = q.search || ''
+      this.sortBy = q.sort || 'title_asc'
+      this.langFilters = q.languages ? q.languages.split(',') : []
+      this.langSearch = ''
+      this.genreFilters = q.genres ? q.genres.split(',') : []
+      this.currentPage = parseInt(q.page) || 1
     },
 
     buildQuery() {
       const q = {}
-      if (this.searchQuery.trim())   q.search    = this.searchQuery.trim()
-      if (this.sortBy !== 'title_asc') q.sort    = this.sortBy
-      if (this.langFilters.length)   q.languages = this.langFilters.join(',')
-      if (this.genreFilters.length)  q.genres    = this.genreFilters.join(',')
-      if (this.currentPage > 1)      q.page      = this.currentPage
+      if (this.searchQuery.trim()) q.search = this.searchQuery.trim()
+      if (this.sortBy !== 'title_asc') q.sort = this.sortBy
+      if (this.langFilters.length) q.languages = this.langFilters.join(',')
+      if (this.genreFilters.length) q.genres = this.genreFilters.join(',')
+      if (this.currentPage > 1) q.page = this.currentPage
       return q
     },
 
@@ -416,18 +418,18 @@ export default {
         const perPage = this.viewMode === 'table' ? 500 : 24
         const { data } = await axios.get('/api/browse', {
           params: {
-            search:   this.searchQuery.trim() || undefined,
-            genres:   this.genreFilters.length ? this.genreFilters : undefined,
+            search: this.searchQuery.trim() || undefined,
+            genres: this.genreFilters.length ? this.genreFilters : undefined,
             languages: this.langFilters.length ? this.langFilters : undefined,
-            sort:     this.sortBy,
-            page:     this.currentPage,
+            sort: this.sortBy,
+            page: this.currentPage,
             per_page: perPage,
           },
         })
-        this.books       = data.data
+        this.books = data.data
         this.currentPage = data.current_page
-        this.lastPage    = data.last_page
-        this.totalBooks  = data.total
+        this.lastPage = data.last_page
+        this.totalBooks = data.total
       } catch {
         // klusām ignorē
       } finally {
@@ -448,7 +450,7 @@ export default {
     },
     clearGenre() {
       this.genreFilters = []
-      this.genreSearch  = ''
+      this.genreSearch = ''
       this.applyFilters()
     },
     removeGenre(genre) {
@@ -460,13 +462,13 @@ export default {
     // valodas filtri
     selectLang(l) {
       if (!this.langFilters.includes(l.value)) this.langFilters.push(l.value)
-      this.langSearch   = ''
+      this.langSearch = ''
       this.showLangSugg = false
       this.applyFilters()
     },
     clearLang() {
       this.langFilters = []
-      this.langSearch  = ''
+      this.langSearch = ''
       this.applyFilters()
     },
     removeLang(lang) {
@@ -492,11 +494,11 @@ export default {
     // swap modālis
     async openSwap(book) {
       this.detailBook = null
-      this.swapModal.wantedBook    = book
+      this.swapModal.wantedBook = book
       this.swapModal.selectedBookId = null
-      this.swapModal.error         = ''
-      this.swapModal.myBooks       = []
-      this.swapModal.open          = true
+      this.swapModal.error = ''
+      this.swapModal.myBooks = []
+      this.swapModal.open = true
       if (authStore.user) {
         try {
           const { data } = await axios.get('/api/books')
@@ -506,12 +508,12 @@ export default {
     },
 
     async sendSwap() {
-      this.swapModal.error   = ''
+      this.swapModal.error = ''
       this.swapModal.sending = true
       try {
         await axios.post('/api/swap-requests', {
           offered_book_id: this.swapModal.selectedBookId,
-          wanted_book_id:  this.swapModal.wantedBook.id,
+          wanted_book_id: this.swapModal.wantedBook.id,
         })
         this.books = this.books.filter(b => b.id !== this.swapModal.wantedBook.id)
         this.swapModal.open = false
@@ -539,6 +541,17 @@ export default {
         this.users = data
       } catch { /* ignorē */ } finally {
         this.loadingUsers = false
+      }
+    },
+
+    async openDetail(book) {
+      this.detailBook = book
+      this.detailBookBlocked = false
+      if (authStore.user && book.user?.id) {
+        try {
+          const { data } = await axios.get(`/api/users/${book.user.id}`)
+          this.detailBookBlocked = data.is_blocked ?? false
+        } catch { /* ignore */ }
       }
     },
 

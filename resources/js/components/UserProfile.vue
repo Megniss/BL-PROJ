@@ -37,7 +37,7 @@
               </div>
             </div>
             <div v-if="authStore.user && authStore.user.id !== profile.id" class="d-flex flex-column gap-2 align-items-end">
-              <button class="btn btn-primary" @click="goToMessages">{{ t('up.message') }} {{ profile.name }}</button>
+              <button v-if="!isBlocked" class="btn btn-primary" @click="goToMessages">{{ t('up.message') }} {{ profile.name }}</button>
               <button class="btn-block-user" :class="{ blocked: isBlocked }" @click="toggleBlock">
                 {{ isBlocked ? t('up.unblock') : t('up.block') }}
               </button>
@@ -55,7 +55,8 @@
 
         <div v-else class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
           <div v-for="book in profile.library" :key="book.id" class="col">
-            <div class="card h-100 book-card border">
+            <div class="card h-100 book-card border" style="position:relative">
+              <div v-if="book.status === 'Pending'" class="pending-overlay"></div>
               <div class="book-card-cover" :style="!book.cover_image ? { background: coverColor(book) } : {}">
                 <img v-if="book.cover_image" :src="'/storage/' + book.cover_image" :alt="book.title" class="book-card-cover-img" />
                 <span v-else class="book-card-genre">{{ book.genre }}</span>

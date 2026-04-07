@@ -54,7 +54,7 @@ class UserController extends Controller
             ->count();
 
         $isBlocked = $authUser
-            ? $authUser->blocking()->where('blocked_id', $user->id)->exists()
+            ? $authUser->blockedUserIds()->contains($user->id)
             : false;
 
         return response()->json([

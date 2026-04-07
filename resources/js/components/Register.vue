@@ -102,9 +102,9 @@ export default {
       this.loading = true
       try {
         const { data } = await axios.post('/api/register', {
-          name:                  this.form.name,
-          email:                 this.form.email,
-          password:              this.form.password,
+          name: this.form.name,
+          email: this.form.email,
+          password: this.form.password,
           password_confirmation: this.form.passwordConfirm,
         })
         setAuth(data.user, data.token)

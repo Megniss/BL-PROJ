@@ -26,11 +26,11 @@
             <input v-model="profileForm.current_password" class="form-control" type="password" autocomplete="current-password" />
           </div>
           <div class="row g-3 mb-3">
-            <div class="col-6">
+            <div class="col-12 col-sm-6">
               <label class="form-label fw-semibold">{{ t('profile.newPwd') }}</label>
               <input v-model="profileForm.new_password" class="form-control" type="password" autocomplete="new-password" />
             </div>
-            <div class="col-6">
+            <div class="col-12 col-sm-6">
               <label class="form-label fw-semibold">{{ t('profile.confirmPwd') }}</label>
               <input v-model="profileForm.new_password_confirmation" class="form-control" type="password" autocomplete="new-password" />
             </div>

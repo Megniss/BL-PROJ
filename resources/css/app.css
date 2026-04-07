@@ -105,26 +105,28 @@ body {
 .nav-mobile-menu {
   background: var(--surface);
   border-top: 1px solid var(--border);
-  padding: 8px 20px 12px;
+  padding: 10px 20px 16px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
 }
 .nav-mobile-menu .nav-mob-link,
 .nav-mobile-menu .nav-mob-action {
   background: none;
   border: none;
   text-align: left;
-  padding: 7px 0;
-  font-size: 14px;
+  padding: 10px 0;
+  font-size: 15px;
   cursor: pointer;
   text-decoration: none;
 }
-.nav-mobile-menu .nav-mob-link { color: var(--muted); }
-.nav-mobile-menu .nav-mob-link:hover { color: var(--ink); }
+.nav-mobile-menu .nav-mob-link { color: var(--ink); }
+.nav-mobile-menu .nav-mob-link:hover { color: var(--green); }
 .nav-mobile-menu .nav-mob-action { color: var(--green); font-weight: 600; }
 .nav-mobile-menu .nav-mob-action:hover { color: var(--green-dark, #2d6a4f); }
-.nav-mobile-divider { height: 1px; background: var(--border); margin: 4px 0; }
+.nav-mobile-divider { height: 1px; background: var(--border); margin: 6px 0; }
+.nav-mob-user-name { font-size: 11px; font-weight: 700; color: var(--muted); padding: 8px 0 4px; text-transform: uppercase; letter-spacing: 0.8px; }
+.nav-mob-logout { color: #c0392b !important; }
 
 /* pogas menu iekšā */
 .nav-mobile-menu .btn {
@@ -133,14 +135,14 @@ body {
   border: none !important;
   box-shadow: none !important;
   text-align: left;
-  padding: 7px 0;
-  font-size: 14px;
-  color: var(--muted) !important;
+  padding: 10px 0;
+  font-size: 15px;
+  color: var(--ink) !important;
   font-weight: 400;
 }
 .nav-mobile-menu .btn-primary { color: var(--green) !important; font-weight: 600; }
-.nav-mobile-menu .btn:hover { color: var(--ink) !important; background: none !important; }
-.nav-mobile-menu .btn-primary:hover { color: var(--green) !important; }
+.nav-mobile-menu .btn:hover { color: var(--green) !important; background: none !important; }
+.nav-mobile-menu .btn-primary:hover { color: var(--green-dark) !important; }
 
 .page-bg { min-height: 100vh; background: var(--cream); }
 
@@ -304,6 +306,7 @@ body {
   border: 1px solid var(--border);
   background: white;
   cursor: pointer;
+  position: relative;
   transition: box-shadow 0.28s, transform 0.28s;
 }
 .featured-card:hover {
@@ -396,21 +399,26 @@ body {
 .pending-overlay {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 3;
   pointer-events: none;
-  overflow: hidden;
+  background: rgba(180, 40, 40, 0.28);
+  border-radius: inherit;
 }
-.pending-overlay::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: -20%;
-  width: 140%;
-  height: 3px;
-  background: rgba(200, 30, 30, 0.82);
-  height: 8px;
-  transform: translateY(-50%) rotate(-30deg);
-  border-radius: 2px;
+
+/* kartiņa ar pending overlay — bez hover efekta */
+.featured-card:has(.pending-overlay):hover {
+  box-shadow: none;
+  transform: none;
+}
+.featured-card:has(.pending-overlay):hover .book-card-cover-img {
+  transform: none;
+}
+.book-card:has(.pending-overlay):hover {
+  box-shadow: none;
+  transform: none;
+}
+.book-card:has(.pending-overlay):hover .book-card-cover-img {
+  transform: none;
 }
 
 .book-card-genre {
@@ -817,7 +825,7 @@ body {
 .icon-btn { background: none; border: none; font-size: 16px; padding: 4px 6px; border-radius: 6px; cursor: pointer; transition: background 0.15s; }
 .icon-btn:hover { background: #f0e8db; }
 
-/* edit/delete overlay on dashboard cards */
+/* rediģēt/dzēst pogas uz grāmatas kartiņas */
 .dash-card-actions {
   position: absolute;
   top: 8px;

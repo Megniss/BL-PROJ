@@ -43,10 +43,10 @@
           </p>
 
           <div class="detail-actions">
-            <button class="btn-swap" :disabled="book.status !== 'Available'" @click="$emit('swap', book)">
+            <button v-if="!isOwnBook && !blocked" class="btn-swap" :disabled="book.status !== 'Available'" @click="$emit('swap', book)">
               <span class="btn-icon">⇄</span>{{ t('books.requestSwap') }}
             </button>
-            <button class="btn-msg-owner" @click="$emit('message', book.user)">
+            <button v-if="!blocked && !isOwnBook" class="btn-msg-owner" @click="$emit('message', book.user)">
               <span class="btn-icon">✉</span>{{ t('books.msgOwner') }}
             </button>
           </div>
@@ -60,14 +60,24 @@
 <script>
 import langMixin from '../langMixin.js'
 import { coverColor } from '../coverColor.js'
+import { authStore } from '../authStore.js'
 
 export default {
   name: 'BookDetailModal',
   mixins: [langMixin],
   props: {
-    book: { type: Object, default: null }
+    book: { type: Object, default: null },
+    blocked: { type: Boolean, default: false },
   },
   emits: ['close', 'swap', 'message', 'profile'],
+  data() {
+    return { authStore }
+  },
+  computed: {
+    isOwnBook() {
+      return authStore.user && this.book?.user?.id === authStore.user.id
+    }
+  },
   methods: {
     coverColor,
   }

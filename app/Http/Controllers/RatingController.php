@@ -12,8 +12,8 @@ class RatingController extends Controller
     {
         $validated = $request->validate([
             'swap_request_id' => ['required', 'integer', 'exists:swap_requests,id'],
-            'stars'           => ['required', 'integer', 'min:1', 'max:5'],
-            'review'          => ['nullable', 'string', 'max:1000'],
+            'stars' => ['required', 'integer', 'min:1', 'max:5'],
+            'review' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $swap = SwapRequest::findOrFail($validated['swap_request_id']);
@@ -24,6 +24,7 @@ class RatingController extends Controller
 
         $userId = $request->user()->id;
 
+        // noskaidrojam kuru grāmatu lietotājs saņēma
         if ($userId === $swap->requester_id) {
             $bookId = $swap->wanted_book_id;
         } elseif ($userId === $swap->owner_id) {
@@ -42,10 +43,10 @@ class RatingController extends Controller
 
         $rating = Rating::create([
             'swap_request_id' => $swap->id,
-            'book_id'         => $bookId,
-            'rater_id'        => $userId,
-            'stars'           => $validated['stars'],
-            'review'          => $validated['review'] ?? null,
+            'book_id' => $bookId,
+            'rater_id' => $userId,
+            'stars' => $validated['stars'],
+            'review' => $validated['review'] ?? null,
         ]);
 
         return response()->json($rating, 201);

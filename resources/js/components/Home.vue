@@ -79,11 +79,11 @@
           </div>
         </template>
         <template v-else>
-          <div v-for="book in recentBooks" :key="book.id" class="featured-card" @click="detailBook = book">
+          <div v-for="book in recentBooks" :key="book.id" class="featured-card" @click="openDetail(book)">
+            <div v-if="book.status === 'Pending'" class="pending-overlay"></div>
             <div class="featured-cover" :style="!book.cover_image ? { background: coverColor(book) } : {}">
               <img v-if="book.cover_image" :src="'/storage/' + book.cover_image" :alt="book.title" class="book-card-cover-img" />
               <span class="book-card-genre">{{ t('genre.' + book.genre) }}</span>
-              <div v-if="book.status === 'Pending'" class="pending-overlay"></div>
               <button v-if="book.status === 'Available'" class="card-quick-swap" @click.stop="authStore.user ? requestSwap(book) : $router.push({ name: 'login' })">⇄ {{ t('featured.swap') }}</button>
             </div>
             <div class="featured-body">
@@ -121,11 +121,11 @@
           </div>
         </template>
         <template v-else>
-          <div v-for="book in popularBooks" :key="book.id" class="featured-card" @click="detailBook = book">
+          <div v-for="book in popularBooks" :key="book.id" class="featured-card" @click="openDetail(book)">
+            <div v-if="book.status === 'Pending'" class="pending-overlay"></div>
             <div class="featured-cover" :style="!book.cover_image ? { background: coverColor(book) } : {}">
               <img v-if="book.cover_image" :src="'/storage/' + book.cover_image" :alt="book.title" class="book-card-cover-img" />
               <span class="book-card-genre">{{ t('genre.' + book.genre) }}</span>
-              <div v-if="book.status === 'Pending'" class="pending-overlay"></div>
               <button v-if="book.status === 'Available'" class="card-quick-swap" @click.stop="authStore.user ? requestSwap(book) : $router.push({ name: 'login' })">⇄ {{ t('featured.swap') }}</button>
             </div>
             <div class="featured-body">
@@ -163,11 +163,11 @@
           </div>
         </template>
         <template v-else>
-          <div v-for="book in topRatedBooks" :key="book.id" class="featured-card" @click="detailBook = book">
+          <div v-for="book in topRatedBooks" :key="book.id" class="featured-card" @click="openDetail(book)">
+            <div v-if="book.status === 'Pending'" class="pending-overlay"></div>
             <div class="featured-cover" :style="!book.cover_image ? { background: coverColor(book) } : {}">
               <img v-if="book.cover_image" :src="'/storage/' + book.cover_image" :alt="book.title" class="book-card-cover-img" />
               <span class="book-card-genre">{{ t('genre.' + book.genre) }}</span>
-              <div v-if="book.status === 'Pending'" class="pending-overlay"></div>
               <button v-if="book.status === 'Available'" class="card-quick-swap" @click.stop="authStore.user ? requestSwap(book) : $router.push({ name: 'login' })">⇄ {{ t('featured.swap') }}</button>
             </div>
             <div class="featured-body">
@@ -227,7 +227,7 @@
         <div class="footer-links d-flex gap-4">
           <button class="footer-link-btn" @click="$router.push({ name: 'about' })">{{ t('footer.about') }}</button>
           <button class="footer-link-btn" @click="scrollToHowItWorks">{{ t('footer.howItWorks') }}</button>
-          <button class="footer-link-btn" @click="scrollToBooks">{{ t('footer.browse') }}</button>
+          <button class="footer-link-btn" @click="$router.push({ name: 'browse' })">{{ t('footer.browse') }}</button>
         </div>
         <p class="footer-copy w-100 mb-0 mt-2">{{ t('footer.copy') }}</p>
       </div>
@@ -238,7 +238,8 @@
   <!-- Grāmatas detaļas -->
   <BookDetailModal
     :book="detailBook"
-    @close="detailBook = null"
+    :blocked="detailBookBlocked"
+    @close="detailBook = null; detailBookBlocked = false"
     @swap="requestSwap"
     @message="goToMessages"
     @profile="(user) => $router.push({ name: 'userProfile', params: { id: user.id } })"
@@ -330,6 +331,17 @@ export default {
       this.$router.push({ name: 'messages', query: { userId: user.id, userName: user.name } })
     },
 
+    async openDetail(book) {
+      this.detailBook = book
+      this.detailBookBlocked = false
+      if (authStore.user && book.user?.id) {
+        try {
+          const { data } = await axios.get(`/api/users/${book.user.id}`)
+          this.detailBookBlocked = data.is_blocked ?? false
+        } catch { /* ignore */ }
+      }
+    },
+
     async requestSwap(book) {
       this.detailBook = null
       this.swapModal.wantedBook    = book
@@ -381,6 +393,7 @@ export default {
       topRatedBooks: [],
       homeSearch: '',
       detailBook: null,
+      detailBookBlocked: false,
       swapModal: {
         open: false, wantedBook: null, myBooks: [],
         selectedBookId: null, sending: false, error: '',

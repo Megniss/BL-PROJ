@@ -51,10 +51,10 @@ export default {
   mixins: [langMixin],
 
   props: {
-    open:    { type: Boolean, required: true },
-    book:    { type: Object,  default: null },
+    open: { type: Boolean, required: true },
+    book: { type: Object, default: null },
     sending: { type: Boolean, default: false },
-    error:   { type: String,  default: '' },
+    error: { type: String, default: '' },
   },
 
   emits: ['close', 'submit'],

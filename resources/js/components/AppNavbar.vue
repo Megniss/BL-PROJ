@@ -21,13 +21,13 @@
           <button :class="['lang-btn', { active: langStore.locale === 'lv' }]" @click="setLocale('lv')">LV</button>
         </div>
 
-        <!-- slot: page-specific items (notifications, back buttons etc.) -->
+        <!-- slot: page-specific items (tikai desktop) -->
         <div class="d-none d-lg-flex align-items-center gap-2">
           <slot />
         </div>
 
-        <!-- user avatar dropdown -->
-        <div v-if="authStore.user" class="nav-user-wrap" ref="dropdownWrap">
+        <!-- avatar dropdown (tikai desktop) -->
+        <div v-if="authStore.user" class="nav-user-wrap d-none d-lg-block" ref="dropdownWrap">
           <button class="nav-avatar-btn" @click="dropdownOpen = !dropdownOpen" :aria-label="authStore.user.name">
             {{ initials }}
           </button>
@@ -43,15 +43,26 @@
           </div>
         </div>
 
-        <!-- burger (mobile, guests only) -->
-        <button v-if="!authStore.user" class="burger-btn d-lg-none" @click="menuOpen = !menuOpen" :aria-label="menuOpen ? 'Aizvērt izvēlni' : 'Atvērt izvēlni'">
+        <!-- burger (mobile, vienmēr) -->
+        <button class="burger-btn d-lg-none" @click="menuOpen = !menuOpen" :aria-label="menuOpen ? 'Aizvērt izvēlni' : 'Atvērt izvēlni'">
           {{ menuOpen ? '✕' : '☰' }}
         </button>
       </div>
     </div>
 
+    <!-- mobilais menu -->
     <div v-if="menuOpen" class="nav-mobile-menu d-lg-none">
       <slot />
+      <template v-if="authStore.user">
+        <div class="nav-mobile-divider mt-1"></div>
+        <div class="nav-mob-user-name">{{ authStore.user.name }}</div>
+        <button class="nav-mob-link" @click="go('dashboard')">{{ t('nav.myLibrary') }}</button>
+        <button class="nav-mob-link" @click="go('browse')">{{ t('nav.browse') }}</button>
+        <button class="nav-mob-link" @click="go('messages')">{{ t('nav.messages') }}</button>
+        <button class="nav-mob-link" @click="go('settings')">{{ t('nav.settings') }}</button>
+        <div class="nav-mobile-divider"></div>
+        <button class="nav-mob-link nav-mob-logout" @click="logout">{{ t('nav.logout') }}</button>
+      </template>
     </div>
   </nav>
 </template>
@@ -91,7 +102,7 @@ export default {
 
   watch: {
     $route() {
-      this.menuOpen    = false
+      this.menuOpen = false
       this.dropdownOpen = false
     }
   },
@@ -99,11 +110,13 @@ export default {
   methods: {
     go(name) {
       this.dropdownOpen = false
+      this.menuOpen = false
       this.$router.push({ name })
     },
 
     async logout() {
       this.dropdownOpen = false
+      this.menuOpen = false
       try { await axios.post('/api/logout') } finally {
         clearAuth()
         this.$router.push({ name: 'home' })
