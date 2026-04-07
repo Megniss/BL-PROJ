@@ -34,6 +34,7 @@
           <div v-if="dropdownOpen" class="nav-dropdown">
             <div class="nav-dropdown-name">{{ authStore.user.name }}</div>
             <div class="nav-dropdown-divider"></div>
+            <button class="nav-dropdown-item" @click="go('profile')">{{ t('nav.profile') }}</button>
             <button class="nav-dropdown-item" @click="go('dashboard')">{{ t('nav.myLibrary') }}</button>
             <button class="nav-dropdown-item" @click="go('browse')">{{ t('nav.browse') }}</button>
             <button class="nav-dropdown-item" @click="go('messages')">{{ t('nav.messages') }}</button>
@@ -55,7 +56,7 @@
       <slot />
       <template v-if="authStore.user">
         <div class="nav-mobile-divider mt-1"></div>
-        <div class="nav-mob-user-name">{{ authStore.user.name }}</div>
+        <button class="nav-mob-link" @click="go('profile')">{{ t('nav.profile') }}</button>
         <button class="nav-mob-link" @click="go('dashboard')">{{ t('nav.myLibrary') }}</button>
         <button class="nav-mob-link" @click="go('browse')">{{ t('nav.browse') }}</button>
         <button class="nav-mob-link" @click="go('messages')">{{ t('nav.messages') }}</button>

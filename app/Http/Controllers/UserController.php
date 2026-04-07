@@ -53,8 +53,12 @@ class UserController extends Controller
             })
             ->count();
 
-        $isBlocked = $authUser
-            ? $authUser->blockedUserIds()->contains($user->id)
+        $iBlockedThem = $authUser
+            ? $authUser->blocking()->where('blocked_id', $user->id)->exists()
+            : false;
+
+        $theyBlockedMe = $authUser
+            ? $authUser->blockedBy()->where('blocker_id', $user->id)->exists()
             : false;
 
         return response()->json([
@@ -64,7 +68,8 @@ class UserController extends Controller
             'books' => $books->count(),
             'swaps' => $user->show_swaps ? $swapsCount : null,
             'library' => $books,
-            'is_blocked' => $isBlocked,
+            'is_blocked' => $iBlockedThem,
+            'they_blocked_me' => $theyBlockedMe,
         ]);
     }
 }

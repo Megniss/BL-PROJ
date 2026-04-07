@@ -550,7 +550,7 @@ export default {
       if (authStore.user && book.user?.id) {
         try {
           const { data } = await axios.get(`/api/users/${book.user.id}`)
-          this.detailBookBlocked = data.is_blocked ?? false
+          this.detailBookBlocked = (data.is_blocked || data.they_blocked_me) ?? false
         } catch { /* ignore */ }
       }
     },

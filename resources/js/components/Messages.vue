@@ -187,7 +187,7 @@ export default {
       // pārbaudam vai bloķēts
       try {
         const { data } = await axios.get(`/api/users/${user.id}`)
-        this.activeUserBlocked = data.is_blocked ?? false
+        this.activeUserBlocked = (data.is_blocked || data.they_blocked_me) ?? false
       } catch { /* ignore */ }
 
       await this.fetchThread()

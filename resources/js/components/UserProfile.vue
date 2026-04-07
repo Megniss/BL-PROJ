@@ -37,8 +37,8 @@
               </div>
             </div>
             <div v-if="authStore.user && authStore.user.id !== profile.id" class="d-flex flex-column gap-2 align-items-end">
-              <button v-if="!isBlocked" class="btn btn-primary" @click="goToMessages">{{ t('up.message') }} {{ profile.name }}</button>
-              <button class="btn-block-user" :class="{ blocked: isBlocked }" @click="toggleBlock">
+              <button v-if="!isBlocked && !theyBlockedMe" class="btn btn-primary" @click="goToMessages">{{ t('up.message') }} {{ profile.name }}</button>
+              <button v-if="!theyBlockedMe" class="btn-block-user" :class="{ blocked: isBlocked }" @click="toggleBlock">
                 {{ isBlocked ? t('up.unblock') : t('up.block') }}
               </button>
             </div>
@@ -78,7 +78,7 @@
                   <span v-else class="text-muted">{{ t('books.noRatings') }}</span>
                 </div>
                 <p v-if="book.description" class="book-card-desc mb-0">{{ book.description }}</p>
-                <div v-if="authStore.user && authStore.user.id !== profile.id && !isBlocked" class="mt-auto pt-2">
+                <div v-if="authStore.user && authStore.user.id !== profile.id && !isBlocked && !theyBlockedMe" class="mt-auto pt-2">
                   <button class="btn-swap" :disabled="book.status !== 'Available'" @click="requestSwap(book)">{{ t('books.requestSwap') }}</button>
                 </div>
               </div>
@@ -121,10 +121,11 @@ export default {
   data() {
     return {
       authStore,
-      profile:   null,
-      loading:   true,
-      error:     '',
+      profile: null,
+      loading: true,
+      error: '',
       isBlocked: false,
+      theyBlockedMe: false,
       swapModal: {
         open: false,
         wantedBook: null,
@@ -146,8 +147,9 @@ export default {
       this.error   = ''
       try {
         const { data } = await axios.get(`/api/users/${this.$route.params.id}`)
-        this.profile   = data
+        this.profile = data
         this.isBlocked = data.is_blocked ?? false
+        this.theyBlockedMe = data.they_blocked_me ?? false
       } catch (err) {
         this.error = err.response?.status === 404
           ? this.t('up.notFound')
