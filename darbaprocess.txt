@@ -122,3 +122,10 @@ npm install
 npm run build
 php artisan serve
 
+e-mail validacija, jabut uniqe
+nevar lietotajam but 2 vai vairak same book
+lietotajs nevar nomainit statusu gamatai kad ta ir pieprasita apmainai
+message span limiting
+rezerveta gramata
+setting poga dropdown menu profilam
+user blocking

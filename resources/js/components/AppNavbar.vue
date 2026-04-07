@@ -43,8 +43,8 @@
           </div>
         </div>
 
-        <!-- burger (mobile) -->
-        <button class="burger-btn d-lg-none" @click="menuOpen = !menuOpen" :aria-label="menuOpen ? 'Aizvērt izvēlni' : 'Atvērt izvēlni'">
+        <!-- burger (mobile, guests only) -->
+        <button v-if="!authStore.user" class="burger-btn d-lg-none" @click="menuOpen = !menuOpen" :aria-label="menuOpen ? 'Aizvērt izvēlni' : 'Atvērt izvēlni'">
           {{ menuOpen ? '✕' : '☰' }}
         </button>
       </div>

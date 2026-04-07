@@ -49,6 +49,7 @@ Laravel apstrādā REST API loģiku, Vue veido lietotāja saskarni un komunicē 
 - Poga visu filtru notīrīšanai uzreiz
 - Kārtošana pēc nosaukuma vai autora (A-Z / Z-A)
 - Kartiņu un tabulas skats
+- Aizturētās grāmatas redzamas ar sarkanu diagonālu svītru (nevar pieprasīt)
 - Lapu numerācija
 - URL satur aktīvos filtrus — saite ir kopīgojama
 
@@ -77,6 +78,17 @@ Laravel apstrādā REST API loģiku, Vue veido lietotāja saskarni un komunicē 
 - Paziņojumi par apmaiņas lēmumiem un jauniem ziņojumiem
 - Paziņojumu zvans ar sarkanu skaitītāju
 
+### 8. Lietotāju bloķēšana
+- Lietotājs var bloķēt citu lietotāju no viņa profila vai čata
+- Bloķētie lietotāji nevar sūtīt ziņojumus vai pieprasīt apmaiņu
+- Filtrēšana darbojas abos virzienos — arī ja otrs bloķē tevi
+- Bloķēto saraksts redzams iestatījumu lapā, var atbloķēt jebkurā brīdī
+
+### 9. Iestatījumu lapa
+- Vārda, e-pasta un paroles maiņa
+- Privātuma iestatījumi (vai rādīt pievienošanās datumu un apmaiņu skaitu)
+- Bloķēto lietotāju pārvaldība
+
 ---
 
 ## Datubāzes struktūra
@@ -88,6 +100,7 @@ swap_requests           — apmaiņas pieprasījumi
 messages                — ziņojumi starp lietotājiem
 notifications           — sistēmas paziņojumi
 ratings                 — grāmatu vērtējumi pēc apmaiņas
+blocks                  — bloķēto lietotāju saraksts
 personal_access_tokens  — Sanctum tokeni
 ```
 
@@ -126,14 +139,14 @@ Lietotne ir instalējama kā progresīvā tīmekļa lietotne (PWA):
 ## Projekta struktūra
 
 ```
-app/Http/Controllers/   ← 8 API kontrolieri
-app/Models/             ← User, Book, SwapRequest, Message, Rating
+app/Http/Controllers/   ← 9 API kontrolieri
+app/Models/             ← User, Book, SwapRequest, Message, Rating, Block
 resources/js/
-  components/           ← 15 Vue komponentes
+  components/           ← 16 Vue komponentes
   router/router.js      ← Vue Router
   translations.js       ← visi UI teksti LV/EN
   authStore.js / langStore.js / themeStore.js
-routes/api.php          ← ~27 REST API galapunkti
+routes/api.php          ← ~30 REST API galapunkti
 ```
 
 ---

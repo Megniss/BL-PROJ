@@ -136,6 +136,7 @@
             <div class="book-card-cover" :style="!book.cover_image ? { background: coverColor(book) } : {}">
               <img v-if="book.cover_image" :src="'/storage/' + book.cover_image" :alt="book.title" class="book-card-cover-img" />
               <span class="book-card-genre">{{ book.genre }}</span>
+              <div v-if="book.status === 'Pending'" class="pending-overlay"></div>
               <!-- edit/delete overlay -->
               <div class="dash-card-actions">
                 <button class="dash-action-btn" :aria-label="t('modal.editBook')" @click="openEditModal(book)">✏️</button>

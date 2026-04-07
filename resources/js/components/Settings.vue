@@ -5,7 +5,7 @@
     <div class="container py-5 px-3 px-md-4" style="max-width:680px">
       <h1 class="settings-title mb-4">{{ t('settings.title') }}</h1>
 
-      <!-- Edit Profile -->
+      <!-- profila rediģēšana -->
       <div class="settings-card mb-4">
         <h2 class="settings-section-title">{{ t('settings.editProfile') }}</h2>
 
@@ -36,7 +36,7 @@
             </div>
           </div>
 
-          <div v-if="profileError"   class="alert alert-danger py-2 px-3 mb-3">{{ profileError }}</div>
+          <div v-if="profileError" class="alert alert-danger py-2 px-3 mb-3">{{ profileError }}</div>
           <div v-if="profileSuccess" class="alert alert-success py-2 px-3 mb-3">{{ profileSuccess }}</div>
 
           <button type="submit" class="btn btn-primary" :disabled="profileSaving">
@@ -45,7 +45,7 @@
         </form>
       </div>
 
-      <!-- Privacy -->
+      <!-- privātuma iestatījumi -->
       <div class="settings-card mb-4">
         <h2 class="settings-section-title">{{ t('settings.privacy') }}</h2>
 
@@ -63,7 +63,7 @@
         </div>
       </div>
 
-      <!-- Blocked Users -->
+      <!-- bloķētie lietotāji -->
       <div class="settings-card">
         <h2 class="settings-section-title">{{ t('settings.blocked') }}</h2>
 
@@ -102,19 +102,19 @@ export default {
       authStore,
 
       profileForm: {
-        name:                     '',
-        email:                    '',
-        current_password:         '',
-        new_password:             '',
+        name: '',
+        email: '',
+        current_password: '',
+        new_password: '',
         new_password_confirmation: '',
       },
       profileSaving: false,
-      profileError:  '',
+      profileError: '',
       profileSuccess: '',
 
       privacyForm: { show_joined: true, show_swaps: true },
 
-      blockedUsers:   [],
+      blockedUsers: [],
       blockedLoading: true,
     }
   },
@@ -124,24 +124,24 @@ export default {
       axios.get('/api/profile'),
       this.fetchBlocked(),
     ])
-    this.profileForm.name   = profile.data.name
-    this.profileForm.email  = profile.data.email
+    this.profileForm.name = profile.data.name
+    this.profileForm.email = profile.data.email
     this.privacyForm.show_joined = profile.data.show_joined
-    this.privacyForm.show_swaps  = profile.data.show_swaps
+    this.privacyForm.show_swaps = profile.data.show_swaps
   },
 
   methods: {
     async saveProfile() {
-      this.profileError   = ''
+      this.profileError = ''
       this.profileSuccess = ''
-      this.profileSaving  = true
+      this.profileSaving = true
       try {
         const { data } = await axios.patch('/api/profile', this.profileForm)
         updateUser(data)
-        this.profileForm.name             = data.name
-        this.profileForm.email            = data.email
-        this.profileForm.current_password         = ''
-        this.profileForm.new_password             = ''
+        this.profileForm.name = data.name
+        this.profileForm.email = data.email
+        this.profileForm.current_password = ''
+        this.profileForm.new_password = ''
         this.profileForm.new_password_confirmation = ''
         this.profileSuccess = this.t('profile.saved')
       } catch (err) {

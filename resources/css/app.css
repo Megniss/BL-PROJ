@@ -1324,6 +1324,7 @@ body {
 
 [data-theme="dark"] body { background: #1a1612; color: #e8e0d5; }
 [data-theme="dark"] .bookloop-navbar { background: #211d18; border-color: #2e2820; }
+[data-theme="dark"] .tag:not(.tag-green):not(.tag-yellow) { background: #2e2820; color: #9a9088; }
 [data-theme="dark"] .nav-mobile-menu { background: #211d18; border-color: #2e2820; }
 [data-theme="dark"] .burger-btn { border-color: #3a3228; color: #e8e0d5; }
 [data-theme="dark"] .bg-white { background: #211d18 !important; }

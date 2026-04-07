@@ -94,7 +94,7 @@
 
 <script>
 import axios from 'axios'
-import { authStore, clearAuth } from '../authStore.js'
+import { authStore } from '../authStore.js'
 import langMixin from '../langMixin.js'
 import AppNavbar from './AppNavbar.vue'
 import RatingModal from './RatingModal.vue'
@@ -115,11 +115,11 @@ export default {
       historyNextPage: null,
       historyLoading: false,
       ratingModal: {
-        open:    false,
-        swap:    null,
-        book:    null,
+        open: false,
+        swap: null,
+        book: null,
         sending: false,
-        error:   '',
+        error: '',
       },
     }
   },
@@ -148,8 +148,8 @@ export default {
           axios.get('/api/profile'),
           axios.get('/api/profile/history'),
         ])
-        this.profile         = profile.data
-        this.history         = history.data.data
+        this.profile = profile.data
+        this.history = history.data.data
         this.historyNextPage = history.data.next_page_url
       } finally {
         this.loading = false
@@ -175,7 +175,6 @@ export default {
     },
 
     receivedBook(swap) {
-      // requester got wanted_book, owner got offered_book
       if (swap.requester.id === this.authStore.user.id) {
         return swap.wanted_book
       }
@@ -194,22 +193,21 @@ export default {
     },
 
     openRatingModal(swap) {
-      this.ratingModal.swap  = swap
-      this.ratingModal.book  = this.receivedBook(swap)
+      this.ratingModal.swap = swap
+      this.ratingModal.book = this.receivedBook(swap)
       this.ratingModal.error = ''
-      this.ratingModal.open  = true
+      this.ratingModal.open = true
     },
 
     async submitRating({ stars, review }) {
       this.ratingModal.sending = true
-      this.ratingModal.error   = ''
+      this.ratingModal.error = ''
       try {
         const { data } = await axios.post('/api/ratings', {
           swap_request_id: this.ratingModal.swap.id,
-          stars:           stars,
-          review:          review || null,
+          stars: stars,
+          review: review || null,
         })
-        // local update — push rating so the Rate button becomes read-only stars
         const swap = this.history.find(s => s.id === this.ratingModal.swap.id)
         if (swap) swap.ratings.push(data)
         this.ratingModal.open = false
@@ -219,13 +217,6 @@ export default {
         this.ratingModal.sending = false
       }
     },
-
-    async handleLogout() {
-      try { await axios.post('/api/logout') } finally {
-        clearAuth()
-        this.$router.push({ name: 'home' })
-      }
-    }
   }
 }
 </script>

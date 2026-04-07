@@ -35,8 +35,8 @@ class SwapRequestController extends Controller
             return response()->json(['message' => 'One or both books are no longer available.'], 422);
         }
 
-        $blocked = $user->blockedUserIds()->contains($wantedBook->user_id);
-        if ($blocked) {
+        // bloķētie nevar mainīties
+        if ($user->blockedUserIds()->contains($wantedBook->user_id)) {
             return response()->json(['message' => 'You cannot swap with this user.'], 422);
         }
 
@@ -134,10 +134,12 @@ class SwapRequestController extends Controller
         $ownerId = $swap->wantedBook->user_id;
 
         DB::transaction(function () use ($swap, $requesterId, $ownerId) {
+            // apmainām grāmatas
             Book::where('id', $swap->offered_book_id)->update(['user_id' => $ownerId, 'status' => 'Available']);
             Book::where('id', $swap->wanted_book_id)->update(['user_id' => $requesterId, 'status' => 'Available']);
             $swap->update(['status' => 'accepted']);
 
+            // noraida citus pieprasījumus uz tām pašām grāmatām
             $conflicting = SwapRequest::where('id', '!=', $swap->id)
                 ->where('status', 'pending')
                 ->where(function ($q) use ($swap) {

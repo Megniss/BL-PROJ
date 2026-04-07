@@ -2,12 +2,10 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Models\Book;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -18,14 +16,8 @@ use Laravel\Sanctum\HasApiTokens;
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     public function books(): HasMany
     {
         return $this->hasMany(Book::class);
@@ -41,11 +33,11 @@ class User extends Authenticatable
         return $this->hasMany(Block::class, 'blocked_id');
     }
 
-    // ids of everyone this user has blocked OR is blocked by
+    // visi bloķētie lietotāji (abos virzienos)
     public function blockedUserIds(): Collection
     {
-        $out  = $this->blocking()->pluck('blocked_id');
-        $in   = $this->blockedBy()->pluck('blocker_id');
+        $out = $this->blocking()->pluck('blocked_id');
+        $in = $this->blockedBy()->pluck('blocker_id');
         return $out->merge($in)->unique()->values();
     }
 

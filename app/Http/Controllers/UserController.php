@@ -23,7 +23,7 @@ class UserController extends Controller
             ->limit(30)
             ->get(['id', 'name', 'created_at']);
 
-        // pieliec īsus grāmatu priekšskatījumus
+        // pieliek grāmatu priekšskatījumu
         $users->each(function ($user) {
             $user->preview_books = $user->books()
                 ->where('status', 'Available')
@@ -49,8 +49,7 @@ class UserController extends Controller
 
         $swapsCount = SwapRequest::where('status', 'accepted')
             ->where(function ($q) use ($user) {
-                $q->where('requester_id', $user->id)
-                  ->orWhere('owner_id', $user->id);
+                $q->where('requester_id', $user->id)->orWhere('owner_id', $user->id);
             })
             ->count();
 
@@ -59,12 +58,12 @@ class UserController extends Controller
             : false;
 
         return response()->json([
-            'id'         => $user->id,
-            'name'       => $user->name,
-            'joined'     => $user->show_joined ? $user->created_at->toDateString() : null,
-            'books'      => $books->count(),
-            'swaps'      => $user->show_swaps ? $swapsCount : null,
-            'library'    => $books,
+            'id' => $user->id,
+            'name' => $user->name,
+            'joined' => $user->show_joined ? $user->created_at->toDateString() : null,
+            'books' => $books->count(),
+            'swaps' => $user->show_swaps ? $swapsCount : null,
+            'library' => $books,
             'is_blocked' => $isBlocked,
         ]);
     }

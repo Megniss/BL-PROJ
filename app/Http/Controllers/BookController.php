@@ -17,6 +17,7 @@ class BookController extends Controller
             ->withCount('ratings')
             ->whereIn('status', ['Available', 'Pending']);
 
+        // savējās grāmatas nerāda
         $user = auth('sanctum')->user();
         if ($user) {
             $query->where('user_id', '!=', $user->id);
@@ -33,19 +34,20 @@ class BookController extends Controller
         if ($genres = $request->query('genres')) {
             $query->whereIn('genre', (array) $genres);
         }
+
         if ($languages = $request->query('languages')) {
             $query->whereIn('language', (array) $languages);
         }
 
         match ($request->query('sort', 'title_asc')) {
-            'title_asc'   => $query->orderBy('title', 'asc'),
-            'title_desc'  => $query->orderBy('title', 'desc'),
-            'author_asc'  => $query->orderBy('author', 'asc'),
+            'title_asc' => $query->orderBy('title', 'asc'),
+            'title_desc' => $query->orderBy('title', 'desc'),
+            'author_asc' => $query->orderBy('author', 'asc'),
             'author_desc' => $query->orderBy('author', 'desc'),
-            'newest'      => $query->orderBy('created_at', 'desc'),
-            'popular'     => $query->orderBy('ratings_count', 'desc'),
-            'top_rated'   => $query->orderByDesc('ratings_avg_stars'),
-            default       => $query->orderBy('title', 'asc'),
+            'newest' => $query->orderBy('created_at', 'desc'),
+            'popular' => $query->orderBy('ratings_count', 'desc'),
+            'top_rated' => $query->orderByDesc('ratings_avg_stars'),
+            default => $query->orderBy('title', 'asc'),
         };
 
         $perPage = min((int) $request->query('per_page', 12), 500);
@@ -62,18 +64,18 @@ class BookController extends Controller
         $userId = $request->user()->id;
 
         $data = $request->validate([
-            'title'       => ['required', 'string', 'max:255', Rule::unique('books')->where(fn($q) => $q->where('user_id', $userId)->where('author', $request->input('author')))],
-            'author'      => ['required', 'string', 'max:255'],
-            'genre'       => ['required', 'string', 'max:100'],
-            'language'    => ['required', 'string', 'max:100'],
-            'condition'   => ['required', 'in:New,Good,Fair,Worn'],
+            'title' => ['required', 'string', 'max:255',
+                Rule::unique('books')->where(fn($q) => $q->where('user_id', $userId)->where('author', $request->input('author')))],
+            'author' => ['required', 'string', 'max:255'],
+            'genre' => ['required', 'string', 'max:100'],
+            'language' => ['required', 'string', 'max:100'],
+            'condition' => ['required', 'in:New,Good,Fair,Worn'],
             'description' => ['nullable', 'string', 'max:1000'],
         ], [
             'title.unique' => 'You already have a book with this title and author in your library.',
         ]);
 
         $book = $request->user()->books()->create($data);
-
         return response()->json($book, 201);
     }
 
@@ -86,7 +88,8 @@ class BookController extends Controller
         $userId = $request->user()->id;
 
         $data = $request->validate([
-            'title'  => ['required', 'string', 'max:255', Rule::unique('books')->where(fn($q) => $q->where('user_id', $userId)->where('author', $request->input('author')))->ignore($book->id)],
+            'title' => ['required', 'string', 'max:255',
+                Rule::unique('books')->where(fn($q) => $q->where('user_id', $userId)->where('author', $request->input('author')))->ignore($book->id)],
             'author' => ['required', 'string', 'max:255'],
             'genre' => ['required', 'string', 'max:100'],
             'language' => ['required', 'string', 'max:100'],
@@ -97,7 +100,6 @@ class BookController extends Controller
         ]);
 
         $book->update($data);
-
         return response()->json($book);
     }
 
@@ -108,13 +110,10 @@ class BookController extends Controller
         }
 
         if ($book->status === 'Pending') {
-            return response()->json([
-                'message' => 'This book is part of a pending swap. Cancel the swap first.',
-            ], 422);
+            return response()->json(['message' => 'This book is part of a pending swap. Cancel the swap first.'], 422);
         }
 
         $book->delete();
-
         return response()->json(['message' => 'Book deleted.']);
     }
 
@@ -124,11 +123,9 @@ class BookController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
-        $request->validate([
-            'cover' => ['required', 'image', 'max:2048'],
-        ]);
+        $request->validate(['cover' => ['required', 'image', 'max:2048']]);
 
-        // dzēšam veco, ja ir
+        // dzēšam veco attēlu ja ir
         if ($book->cover_image) {
             Storage::disk('public')->delete($book->cover_image);
         }

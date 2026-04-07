@@ -120,7 +120,7 @@
 
 <script>
 import axios from 'axios'
-import { authStore, clearAuth } from '../authStore.js'
+import { authStore } from '../authStore.js'
 import langMixin from '../langMixin.js'
 import AppNavbar from './AppNavbar.vue'
 
@@ -134,18 +134,18 @@ export default {
   data() {
     return {
       authStore,
-      conversations:  [],
-      activeUser:     null,
-      messages:       [],
-      compose:        '',
-      loadingConvos:  true,
-      loadingThread:  false,
-      sending:        false,
-      showThread:     false,
-      pollTimer:          null,
-      convosError:        null,
-      threadError:        null,
-      activeUserBlocked:  false,
+      conversations: [],
+      activeUser: null,
+      messages: [],
+      compose: '',
+      loadingConvos: true,
+      loadingThread: false,
+      sending: false,
+      showThread: false,
+      pollTimer: null,
+      convosError: null,
+      threadError: null,
+      activeUserBlocked: false,
     }
   },
 
@@ -184,7 +184,7 @@ export default {
       this.showThread        = true
       clearInterval(this.pollTimer)
 
-      // check block status
+      // pārbaudam vai bloķēts
       try {
         const { data } = await axios.get(`/api/users/${user.id}`)
         this.activeUserBlocked = data.is_blocked ?? false
@@ -286,14 +286,6 @@ export default {
       })
     },
 
-    async handleLogout() {
-      try {
-        await axios.post('/api/logout')
-      } finally {
-        clearAuth()
-        this.$router.push({ name: 'home' })
-      }
-    },
   },
 }
 </script>

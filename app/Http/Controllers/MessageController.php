@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class MessageController extends Controller
 {
+    // saraksts ar visām sarunām
     public function index(Request $request)
     {
         $me = $request->user()->id;
@@ -51,6 +52,7 @@ class MessageController extends Controller
         return response()->json($conversations);
     }
 
+    // konkrēta saruna ar lietotāju
     public function show(Request $request, User $user)
     {
         $me = $request->user()->id;
@@ -59,11 +61,9 @@ class MessageController extends Controller
             $q->where('from_user_id', $me)->where('to_user_id', $user->id);
         })->orWhere(function ($q) use ($me, $user) {
             $q->where('from_user_id', $user->id)->where('to_user_id', $me);
-        })
-            ->with('sender:id,name')
-            ->oldest()
-            ->get();
+        })->with('sender:id,name')->oldest()->get();
 
+        // atzīmē kā izlasītas
         Message::where('from_user_id', $user->id)
             ->where('to_user_id', $me)
             ->whereNull('read_at')
@@ -83,6 +83,7 @@ class MessageController extends Controller
             return response()->json(['message' => 'You cannot message yourself.'], 422);
         }
 
+        // bloķētie nevar rakstīt
         $blocked = $request->user()->blockedUserIds()->contains((int) $data['to_user_id']);
         if ($blocked) {
             return response()->json(['message' => 'You cannot message this user.'], 422);

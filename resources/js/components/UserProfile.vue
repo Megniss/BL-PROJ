@@ -77,7 +77,7 @@
                   <span v-else class="text-muted">{{ t('books.noRatings') }}</span>
                 </div>
                 <p v-if="book.description" class="book-card-desc mb-0">{{ book.description }}</p>
-                <div v-if="authStore.user && authStore.user.id !== profile.id" class="mt-auto pt-2">
+                <div v-if="authStore.user && authStore.user.id !== profile.id && !isBlocked" class="mt-auto pt-2">
                   <button class="btn-swap" :disabled="book.status !== 'Available'" @click="requestSwap(book)">{{ t('books.requestSwap') }}</button>
                 </div>
               </div>
