@@ -8,7 +8,7 @@
 
 **BookLoop** ir grāmatu apmaiņas tīmekļa lietotne. Ideja vienkārša — mājās guļ izlasītas grāmatas, kuras kādam citam varētu noderēt. BookLoop ļauj lietotājiem piedāvāt savas grāmatas un apmainīt tās pret citu grāmatām bez maksas.
 
-Rezultātā sanāca pilnvērtīga platforma ar lietotāju kontiem, grāmatu katalogu, apmaiņas sistēmu, iekšējo čatu un vērtēšanas sistēmu.
+Rezultātā sanāca pilnvērtīga platforma ar lietotāju kontiem, grāmatu katalogu, apmaiņas sistēmu, iekšējo čatu, vērtēšanas sistēmu, administrācijas paneli un e-pasta paziņojumiem.
 
 ---
 
@@ -23,6 +23,8 @@ Rezultātā sanāca pilnvērtīga platforma ar lietotāju kontiem, grāmatu kata
 | **CSS** | Bootstrap 5 + pielāgota zaļā shēma |
 | **Būvēšana** | Vite |
 | **PWA** | Web App Manifest + Service Worker |
+| **E-pasta testēšana** | Mailtrap (HTTP API sandbox) |
+| **Rindas** | Laravel Queue (database driver) |
 
 Laravel apstrādā REST API loģiku, Vue veido lietotāja saskarni un komunicē ar API caur Axios. Lietotnei ir tumšais/gaišais režīms un pilns LV/EN valodu atbalsts.
 
@@ -35,12 +37,15 @@ Laravel apstrādā REST API loģiku, Vue veido lietotāja saskarni un komunicē 
 - Paroles atjaunošana pa e-pastu
 - Profila rediģēšana (vārds, e-pasts, parole)
 - Apmaiņu vēsture profilā
+- **Stipras paroles:** jābūt lielajiem un mazajiem burtiem, ciparam un simbolam
 
 ### 2. Grāmatu bibliotēka
 - Pievienot, rediģēt, dzēst grāmatas
 - Vāka attēla augšupielāde (vai automātisks krāsu gradients)
 - 15 žanri, 3 valodas, 4 fiziskā stāvokļa līmeņi
 - Automātisks statuss: Pieejama → Aizturēta → Apmainīta
+- **Validācija:** nosaukumam jāsatur vismaz viens burts; autoram — tikai burti, atstarpes un defises (latīņu un citi unicode burti)
+- **Auto-formatēšana:** nosaukums un autors automātiski tiek pārformatēts PascalCase stilā (katrs vārds ar lielo burtu)
 
 ### 3. Grāmatu pārlūkošana
 - Pieejama arī nereģistrētiem lietotājiem
@@ -77,6 +82,7 @@ Laravel apstrādā REST API loģiku, Vue veido lietotāja saskarni un komunicē 
 ### 7. Paziņojumu sistēma
 - Paziņojumi par apmaiņas lēmumiem un jauniem ziņojumiem
 - Paziņojumu zvans ar sarkanu skaitītāju
+- **E-pasta paziņojumi:** katrs paziņojums tiek nosūtīts arī uz lietotāja e-pastu (sk. sadaļu 11)
 
 ### 8. Lietotāju bloķēšana
 - Lietotājs var bloķēt citu lietotāju no viņa profila vai čata
@@ -89,18 +95,52 @@ Laravel apstrādā REST API loģiku, Vue veido lietotāja saskarni un komunicē 
 - Privātuma iestatījumi (vai rādīt pievienošanās datumu un apmaiņu skaitu)
 - Bloķēto lietotāju pārvaldība
 
+### 10. Administrācijas panelis
+- Pieejams tikai lietotājiem ar `is_admin = true`
+- Aizsargāts ar `AdminMiddleware` — ne-admini saņem 403
+- Nav tikai grāmatu dzēšana — admins var darīt **visu ko parasts lietotājs, un vairāk**
+
+**Lietotāji:**
+- Redzami visi reģistrētie lietotāji (ID, vārds, e-pasts, reģ. datums, statuss)
+- Bloķēt / atbloķēt jebkuru lietotāju (bloķēts nevar pieteikties)
+- Piešķirt / atņemt admin tiesības
+
+**Grāmatas:**
+- Redzamas visas grāmatas ar statusu un īpašnieku
+- Dzēst jebkuru grāmatu
+
+**Apmaiņu pieprasījumi:**
+- Redzami visi pieprasījumi ar statusu
+- Apstiprināt vai noraidīt jebkuru pieprasījumu
+- Dzēst pieprasījumu
+
+**Vērtējumi:**
+- Redzami visi vērtējumi — zvaigznes, teksts, autors, grāmata
+
+Panelis ir sakārtots saliekamās/izlokāmās sadaļās. Pilns LV/EN tulkojums, tumšā režīma atbalsts.
+
+### 11. E-pasta paziņojumi
+- **Mailtrap sandbox** — e-pasti tiek pārtverti testēšanas vidē, nevis sūtīti īstiem adresātiem
+- **Laravel Queue** — e-pasti tiek nosūtīti asinhroni, lai pieprasījums atgrieztos uzreiz
+- Trīs paziņojumu veidi:
+  - `SwapAccepted` — apmaiņa apstiprināta
+  - `SwapDeclined` — apmaiņa noraidīta
+  - `NewMessage` — saņemts jauns ziņojums čatā
+
 ---
 
 ## Datubāzes struktūra
 
 ```
-users                   — lietotāju konti
+users                   — lietotāju konti (is_admin, is_blocked lauki)
 books                   — grāmatu katalogs
 swap_requests           — apmaiņas pieprasījumi
 messages                — ziņojumi starp lietotājiem
 notifications           — sistēmas paziņojumi
 ratings                 — grāmatu vērtējumi pēc apmaiņas
 blocks                  — bloķēto lietotāju saraksts
+jobs                    — Laravel Queue rinda (asinhronie uzdevumi)
+failed_jobs             — neizdevušies rindas uzdevumi
 personal_access_tokens  — Sanctum tokeni
 ```
 
@@ -113,6 +153,7 @@ personal_access_tokens  — Sanctum tokeni
 - Ziņojumu saraksts ar `role="log"` un `aria-live`
 - Ikonas pogas ar `aria-label`
 - Klaviatūras navigācija uz visiem klikšķināmiem elementiem
+- **Visi formu lauki saistīti ar `<label for="">` atribūtiem** — ekrānlasītāji pareizi identificē katru lauku
 
 ---
 
@@ -128,25 +169,30 @@ Lietotne ir instalējama kā progresīvā tīmekļa lietotne (PWA):
 ## Drošība
 
 - Paroles saglabātas kā bcrypt hash
+- **Stipras paroles:** minimums 8 simboli, lielie + mazie burti, cipars, speciālais simbols
 - API aizsargāts ar Sanctum tokeniem
 - Ātruma ierobežojumi pieteikšanās un reģistrācijas maršrutiem
 - Piederības pārbaudes — lietotājs var mainīt tikai savus datus
 - Ievades validācija visos API galapunktos
 - Transakcijas apmaiņas operācijām
+- Admin maršruti aizsargāti ar `AdminMiddleware`
+- Bloķēti lietotāji nevar pieteikties sistēmā
 
 ---
 
 ## Projekta struktūra
 
 ```
-app/Http/Controllers/   ← 9 API kontrolieri
+app/Http/Controllers/   ← 11 API kontrolieri (ieskaitot AdminController)
+app/Http/Middleware/    ← AdminMiddleware
 app/Models/             ← User, Book, SwapRequest, Message, Rating, Block
+app/Notifications/      ← SwapAccepted, SwapDeclined, NewMessage
 resources/js/
-  components/           ← 16 Vue komponentes
-  router/router.js      ← Vue Router
-  translations.js       ← visi UI teksti LV/EN
+  components/           ← 18+ Vue komponentes (ieskaitot Admin.vue)
+  router/router.js      ← Vue Router (ar admin maršrutu un sardzi)
+  translations.js       ← visi UI teksti LV/EN (~200+ atslēgas)
   authStore.js / langStore.js / themeStore.js
-routes/api.php          ← ~30 REST API galapunkti
+routes/api.php          ← ~45 REST API galapunkti
 ```
 
 ---
@@ -167,6 +213,12 @@ npm install
 composer run dev
 ```
 
+**Rindas apstrādātājs (e-pasta paziņojumiem):**
+```bash
+php artisan queue:work
+```
+> Šis process jāpalaiž atsevišķā terminālī un jātur atvērts — tas apstrādā e-pasta sūtīšanas rindas uzdevumus.
+
 **Testi:**
 ```bash
 composer run test
@@ -186,6 +238,9 @@ composer run test
 - Pilna stack izstrāde — no migrācijām līdz pogas krāsai ekrānā
 - PWA izveide ar Service Worker un Web App Manifest
 - Pieejamības standarti (WCAG 2.1 AA)
+- **Asinhrona uzdevumu apstrāde ar Laravel Queue**
+- **E-pasta sūtīšana caur Mailtrap HTTP API**
+- **Admin paneļa izveide ar lomu pārvaldību**
 
 ---
 

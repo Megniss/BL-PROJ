@@ -122,7 +122,7 @@ class SwapRequestController extends Controller
 
     public function accept(Request $request, SwapRequest $swap)
     {
-        if ($swap->wantedBook->user_id !== $request->user()->id) {
+        if ($swap->owner_id !== $request->user()->id) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
