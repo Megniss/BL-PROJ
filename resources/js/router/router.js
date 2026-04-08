@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { isLoggedIn } from '../authStore.js'
+import { isLoggedIn, authStore } from '../authStore.js'
 
 import Home from '../components/Home.vue'
 import About from '../components/About.vue'
@@ -50,6 +50,12 @@ const routes = [
     component: () => import('../components/UserProfile.vue'),
   },
   {
+    path: '/admin',
+    name: 'admin',
+    component: () => import('../components/Admin.vue'),
+    meta: { requiresAdmin: true },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'notFound',
     component: () => import('../components/NotFound.vue'),
@@ -67,6 +73,9 @@ router.beforeEach((to) => {
   }
   if (to.meta.guestOnly && isLoggedIn()) {
     return { name: 'dashboard' }
+  }
+  if (to.meta.requiresAdmin && (!isLoggedIn() || !authStore.user?.is_admin)) {
+    return { name: 'home' }
   }
 })
 

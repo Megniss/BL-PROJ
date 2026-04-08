@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlockController;
 use App\Http\Controllers\BookController;
@@ -60,4 +61,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/swap-requests/{swap}/accept', [SwapRequestController::class, 'accept']);
     Route::patch('/swap-requests/{swap}/decline', [SwapRequestController::class, 'decline']);
     Route::delete('/swap-requests/{swap}', [SwapRequestController::class, 'destroy']);
+
+    Route::middleware('admin')->group(function () {
+        Route::get('/admin/users', [AdminController::class, 'users']);
+        Route::get('/admin/books', [AdminController::class, 'books']);
+        Route::get('/admin/swaps', [AdminController::class, 'swaps']);
+        Route::get('/admin/ratings', [AdminController::class, 'ratings']);
+        Route::patch('/admin/users/{user}/block', [AdminController::class, 'blockUser']);
+        Route::patch('/admin/users/{user}/unblock', [AdminController::class, 'unblockUser']);
+        Route::patch('/admin/users/{user}/make-admin', [AdminController::class, 'makeAdmin']);
+        Route::patch('/admin/users/{user}/remove-admin', [AdminController::class, 'removeAdmin']);
+        Route::delete('/admin/books/{book}', [AdminController::class, 'deleteBook']);
+        Route::patch('/admin/swaps/{swap}/accept', [AdminController::class, 'acceptSwap']);
+        Route::patch('/admin/swaps/{swap}/decline', [AdminController::class, 'declineSwap']);
+        Route::delete('/admin/swaps/{swap}', [AdminController::class, 'deleteSwap']);
+    });
 });

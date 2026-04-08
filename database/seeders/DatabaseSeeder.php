@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
                 'email_verified_at' => null,
                 'password' => '$2y$12$6hgaDzO/rc1UIOtLB6dGaOaxrpQ5vEzui8qw4znjspfQMAGs8..Ae',
                 'remember_token' => null,
+                'is_admin' => true,
+                'is_blocked' => false,
                 'created_at' => '2026-03-24 10:09:06',
                 'updated_at' => '2026-03-26 07:27:35',
             ],

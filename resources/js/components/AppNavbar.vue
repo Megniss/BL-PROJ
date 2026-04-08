@@ -42,6 +42,10 @@
             <button class="nav-dropdown-item" @click="go('browse')">{{ t('nav.browse') }}</button>
             <button class="nav-dropdown-item" @click="go('messages')">{{ t('nav.messages') }}</button>
             <button class="nav-dropdown-item" @click="go('settings')">{{ t('nav.settings') }}</button>
+            <template v-if="authStore.user?.is_admin">
+              <div class="nav-dropdown-divider"></div>
+              <button class="nav-dropdown-item nav-dropdown-admin" @click="go('admin')">{{ t('nav.admin') }}</button>
+            </template>
             <div class="nav-dropdown-divider"></div>
             <button class="nav-dropdown-item nav-dropdown-logout" @click="logout">{{ t('nav.logout') }}</button>
           </div>
@@ -64,6 +68,7 @@
         <button class="nav-mob-link" @click="go('browse')">{{ t('nav.browse') }}</button>
         <button class="nav-mob-link" @click="go('messages')">{{ t('nav.messages') }}</button>
         <button class="nav-mob-link" @click="go('settings')">{{ t('nav.settings') }}</button>
+        <button v-if="authStore.user?.is_admin" class="nav-mob-link nav-mob-admin" @click="go('admin')">{{ t('nav.admin') }}</button>
         <div class="nav-mobile-divider"></div>
         <button class="nav-mob-link nav-mob-logout" @click="logout">{{ t('nav.logout') }}</button>
       </template>

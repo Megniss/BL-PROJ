@@ -38,13 +38,13 @@
 
         <form @submit.prevent="handleLogin">
           <div class="mb-3">
-            <label class="form-label fw-semibold">{{ t('login.email') }}</label>
-            <input v-model="form.email" type="email" class="form-control" placeholder="you@example.com" required />
+            <label for="login-email" class="form-label fw-semibold">{{ t('login.email') }}</label>
+            <input id="login-email" v-model="form.email" type="email" class="form-control" placeholder="you@example.com" required />
           </div>
 
           <div class="mb-2">
-            <label class="form-label fw-semibold">{{ t('login.password') }}</label>
-            <input v-model="form.password" type="password" class="form-control" placeholder="••••••••" required />
+            <label for="login-password" class="form-label fw-semibold">{{ t('login.password') }}</label>
+            <input id="login-password" v-model="form.password" type="password" class="form-control" placeholder="••••••••" required />
           </div>
 
           <div class="text-end mb-3">

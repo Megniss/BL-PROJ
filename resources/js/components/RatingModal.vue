@@ -18,8 +18,9 @@
           >★</span>
         </div>
 
-        <label class="form-label fw-semibold">{{ t('profile.ratingReview') }}</label>
+        <label for="rating-review" class="form-label fw-semibold">{{ t('profile.ratingReview') }}</label>
         <textarea
+          id="rating-review"
           v-model="review"
           class="form-control mb-3"
           rows="3"

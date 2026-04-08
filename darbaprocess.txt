@@ -134,3 +134,9 @@ user blocking
 mazak runa
 citu modeli
 
+paroles grutakas
+admin power ar translate un block un dati iedodt un nonemt admin tiesibas citam
+e-pasta sutijumi
+gramatu validaija paec nosaukuma un autora un burtu check
+
+

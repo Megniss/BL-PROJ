@@ -41,8 +41,8 @@
 
         <form v-if="!resetUrl" @submit.prevent="handleSubmit">
           <div class="mb-3">
-            <label class="form-label fw-semibold">{{ t('login.email') }}</label>
-            <input v-model="email" type="email" class="form-control" placeholder="you@example.com" required />
+            <label for="forgot-email" class="form-label fw-semibold">{{ t('login.email') }}</label>
+            <input id="forgot-email" v-model="email" type="email" class="form-control" placeholder="you@example.com" required />
           </div>
 
           <div v-if="errorMsg" class="alert alert-danger py-2 px-3 mb-3">{{ errorMsg }}</div>

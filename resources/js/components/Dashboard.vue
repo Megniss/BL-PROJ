@@ -166,16 +166,16 @@
         <form @submit.prevent="saveBook">
           <div class="row g-3 mb-3">
             <div class="col-6">
-              <label class="form-label fw-semibold">{{ t('modal.fieldTitle') }}</label>
-              <input v-model="form.title" class="form-control" type="text" required />
+              <label for="book-title" class="form-label fw-semibold">{{ t('modal.fieldTitle') }}</label>
+              <input id="book-title" v-model="form.title" class="form-control" type="text" required />
             </div>
             <div class="col-6">
-              <label class="form-label fw-semibold">{{ t('modal.fieldAuthor') }}</label>
-              <input v-model="form.author" class="form-control" type="text" required />
+              <label for="book-author" class="form-label fw-semibold">{{ t('modal.fieldAuthor') }}</label>
+              <input id="book-author" v-model="form.author" class="form-control" type="text" required />
             </div>
             <div class="col-6">
-              <label class="form-label fw-semibold">{{ t('modal.fieldGenre') }}</label>
-              <select v-model="form.genre" class="form-select" required>
+              <label for="book-genre" class="form-label fw-semibold">{{ t('modal.fieldGenre') }}</label>
+              <select id="book-genre" v-model="form.genre" class="form-select" required>
                 <option value="">{{ t('modal.selectGenre') }}</option>
                 <option>Romāns</option><option>Dzeja</option><option>Zinātne</option>
                 <option>Vēsture</option><option>Klasika</option><option>Bērnu grāmatas</option>
@@ -185,25 +185,25 @@
               </select>
             </div>
             <div class="col-6">
-              <label class="form-label fw-semibold">{{ t('modal.fieldLang') }}</label>
-              <select v-model="form.language" class="form-select" required>
+              <label for="book-language" class="form-label fw-semibold">{{ t('modal.fieldLang') }}</label>
+              <select id="book-language" v-model="form.language" class="form-select" required>
                 <option value="">{{ t('modal.selectLang') }}</option>
                 <option>Latviešu</option><option>English</option><option>Русский</option>
               </select>
             </div>
             <div class="col-6">
-              <label class="form-label fw-semibold">{{ t('modal.fieldCond') }}</label>
-              <select v-model="form.condition" class="form-select" required>
+              <label for="book-condition" class="form-label fw-semibold">{{ t('modal.fieldCond') }}</label>
+              <select id="book-condition" v-model="form.condition" class="form-select" required>
                 <option>New</option><option>Good</option><option>Fair</option><option>Worn</option>
               </select>
             </div>
             <div class="col-12">
-              <label class="form-label fw-semibold">{{ t('modal.fieldDesc') }}</label>
-              <textarea v-model="form.description" class="form-control" rows="3" :placeholder="t('modal.descHint')"></textarea>
+              <label for="book-description" class="form-label fw-semibold">{{ t('modal.fieldDesc') }}</label>
+              <textarea id="book-description" v-model="form.description" class="form-control" rows="3" :placeholder="t('modal.descHint')"></textarea>
             </div>
             <!-- Vāka attēls -->
             <div class="col-12">
-              <label class="form-label fw-semibold">{{ t('modal.cover') }}</label>
+              <label for="book-cover" class="form-label fw-semibold">{{ t('modal.cover') }}</label>
               <!-- pašreizējais vāks (rediģēšanas režīmā, nav jauns failu) -->
               <div v-if="editingBook && editingBook.cover_image && !coverRemoved && !coverPreview" class="d-flex align-items-center gap-3 mb-2">
                 <img :src="'/storage/' + editingBook.cover_image" class="cover-preview-img" :alt="editingBook.title" />
@@ -214,7 +214,7 @@
                 <img :src="coverPreview" class="cover-preview-img" :alt="t('modal.cover')" />
                 <button type="button" class="btn btn-sm btn-outline-secondary" @click="clearCoverFile">{{ t('modal.cancelCover') }}</button>
               </div>
-              <input type="file" accept="image/*" class="form-control" @change="onCoverChange" />
+              <input id="book-cover" type="file" accept="image/*" class="form-control" @change="onCoverChange" />
             </div>
           </div>
           <div v-if="formError" class="alert alert-danger py-2 px-3 mb-3" role="alert">{{ formError }}</div>

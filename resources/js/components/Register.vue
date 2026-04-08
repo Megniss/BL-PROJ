@@ -38,20 +38,21 @@
 
         <form @submit.prevent="handleRegister">
           <div class="mb-3">
-            <label class="form-label fw-semibold">{{ t('register.name') }}</label>
-            <input v-model="form.name" type="text" class="form-control" :placeholder="t('register.namePlaceholder')" required />
+            <label for="reg-name" class="form-label fw-semibold">{{ t('register.name') }}</label>
+            <input id="reg-name" v-model="form.name" type="text" class="form-control" :placeholder="t('register.namePlaceholder')" required />
           </div>
           <div class="mb-3">
-            <label class="form-label fw-semibold">{{ t('register.email') }}</label>
-            <input v-model="form.email" type="email" class="form-control" placeholder="you@example.com" required />
+            <label for="reg-email" class="form-label fw-semibold">{{ t('register.email') }}</label>
+            <input id="reg-email" v-model="form.email" type="email" class="form-control" placeholder="you@example.com" required />
           </div>
           <div class="mb-3">
-            <label class="form-label fw-semibold">{{ t('register.password') }}</label>
-            <input v-model="form.password" type="password" class="form-control" :placeholder="t('register.passwordPlaceholder')" minlength="8" required />
+            <label for="reg-password" class="form-label fw-semibold">{{ t('register.password') }}</label>
+            <input id="reg-password" v-model="form.password" type="password" class="form-control" :placeholder="t('register.passwordPlaceholder')" minlength="8" required />
+            <small class="text-muted">Min 8 chars, uppercase, number & symbol (e.g. Hello1!)</small>
           </div>
           <div class="mb-3">
-            <label class="form-label fw-semibold">{{ t('register.confirm') }}</label>
-            <input v-model="form.passwordConfirm" type="password" class="form-control" placeholder="••••••••" required />
+            <label for="reg-confirm" class="form-label fw-semibold">{{ t('register.confirm') }}</label>
+            <input id="reg-confirm" v-model="form.passwordConfirm" type="password" class="form-control" placeholder="••••••••" required />
           </div>
 
           <div v-if="errorMsg" class="alert alert-danger py-2 px-3 mb-3">{{ errorMsg }}</div>

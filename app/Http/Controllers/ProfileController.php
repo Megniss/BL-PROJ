@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SwapRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules;
 
 class ProfileController extends Controller
 {
@@ -39,7 +40,7 @@ class ProfileController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email,' . $user->id],
             'current_password' => ['nullable', 'string'],
-            'new_password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            'new_password' => ['nullable', 'confirmed', Rules\Password::min(8)->mixedCase()->numbers()->symbols()],
             'new_password_confirmation' => ['nullable', 'string'],
         ]);
 

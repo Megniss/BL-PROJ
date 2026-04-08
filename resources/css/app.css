@@ -35,6 +35,27 @@ body {
   background: var(--cream);
   color: var(--ink);
   font-family: var(--font-body);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  flex: 1;
+}
+
+/* footer pinned to bottom — wrap page content in .page-layout */
+.page-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.page-layout > *:not(nav):not(footer) {
+  flex: 1;
 }
 
 /* pogas */
@@ -1641,6 +1662,8 @@ body {
 [data-theme="dark"] .nav-dropdown-item:hover { background: #2a2520; }
 
 /* settings page */
+.bookloop-home { min-height: 100vh; display: flex; flex-direction: column; }
+.bookloop-home > footer { margin-top: auto; }
 .settings-page { min-height: 100vh; display: flex; flex-direction: column; background: var(--bg); }
 .settings-page > .container-xl { flex: 1; }
 .profile-page { min-height: 100vh; display: flex; flex-direction: column; background: var(--bg); }

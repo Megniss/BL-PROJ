@@ -34,12 +34,12 @@
 
         <form v-else @submit.prevent="handleSubmit">
           <div class="mb-3">
-            <label class="form-label fw-semibold">{{ t('login.password') }}</label>
-            <input v-model="form.password" type="password" class="form-control" placeholder="••••••••" required minlength="8" />
+            <label for="reset-password" class="form-label fw-semibold">{{ t('login.password') }}</label>
+            <input id="reset-password" v-model="form.password" type="password" class="form-control" placeholder="••••••••" required minlength="8" />
           </div>
           <div class="mb-3">
-            <label class="form-label fw-semibold">{{ t('register.confirm') }}</label>
-            <input v-model="form.password_confirmation" type="password" class="form-control" placeholder="••••••••" required />
+            <label for="reset-confirm" class="form-label fw-semibold">{{ t('register.confirm') }}</label>
+            <input id="reset-confirm" v-model="form.password_confirmation" type="password" class="form-control" placeholder="••••••••" required />
           </div>
 
           <div v-if="errorMsg" class="alert alert-danger py-2 px-3 mb-3">{{ errorMsg }}</div>

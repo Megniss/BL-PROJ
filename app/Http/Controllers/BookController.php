@@ -59,20 +59,37 @@ class BookController extends Controller
         return response()->json($request->user()->books()->latest()->get());
     }
 
+    private function toPascalCase(string $value): string
+    {
+        // capitalize each word then strip spaces: "harry potter" -> "HarryPotter"
+        return str_replace(' ', '', ucwords(mb_strtolower($value)));
+    }
+
     public function store(Request $request)
     {
+        $request->merge([
+            'title' => $this->toPascalCase($request->input('title', '')),
+            'author' => $this->toPascalCase($request->input('author', '')),
+        ]);
+
         $userId = $request->user()->id;
 
         $data = $request->validate([
-            'title' => ['required', 'string', 'max:255',
+            'title' => ['required', 'string', 'min:2', 'max:255',
+                'regex:/[\p{L}]/u',
                 Rule::unique('books')->where(fn($q) => $q->where('user_id', $userId)->where('author', $request->input('author')))],
-            'author' => ['required', 'string', 'max:255'],
+            'author' => ['required', 'string', 'min:2', 'max:255',
+                'regex:/^[\p{L}\s\'\-\.]+$/u'],
             'genre' => ['required', 'string', 'max:100'],
             'language' => ['required', 'string', 'max:100'],
             'condition' => ['required', 'in:New,Good,Fair,Worn'],
             'description' => ['nullable', 'string', 'max:1000'],
         ], [
             'title.unique' => 'You already have a book with this title and author in your library.',
+            'title.min' => 'Title must be at least 2 characters.',
+            'title.regex' => 'Title must contain at least one letter.',
+            'author.min' => 'Author name must be at least 2 characters.',
+            'author.regex' => 'Author name can only contain letters, spaces, hyphens, apostrophes, and dots.',
         ]);
 
         $book = $request->user()->books()->create($data);
@@ -85,18 +102,29 @@ class BookController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
+        $request->merge([
+            'title' => $this->toPascalCase($request->input('title', '')),
+            'author' => $this->toPascalCase($request->input('author', '')),
+        ]);
+
         $userId = $request->user()->id;
 
         $data = $request->validate([
-            'title' => ['required', 'string', 'max:255',
+            'title' => ['required', 'string', 'min:2', 'max:255',
+                'regex:/[\p{L}]/u',
                 Rule::unique('books')->where(fn($q) => $q->where('user_id', $userId)->where('author', $request->input('author')))->ignore($book->id)],
-            'author' => ['required', 'string', 'max:255'],
+            'author' => ['required', 'string', 'min:2', 'max:255',
+                'regex:/^[\p{L}\s\'\-\.]+$/u'],
             'genre' => ['required', 'string', 'max:100'],
             'language' => ['required', 'string', 'max:100'],
             'condition' => ['required', 'in:New,Good,Fair,Worn'],
             'description' => ['nullable', 'string', 'max:1000'],
         ], [
             'title.unique' => 'You already have a book with this title and author in your library.',
+            'title.min' => 'Title must be at least 2 characters.',
+            'title.regex' => 'Title must contain at least one letter.',
+            'author.min' => 'Author name must be at least 2 characters.',
+            'author.regex' => 'Author name can only contain letters, spaces, hyphens, apostrophes, and dots.',
         ]);
 
         $book->update($data);
