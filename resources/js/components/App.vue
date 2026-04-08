@@ -4,22 +4,34 @@
     <div class="scroll-progress" :style="{ width: scrollProgress + '%' }"></div>
     <router-view></router-view>
     <button v-if="showBackToTop" class="back-to-top" @click="scrollToTop" aria-label="Atgriezties uz augšu">↑</button>
+
+    <!-- Cookie banner -->
+    <div v-if="showCookie" class="cookie-banner" role="alert">
+      <p class="cookie-text">{{ t('cookie.text') }}</p>
+      <button class="cookie-btn" @click="acceptCookie">{{ t('cookie.btn') }}</button>
+    </div>
   </div>
 </template>
 
 <script>
+import langMixin from '../langMixin.js'
+
 export default {
   name: 'App',
+
+  mixins: [langMixin],
 
   data() {
     return {
       scrollProgress: 0,
       showBackToTop: false,
+      showCookie: false,
     }
   },
 
   mounted() {
     window.addEventListener('scroll', this.onScroll, { passive: true })
+    this.showCookie = true
   },
 
   beforeUnmount() {
@@ -36,6 +48,10 @@ export default {
 
     scrollToTop() {
       window.scrollTo({ top: 0, behavior: 'smooth' })
+    },
+
+    acceptCookie() {
+      this.showCookie = false
     },
   }
 }

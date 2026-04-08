@@ -46,13 +46,22 @@
         <div class="filter-area">
         <transition name="tab-fade" mode="out-in">
         <div v-if="tab === 'books'" key="books-filters">
-        <div class="d-flex flex-wrap gap-2 mb-2">
-          <!-- meklēšana -->
-          <div class="d-flex gap-2 flex-grow-1" style="min-width:220px">
-            <input v-model="searchQuery" class="form-control" :placeholder="t('search.placeholder')" :aria-label="t('search.placeholder')" @keyup.enter="applyFilters" />
-            <button class="btn btn-primary flex-shrink-0" @click="applyFilters">{{ t('search.btn') }}</button>
-          </div>
+        <!-- row 1: search + filter toggle (always visible) -->
+        <div class="d-flex gap-2 mb-2">
+          <input v-model="searchQuery" class="form-control" :placeholder="t('search.placeholder')" :aria-label="t('search.placeholder')" @keyup.enter="applyFilters" />
+          <button class="btn btn-primary flex-shrink-0" @click="applyFilters">{{ t('search.btn') }}</button>
+          <button class="filter-more-btn d-lg-none" :class="{ active: showMoreFilters }" @click="showMoreFilters = !showMoreFilters" :aria-label="t('search.moreFilters')">
+            <svg aria-hidden="true" width="16" height="13" viewBox="0 0 16 13" fill="none">
+              <rect x="0" y="0"  width="16" height="2" rx="1" fill="currentColor"/>
+              <rect x="3" y="5.5" width="10" height="2" rx="1" fill="currentColor"/>
+              <rect x="6" y="11" width="4"  height="2" rx="1" fill="currentColor"/>
+            </svg>
+            <span class="filter-more-dot" v-if="genreFilters.length || langFilters.length || sortBy !== 'title_asc'"></span>
+          </button>
+        </div>
 
+        <!-- row 2: extra filters — always on desktop, toggled on mobile -->
+        <div v-if="showMoreFilters || isDesktop" class="d-flex flex-wrap gap-2 mb-2">
           <!-- žanrs -->
           <div class="filter-suggest-wrap" style="min-width:150px;flex:1">
             <div class="filter-suggest-inner">
@@ -322,6 +331,8 @@ export default {
         open: false, wantedBook: null, myBooks: [],
         selectedBookId: null, sending: false, error: '', success: false,
       },
+      showMoreFilters: false,
+      isDesktop: window.innerWidth >= 992,
     }
   },
 
@@ -377,6 +388,12 @@ export default {
   mounted() {
     this.readRouteParams(this.$route.query)
     this.fetchBooks()
+    this._onResize = () => { this.isDesktop = window.innerWidth >= 992 }
+    window.addEventListener('resize', this._onResize)
+  },
+
+  beforeUnmount() {
+    window.removeEventListener('resize', this._onResize)
   },
 
   watch: {

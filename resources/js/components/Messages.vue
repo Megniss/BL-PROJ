@@ -10,10 +10,10 @@
       <!-- Sarakstes saraksts -->
       <aside class="convo-panel" :class="{ 'hidden-mobile': showThread }">
         <div class="convo-header">
-          <h2 class="convo-title">Messages</h2>
+          <h2 class="convo-title">{{ t('messages.title') }}</h2>
         </div>
 
-        <div v-if="loadingConvos" class="convo-empty">Loading…</div>
+        <div v-if="loadingConvos" class="convo-empty">{{ t('messages.loading') }}</div>
 
         <div v-else-if="convosError" class="convo-empty text-danger">{{ convosError }}</div>
 
@@ -36,7 +36,7 @@
           <div class="convo-info">
             <div class="convo-name">
               {{ convo.user.name }}
-              <span v-if="convo.is_blocked" class="convo-blocked-tag">blocked</span>
+              <span v-if="convo.is_blocked" class="convo-blocked-tag">{{ t('messages.blockedTag') }}</span>
             </div>
             <div class="convo-last">{{ convo.last_message?.body }}</div>
           </div>
@@ -56,7 +56,7 @@
         <template v-else>
           <!-- Sarakstes galvene -->
           <div class="thread-header">
-            <button class="back-btn" @click="showThread = false">← Back</button>
+            <button class="back-btn" @click="showThread = false">{{ t('messages.back') }}</button>
             <span
               class="thread-user-link"
               role="button"
@@ -71,10 +71,10 @@
 
           <!-- Ziņojumi -->
           <div class="thread-messages" ref="messageList" role="log" aria-live="polite" aria-label="Ziņojumi">
-            <div v-if="loadingThread" class="thread-status">Loading…</div>
+            <div v-if="loadingThread" class="thread-status">{{ t('messages.loading') }}</div>
             <div v-if="threadError" class="text-center text-danger p-3">{{ threadError }}</div>
             <div v-else-if="messages.length === 0" class="thread-status">
-              No messages yet. Say hello!
+              {{ t('messages.noMessages') }}
             </div>
 
             <div
@@ -101,15 +101,15 @@
                     @keydown.escape="cancelEdit"
                   ></textarea>
                   <div class="msg-edit-actions">
-                    <button class="msg-edit-save" @click="saveEdit(msg)" :disabled="editSaving">{{ editSaving ? '…' : 'Save' }}</button>
-                    <button class="msg-edit-cancel" @click="cancelEdit">Cancel</button>
+                    <button class="msg-edit-save" @click="saveEdit(msg)" :disabled="editSaving">{{ editSaving ? '…' : t('messages.save') }}</button>
+                    <button class="msg-edit-cancel" @click="cancelEdit">{{ t('messages.cancel') }}</button>
                   </div>
                 </template>
 
                 <template v-else>
                   <p class="msg-body">{{ msg.body }}</p>
                   <div class="msg-meta">
-                    <span v-if="msg.edited_at" class="msg-edited">edited</span>
+                    <span v-if="msg.edited_at" class="msg-edited">{{ t('messages.edited') }}</span>
                     <span class="msg-time">{{ formatTime(msg.created_at) }}</span>
                   </div>
                 </template>
@@ -118,8 +118,8 @@
 
             <!-- konteksta izvēlne -->
             <div v-if="ctxMenu.visible" class="msg-ctx-menu" :style="{ top: ctxMenu.y + 'px', left: ctxMenu.x + 'px' }">
-              <button @click="startEdit(ctxMenu.msg); ctxMenu.visible = false">✏️ Edit</button>
-              <button @click="unsendMessage(ctxMenu.msg); ctxMenu.visible = false" class="msg-ctx-danger">🗑️ Unsend</button>
+              <button @click="startEdit(ctxMenu.msg); ctxMenu.visible = false">{{ t('messages.editBtn') }}</button>
+              <button @click="unsendMessage(ctxMenu.msg); ctxMenu.visible = false" class="msg-ctx-danger">{{ t('messages.unsendBtn') }}</button>
             </div>
           </div>
 
@@ -131,7 +131,7 @@
             <textarea
               v-model="compose"
               class="compose-input"
-              placeholder="Type a message…"
+              :placeholder="t('messages.placeholder')"
               aria-label="Rakstīt ziņu"
               rows="1"
               @keydown.enter.exact.prevent="sendMessage"
@@ -400,7 +400,7 @@ export default {
     },
 
     async unsendMessage(msg) {
-      if (!confirm('Unsend this message?')) return
+      if (!confirm(this.t('messages.unsendConfirm'))) return
       try {
         await axios.delete(`/api/messages/${msg.id}`)
         this.messages = this.messages.filter(m => m.id !== msg.id)

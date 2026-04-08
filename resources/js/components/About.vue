@@ -8,7 +8,6 @@
     <section class="about-hero py-5">
       <div class="about-hero-bg-mark" aria-hidden="true">⇄</div>
       <div class="container-xl text-center py-3" style="position:relative; z-index:1">
-        <span class="hero-badge mb-3 d-inline-block">{{ t('about.badge') }}</span>
         <h1 class="about-title mb-3">{{ t('about.title') }}</h1>
         <p class="about-subtitle">{{ t('about.subtitle') }}</p>
       </div>
@@ -40,13 +39,7 @@
           <div class="about-card-icon">👨‍💻</div>
           <div>
             <h2 class="about-card-title mb-2">{{ t('about.creator.title') }}</h2>
-            <p class="about-card-text mb-3">{{ t('about.creator.body') }}</p>
-            <div class="d-flex flex-wrap gap-2">
-              <span class="about-tag about-tag--laravel">Laravel</span>
-              <span class="about-tag about-tag--vue">Vue.js</span>
-              <span class="about-tag about-tag--sqlite">SQLite</span>
-              <span class="about-tag about-tag--vite">Vite</span>
-            </div>
+            <p class="about-card-text mb-0">{{ t('about.creator.body') }}</p>
           </div>
         </div>
 

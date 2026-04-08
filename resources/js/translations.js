@@ -35,6 +35,8 @@ export const translations = {
     'search.addLang': '+ Add language',
     'search.allLanguages': 'All Languages',
     'search.btn': 'Search',
+    'search.moreFilters': 'Filters',
+    'search.fewerFilters': 'Hide filters',
     'books.ownedBy': 'by',
     'pagination.prev': '← Prev',
     'pagination.next': 'Next →',
@@ -330,6 +332,22 @@ export const translations = {
     'messages.noConvos': 'No conversations yet.',
     'messages.noConvosSub': 'Browse books and click "Message Owner" to start one.',
     'messages.selectConvo': 'Select a conversation to start chatting.',
+    'messages.title': 'Messages',
+    'messages.loading': 'Loading…',
+    'messages.back': '← Back',
+    'messages.blockedTag': 'blocked',
+    'messages.noMessages': 'No messages yet. Say hello!',
+    'messages.save': 'Save',
+    'messages.cancel': 'Cancel',
+    'messages.edited': 'edited',
+    'messages.editBtn': '✏️ Edit',
+    'messages.unsendBtn': '🗑️ Unsend',
+    'messages.placeholder': 'Type a message…',
+    'messages.unsendConfirm': 'Unsend this message?',
+
+    // Sīkdatnes
+    'cookie.text': 'We use cookies to keep you logged in and improve your experience.',
+    'cookie.btn': 'Got it',
 
     // Par mums
     'about.why.title': 'The Idea',
@@ -376,6 +394,8 @@ export const translations = {
     'search.addLang': '+ Pievienot valodu',
     'search.allLanguages': 'Visas valodas',
     'search.btn': 'Meklēt',
+    'search.moreFilters': 'Filtri',
+    'search.fewerFilters': 'Slēpt filtrus',
     'books.ownedBy': 'no',
     'pagination.prev': '← Iepr.',
     'pagination.next': 'Nāk. →',
@@ -671,6 +691,22 @@ export const translations = {
     'messages.noConvos': 'Sarakstes vēl nav.',
     'messages.noConvosSub': 'Pārlūko grāmatas un klikšķini "Rakstīt īpašniekam", lai sāktu.',
     'messages.selectConvo': 'Izvēlies sarakstes lai sāktu čatot.',
+    'messages.title': 'Ziņojumi',
+    'messages.loading': 'Ielādē…',
+    'messages.back': '← Atpakaļ',
+    'messages.blockedTag': 'bloķēts',
+    'messages.noMessages': 'Vēl nav ziņu. Saki sveiki!',
+    'messages.save': 'Saglabāt',
+    'messages.cancel': 'Atcelt',
+    'messages.edited': 'rediģēts',
+    'messages.editBtn': '✏️ Rediģēt',
+    'messages.unsendBtn': '🗑️ Atsaukt',
+    'messages.placeholder': 'Raksti ziņu…',
+    'messages.unsendConfirm': 'Atsaukt šo ziņu?',
+
+    // Sīkdatnes
+    'cookie.text': 'Mēs izmantojam sīkdatnes, lai saglabātu tavu pieteikšanos un uzlabotu pieredzi.',
+    'cookie.btn': 'Sapratu',
 
     // Par mums
     'about.why.title': 'Ideja',
