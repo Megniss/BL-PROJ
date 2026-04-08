@@ -9,6 +9,7 @@
       </template>
     </AppNavbar>
 
+    <div class="page-body">
     <div v-if="loading" class="text-center py-5 text-muted">
       <div class="fs-1">⏳</div>
       <p>{{ t('profile.loading') }}</p>
@@ -88,6 +89,8 @@
       </div>
     </template>
 
+    </div> <!-- /page-body -->
+    <AppFooter />
   </div>
 
   <SwapModal
@@ -97,6 +100,7 @@
     :selected-book-id="swapModal.selectedBookId"
     :sending="swapModal.sending"
     :error="swapModal.error"
+    :success="swapModal.success"
     @update:selected-book-id="swapModal.selectedBookId = $event"
     @close="closeSwapModal"
     @send="sendSwapRequest"
@@ -108,13 +112,14 @@ import axios from 'axios'
 import { authStore } from '../authStore.js'
 import SwapModal from './SwapModal.vue'
 import AppNavbar from './AppNavbar.vue'
+import AppFooter from './AppFooter.vue'
 import { coverColor } from '../coverColor.js'
 import langMixin from '../langMixin.js'
 
 export default {
   name: 'UserProfile',
 
-  components: { SwapModal, AppNavbar },
+  components: { SwapModal, AppNavbar, AppFooter },
 
   mixins: [langMixin],
 
@@ -133,6 +138,7 @@ export default {
         selectedBookId: null,
         sending: false,
         error: '',
+        success: false,
       },
     }
   },
@@ -183,6 +189,7 @@ export default {
 
     closeSwapModal() {
       this.swapModal.open = false
+      this.swapModal.success = false
     },
 
     async sendSwapRequest() {
@@ -194,7 +201,7 @@ export default {
           wanted_book_id:  this.swapModal.wantedBook.id,
         })
         this.profile.library = this.profile.library.filter(b => b.id !== this.swapModal.wantedBook.id)
-        this.closeSwapModal()
+        this.swapModal.success = true
       } catch (err) {
         this.swapModal.error = err.response?.data?.message || this.t('up.swapError')
       } finally {

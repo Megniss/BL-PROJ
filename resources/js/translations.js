@@ -65,7 +65,9 @@ export const translations = {
     // Grāmatas
     'books.title': 'Recently Added',
     'books.viewAll': 'View all →',
-    'books.empty': 'No books found for your search.',
+    'books.empty': 'No books match your filters.',
+    'books.emptyNoFilters': 'No books listed yet.',
+    'books.emptyNoFiltersSub': 'Be the first to add one — sign up and list a book!',
     'books.clearFilters': 'Clear filters',
     'books.requestSwap': 'Request Swap',
     'books.status.Available': 'Available',
@@ -208,6 +210,16 @@ export const translations = {
     'up.swapError': 'Something went wrong.',
     'up.block': 'Block user',
     'up.unblock': 'Unblock user',
+    'up.wantBook': 'You want',
+    'up.by': 'by',
+    'up.ownedBy': 'owned by',
+    'up.loginToSwap': 'You need to be logged in to request a swap.',
+    'up.cancel': 'Cancel',
+    'up.needBook': 'You need at least one Available book in your library to offer in exchange.',
+    'up.pickBook': 'Pick one of your books to offer in exchange:',
+    'up.selected': 'Selected',
+    'up.sending': 'Sending…',
+    'up.sendRequest': 'Send Request',
     'msg.blocked': 'You have blocked this user. Unblock them to send messages.',
 
     // Paziņojumi
@@ -273,6 +285,8 @@ export const translations = {
     'profile.editBtn': 'Edit Profile',
     'profile.swapHistory': '📜 Swap History',
     'profile.noSwaps': 'No completed swaps yet.',
+    'profile.noSwapsSub': 'Once you complete a swap, your history will appear here.',
+    'profile.browseBtn': 'Browse Books',
     'profile.loadMore': 'Load more',
     'profile.loadingMore': 'Loading…',
     'profile.youGave': 'You gave',
@@ -307,6 +321,17 @@ export const translations = {
     'about.subtitle': 'A free book exchange platform built for readers in Latvia.',
     'about.what.title': 'What is BookLoop?',
     'about.what.body': 'BookLoop is a platform that lets readers share and exchange books with each other. Instead of letting your finished books collect dust on the shelf, you can list them and swap with someone who has a book you want to read next. No money, no subscriptions — just books finding new readers.',
+    // Maiņas pieprasījums
+    'swap.sent': 'Request Sent!',
+    'swap.sentDesc': 'The owner will review your request and get back to you.',
+    'swap.sentClose': 'Done',
+
+    // Ziņojumi (tukšie stāvokļi)
+    'messages.noConvos': 'No conversations yet.',
+    'messages.noConvosSub': 'Browse books and click "Message Owner" to start one.',
+    'messages.selectConvo': 'Select a conversation to start chatting.',
+
+    // Par mums
     'about.why.title': 'The Idea',
     'about.why.body': "Books can be expensive, and libraries don't always have what you're looking for. BookLoop solves this by connecting readers directly — you give a book, you get a book. Simple, free, and community-driven.",
     'about.creator.title': 'The Creator',
@@ -381,7 +406,9 @@ export const translations = {
     // Grāmatas
     'books.title': 'Nesen Pievienotās',
     'books.viewAll': 'Skatīt visas →',
-    'books.empty': 'Netika atrasta neviena grāmata.',
+    'books.empty': 'Neviena grāmata neatbilst filtriem.',
+    'books.emptyNoFilters': 'Vēl nav pievienotu grāmatu.',
+    'books.emptyNoFiltersSub': 'Esi pirmais — reģistrējies un pievieno grāmatu!',
     'books.clearFilters': 'Notīrīt filtrus',
     'books.requestSwap': 'Pieprasīt Maiņu',
     'books.status.Available': 'Pieejama',
@@ -524,6 +551,16 @@ export const translations = {
     'up.swapError': 'Kaut kas nogāja greizi.',
     'up.block': 'Bloķēt lietotāju',
     'up.unblock': 'Atbloķēt lietotāju',
+    'up.wantBook': 'Tu gribi',
+    'up.by': 'autors',
+    'up.ownedBy': 'īpašnieks',
+    'up.loginToSwap': 'Lai pieprasītu maiņu, tev jāpiesakās.',
+    'up.cancel': 'Atcelt',
+    'up.needBook': 'Lai piedāvātu maiņu, tev bibliotēkā jābūt vismaz vienai pieejamai grāmatai.',
+    'up.pickBook': 'Izvēlies vienu no savām grāmatām, ko piedāvāt maiņā:',
+    'up.selected': 'Izvēlēta',
+    'up.sending': 'Sūta…',
+    'up.sendRequest': 'Nosūtīt Pieprasījumu',
     'msg.blocked': 'Tu esi bloķējis šo lietotāju. Atbloķē, lai sūtītu ziņas.',
 
     // Paziņojumi
@@ -589,6 +626,8 @@ export const translations = {
     'profile.editBtn': 'Rediģēt Profilu',
     'profile.swapHistory': '📜 Apmaiņas Vēsture',
     'profile.noSwaps': 'Vēl nav pabeigtu apmaiņu.',
+    'profile.noSwapsSub': 'Kad būsi pabeidzis apmaiņu, tā parādīsies šeit.',
+    'profile.browseBtn': 'Pārlūkot Grāmatas',
     'profile.loadMore': 'Ielādēt vairāk',
     'profile.loadingMore': 'Ielādē…',
     'profile.youGave': 'Tu atdevi',
@@ -623,6 +662,17 @@ export const translations = {
     'about.subtitle': 'Bezmaksas grāmatu apmaiņas platforma Latvijas lasītājiem.',
     'about.what.title': 'Kas ir BookLoop?',
     'about.what.body': 'BookLoop ir platforma, kas ļauj lasītājiem dalīties un apmainīties ar grāmatām. Tā vietā, lai izlasītās grāmatas putekļotos uz plaukta, tu vari tās pievienot un apmainīt pret grāmatu, kuru gribi izlasīt tālāk. Bez maksas, bez abonementiem — tikai grāmatas, kas atrod jaunus lasītājus.',
+    // Maiņas pieprasījums
+    'swap.sent': 'Pieprasījums Nosūtīts!',
+    'swap.sentDesc': 'Grāmatas īpašnieks izskatīs tavu pieprasījumu un atbildēs.',
+    'swap.sentClose': 'Labi',
+
+    // Ziņojumi (tukšie stāvokļi)
+    'messages.noConvos': 'Sarakstes vēl nav.',
+    'messages.noConvosSub': 'Pārlūko grāmatas un klikšķini "Rakstīt īpašniekam", lai sāktu.',
+    'messages.selectConvo': 'Izvēlies sarakstes lai sāktu čatot.',
+
+    // Par mums
     'about.why.title': 'Ideja',
     'about.why.body': 'Grāmatas var būt dārgas, un bibliotēkās ne vienmēr ir tas, ko meklē. BookLoop risina šo problēmu, tieši savienojot lasītājus — tu dod grāmatu, tu saņem grāmatu. Vienkārši, bez maksas un uz kopienas principiem.',
     'about.creator.title': 'Veidotājs',

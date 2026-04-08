@@ -81,6 +81,7 @@
       </div>
 
     </div>
+    <AppFooter />
   </div>
 </template>
 
@@ -88,12 +89,13 @@
 import axios from 'axios'
 import { authStore, updateUser } from '../authStore.js'
 import AppNavbar from './AppNavbar.vue'
+import AppFooter from './AppFooter.vue'
 import langMixin from '../langMixin.js'
 
 export default {
   name: 'Settings',
 
-  components: { AppNavbar },
+  components: { AppNavbar, AppFooter },
 
   mixins: [langMixin],
 

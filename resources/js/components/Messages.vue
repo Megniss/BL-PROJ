@@ -18,8 +18,8 @@
         <div v-else-if="convosError" class="convo-empty text-danger">{{ convosError }}</div>
 
         <div v-else-if="conversations.length === 0" class="convo-empty">
-          No conversations yet.<br>
-          Browse books and click "Message owner" to start one.
+          {{ t('messages.noConvos') }}<br>
+          {{ t('messages.noConvosSub') }}
         </div>
 
         <div
@@ -34,7 +34,10 @@
         >
           <div class="convo-avatar">{{ convo.user.name[0].toUpperCase() }}</div>
           <div class="convo-info">
-            <div class="convo-name">{{ convo.user.name }}</div>
+            <div class="convo-name">
+              {{ convo.user.name }}
+              <span v-if="convo.is_blocked" class="convo-blocked-tag">blocked</span>
+            </div>
             <div class="convo-last">{{ convo.last_message?.body }}</div>
           </div>
           <div v-if="convo.unread > 0" class="convo-badge">{{ convo.unread }}</div>
@@ -47,7 +50,7 @@
         <!-- Nav izvēlēta sarakstes -->
         <div v-if="!activeUser" class="thread-empty">
           <span class="thread-empty-icon">💬</span>
-          <p>Select a conversation to start chatting.</p>
+          <p>{{ t('messages.selectConvo') }}</p>
         </div>
 
         <template v-else>
@@ -80,10 +83,43 @@
               class="msg-row"
               :class="{ 'msg-mine': msg.from_user_id === authStore.user.id }"
             >
-              <div class="msg-bubble">
-                <p class="msg-body">{{ msg.body }}</p>
-                <span class="msg-time">{{ formatTime(msg.created_at) }}</span>
+              <div
+                class="msg-bubble"
+                :class="{ 'msg-bubble-read': msg.from_user_id === authStore.user.id && msg.read_at, 'msg-bubble-sent': msg.from_user_id === authStore.user.id && !msg.read_at }"
+                @contextmenu.prevent="msg.from_user_id === authStore.user.id && !msg.read_at && editingId !== msg.id ? openCtxMenu(msg, $event) : null"
+                @touchstart="msg.from_user_id === authStore.user.id && !msg.read_at && editingId !== msg.id ? startLongPress(msg, $event) : null"
+                @touchend="cancelLongPress"
+                @touchcancel="cancelLongPress"
+              >
+                <!-- rediģēšanas režīms -->
+                <template v-if="editingId === msg.id">
+                  <textarea
+                    v-model="editBody"
+                    class="msg-edit-input"
+                    rows="2"
+                    @keydown.enter.exact.prevent="saveEdit(msg)"
+                    @keydown.escape="cancelEdit"
+                  ></textarea>
+                  <div class="msg-edit-actions">
+                    <button class="msg-edit-save" @click="saveEdit(msg)" :disabled="editSaving">{{ editSaving ? '…' : 'Save' }}</button>
+                    <button class="msg-edit-cancel" @click="cancelEdit">Cancel</button>
+                  </div>
+                </template>
+
+                <template v-else>
+                  <p class="msg-body">{{ msg.body }}</p>
+                  <div class="msg-meta">
+                    <span v-if="msg.edited_at" class="msg-edited">edited</span>
+                    <span class="msg-time">{{ formatTime(msg.created_at) }}</span>
+                  </div>
+                </template>
               </div>
+            </div>
+
+            <!-- konteksta izvēlne -->
+            <div v-if="ctxMenu.visible" class="msg-ctx-menu" :style="{ top: ctxMenu.y + 'px', left: ctxMenu.x + 'px' }">
+              <button @click="startEdit(ctxMenu.msg); ctxMenu.visible = false">✏️ Edit</button>
+              <button @click="unsendMessage(ctxMenu.msg); ctxMenu.visible = false" class="msg-ctx-danger">🗑️ Unsend</button>
             </div>
           </div>
 
@@ -146,10 +182,16 @@ export default {
       convosError: null,
       threadError: null,
       activeUserBlocked: false,
+      editingId: null,
+      editBody: '',
+      editSaving: false,
+      ctxMenu: { visible: false, x: 0, y: 0, msg: null },
+      longPressTimer: null,
     }
   },
 
   async mounted() {
+    document.addEventListener('click', this.closeCtxMenu)
     await this.fetchConversations()
 
     // Automātiski atver sarakstes ja pārnāk no grāmatas kartiņas vai profila
@@ -162,6 +204,7 @@ export default {
 
   beforeUnmount() {
     clearInterval(this.pollTimer)
+    document.removeEventListener('click', this.closeCtxMenu)
   },
 
   methods: {
@@ -207,6 +250,9 @@ export default {
           await axios.post(`/api/blocks/${this.activeUser.id}`)
           this.activeUserBlocked = true
         }
+        // keep sidebar tag in sync
+        const convo = this.conversations.find(c => c.user.id === this.activeUser.id)
+        if (convo) convo.is_blocked = this.activeUserBlocked
       } catch { /* ignore */ }
     },
 
@@ -278,6 +324,89 @@ export default {
       const el = e.target
       el.style.height = 'auto'
       el.style.height = Math.min(el.scrollHeight, 120) + 'px'
+    },
+
+    openCtxMenu(msg, e) {
+      this.positionCtxMenu(msg, e.currentTarget)
+    },
+
+    positionCtxMenu(msg, bubble) {
+      const r = bubble.getBoundingClientRect()
+      const menuW = 140
+      const menuH = 88
+      const gap = 6
+
+      // own messages are on the right — try left side first, else below
+      let x, y
+
+      if (r.left - menuW - gap >= 0) {
+        // pietiek vietas pa kreisi
+        x = r.left - menuW - gap
+        y = r.top
+      } else if (r.right + menuW + gap <= window.innerWidth) {
+        // pa labi
+        x = r.right + gap
+        y = r.top
+      } else {
+        // zem ziņas
+        x = Math.max(8, r.right - menuW)
+        y = r.bottom + gap
+      }
+
+      // neiziet ārpus apakšas
+      if (y + menuH > window.innerHeight) y = r.top - menuH - gap
+
+      this.ctxMenu = { visible: true, x, y, msg }
+    },
+
+    closeCtxMenu() {
+      this.ctxMenu.visible = false
+    },
+
+    startLongPress(msg, e) {
+      this.longPressTimer = setTimeout(() => {
+        this.positionCtxMenu(msg, e.currentTarget)
+      }, 500)
+    },
+
+    cancelLongPress() {
+      clearTimeout(this.longPressTimer)
+    },
+
+    startEdit(msg) {
+      this.editingId = msg.id
+      this.editBody  = msg.body
+    },
+
+    cancelEdit() {
+      this.editingId = null
+      this.editBody  = ''
+    },
+
+    async saveEdit(msg) {
+      const body = this.editBody.trim()
+      if (!body || this.editSaving) return
+      this.editSaving = true
+      try {
+        const { data } = await axios.put(`/api/messages/${msg.id}`, { body })
+        const idx = this.messages.findIndex(m => m.id === msg.id)
+        if (idx !== -1) this.messages[idx] = data
+        this.cancelEdit()
+      } catch (err) {
+        alert(err.response?.data?.message || 'Could not edit message.')
+      } finally {
+        this.editSaving = false
+      }
+    },
+
+    async unsendMessage(msg) {
+      if (!confirm('Unsend this message?')) return
+      try {
+        await axios.delete(`/api/messages/${msg.id}`)
+        this.messages = this.messages.filter(m => m.id !== msg.id)
+      } catch (err) {
+        alert(err.response?.data?.message || 'Could not unsend message.')
+      }
     },
 
     formatTime(dateStr) {

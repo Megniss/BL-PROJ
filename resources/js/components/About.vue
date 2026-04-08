@@ -53,16 +53,7 @@
       </div>
     </div>
 
-    <footer class="bookloop-footer py-4 mt-4">
-      <div class="container-xl d-flex flex-wrap align-items-center gap-4">
-        <div class="d-flex align-items-center gap-2">
-          <span class="brand-icon" style="color:#5a9b5e">⇄</span>
-          <span class="brand-name text-white">BookLoop</span>
-          <span class="footer-tagline ms-2">{{ t('footer.tagline') }}</span>
-        </div>
-        <p class="footer-copy w-100 mb-0 mt-2">{{ t('footer.copy') }}</p>
-      </div>
-    </footer>
+    <AppFooter />
 
   </div>
 </template>
@@ -70,10 +61,11 @@
 <script>
 import langMixin from '../langMixin.js'
 import AppNavbar from './AppNavbar.vue'
+import AppFooter from './AppFooter.vue'
 
 export default {
   name: 'About',
-  components: { AppNavbar },
+  components: { AppNavbar, AppFooter },
   mixins: [langMixin],
 }
 </script>

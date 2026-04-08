@@ -128,9 +128,18 @@
       </div>
 
       <div v-else-if="books.length === 0" class="text-center py-5 text-muted">
-        <div class="fs-1">📭</div>
-        <p class="mb-3">{{ t('books.empty') }}</p>
-        <button class="btn btn-outline-secondary" @click="clearAll">{{ t('books.clearFilters') }}</button>
+        <template v-if="hasActiveFilters">
+          <div class="fs-1">📭</div>
+          <p class="mb-3">{{ t('books.empty') }}</p>
+          <button class="btn btn-outline-secondary" @click="clearAll">{{ t('books.clearFilters') }}</button>
+        </template>
+        <template v-else>
+          <div class="fs-1">📚</div>
+          <p class="fw-semibold mb-1" style="color:var(--ink)">{{ t('books.emptyNoFilters') }}</p>
+          <p class="small mb-3">{{ t('books.emptyNoFiltersSub') }}</p>
+          <button v-if="!authStore.user" class="btn btn-primary" @click="$router.push({ name: 'register' })">{{ t('nav.signup') }}</button>
+          <button v-else class="btn btn-primary" @click="$router.push({ name: 'dashboard' })">{{ t('dash.addFirst') }}</button>
+        </template>
       </div>
 
       <!-- kartiņu skats -->
@@ -239,16 +248,7 @@
       </div>
     </section>
 
-    <!-- Kājene -->
-    <footer class="bookloop-footer py-4 mt-4">
-      <div class="container-xl d-flex flex-wrap align-items-center gap-4">
-        <div class="d-flex align-items-center gap-2 flex-grow-1">
-          <span class="brand-icon" style="color:#5a9b5e">⇄</span>
-          <span class="brand-name text-white">BookLoop</span>
-        </div>
-        <p class="footer-copy w-100 mb-0 mt-2">{{ t('footer.copy') }}</p>
-      </div>
-    </footer>
+    <AppFooter />
 
   </div>
 
@@ -270,8 +270,9 @@
     :selected-book-id="swapModal.selectedBookId"
     :sending="swapModal.sending"
     :error="swapModal.error"
+    :success="swapModal.success"
     @update:selected-book-id="swapModal.selectedBookId = $event"
-    @close="swapModal.open = false"
+    @close="swapModal.open = false; swapModal.success = false"
     @send="sendSwap"
   />
 </template>
@@ -284,11 +285,12 @@ import { coverColor } from '../coverColor.js'
 import BookDetailModal from './BookDetailModal.vue'
 import SwapModal from './SwapModal.vue'
 import AppNavbar from './AppNavbar.vue'
+import AppFooter from './AppFooter.vue'
 
 export default {
   name: 'Browse',
 
-  components: { BookDetailModal, SwapModal, AppNavbar },
+  components: { BookDetailModal, SwapModal, AppNavbar, AppFooter },
 
   mixins: [langMixin],
 
@@ -318,12 +320,16 @@ export default {
       detailBookBlocked: false,
       swapModal: {
         open: false, wantedBook: null, myBooks: [],
-        selectedBookId: null, sending: false, error: '',
+        selectedBookId: null, sending: false, error: '', success: false,
       },
     }
   },
 
   computed: {
+    hasActiveFilters() {
+      return !!(this.searchQuery || this.genreFilters.length || this.langFilters.length || this.sortBy !== 'title_asc')
+    },
+
     pageTitle() {
       if (this.tab === 'users') return this.t('browse.users')
       if (this.searchQuery) return `${this.t('browse.searchFor')}: "${this.searchQuery}"`
@@ -516,7 +522,7 @@ export default {
           wanted_book_id: this.swapModal.wantedBook.id,
         })
         this.books = this.books.filter(b => b.id !== this.swapModal.wantedBook.id)
-        this.swapModal.open = false
+        this.swapModal.success = true
       } catch (err) {
         this.swapModal.error = err.response?.data?.message || 'Something went wrong.'
       } finally {

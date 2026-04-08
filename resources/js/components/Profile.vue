@@ -31,15 +31,17 @@
                 <div class="profile-stat-label">{{ t('profile.swapsDone') }}</div>
               </div>
             </div>
-            <button class="btn btn-outline-secondary align-self-start" @click="$router.push({ name: 'settings' })">{{ t('profile.editBtn') }}</button>
           </div>
         </div>
 
         <!-- Apmaiņas vēsture -->
         <h2 class="dash-section-title mb-3">{{ t('profile.swapHistory') }}</h2>
 
-        <div v-if="history.length === 0" class="text-center py-4 text-muted">
-          <p>{{ t('profile.noSwaps') }}</p>
+        <div v-if="history.length === 0" class="text-center py-5 text-muted">
+          <div class="fs-1">🔄</div>
+          <p class="fw-semibold mb-1" style="color:var(--ink)">{{ t('profile.noSwaps') }}</p>
+          <p class="small mb-3">{{ t('profile.noSwapsSub') }}</p>
+          <button class="btn btn-primary" @click="$router.push({ name: 'browse' })">{{ t('profile.browseBtn') }}</button>
         </div>
 
         <div v-else class="d-flex flex-column gap-2">
@@ -79,6 +81,7 @@
       </template>
 
     </div>
+    <AppFooter />
   </div>
 
 
@@ -97,12 +100,13 @@ import axios from 'axios'
 import { authStore } from '../authStore.js'
 import langMixin from '../langMixin.js'
 import AppNavbar from './AppNavbar.vue'
+import AppFooter from './AppFooter.vue'
 import RatingModal from './RatingModal.vue'
 
 export default {
   name: 'Profile',
 
-  components: { AppNavbar, RatingModal },
+  components: { AppNavbar, AppFooter, RatingModal },
 
   mixins: [langMixin],
 

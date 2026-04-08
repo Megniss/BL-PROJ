@@ -2,11 +2,11 @@
   <Teleport to="body">
     <div v-if="open" class="modal-overlay" @click.self="$emit('close')">
       <div class="modal-card">
-        <h2 class="modal-title mb-2">Rate: {{ book?.title }}</h2>
+        <h2 class="modal-title mb-2">{{ t('profile.ratingTitle') }}: {{ book?.title }}</h2>
 
         <div v-if="error" class="alert alert-danger py-2 px-3 mb-3">{{ error }}</div>
 
-        <label class="form-label fw-semibold">Your rating</label>
+        <label class="form-label fw-semibold">{{ t('profile.ratingStars') }}</label>
         <div class="star-picker mb-3">
           <span
             v-for="n in 5"
@@ -18,23 +18,23 @@
           >★</span>
         </div>
 
-        <label class="form-label fw-semibold">Review (optional)</label>
+        <label class="form-label fw-semibold">{{ t('profile.ratingReview') }}</label>
         <textarea
           v-model="review"
           class="form-control mb-3"
           rows="3"
           maxlength="500"
-          placeholder="Write a short review..."
+          :placeholder="t('profile.ratingPlaceholder')"
         ></textarea>
 
         <div class="d-flex justify-content-end gap-2">
-          <button class="btn btn-outline-secondary" @click="$emit('close')">Cancel</button>
+          <button class="btn btn-outline-secondary" @click="$emit('close')">{{ t('up.cancel') }}</button>
           <button
             class="btn btn-primary"
             :disabled="stars === 0 || sending"
             @click="handleSubmit"
           >
-            {{ sending ? 'Submitting…' : 'Submit Rating' }}
+            {{ sending ? t('profile.ratingSubmitting') : t('profile.ratingSubmit') }}
           </button>
         </div>
 

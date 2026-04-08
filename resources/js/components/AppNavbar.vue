@@ -26,6 +26,9 @@
           <slot />
         </div>
 
+        <!-- always-visible slot (bell utt.) -->
+        <slot name="inline" />
+
         <!-- avatar dropdown (tikai desktop) -->
         <div v-if="authStore.user" class="nav-user-wrap d-none d-lg-block" ref="dropdownWrap">
           <button class="nav-avatar-btn" @click="dropdownOpen = !dropdownOpen" :aria-label="authStore.user.name">

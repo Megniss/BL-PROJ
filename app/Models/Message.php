@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Message extends Model
 {
-    protected $fillable = ['from_user_id', 'to_user_id', 'body', 'read_at'];
+    protected $fillable = ['from_user_id', 'to_user_id', 'body', 'read_at', 'edited_at'];
 
     protected $casts = [
-        'read_at' => 'datetime',
+        'read_at'   => 'datetime',
+        'edited_at' => 'datetime',
     ];
 
     public function sender(): BelongsTo
