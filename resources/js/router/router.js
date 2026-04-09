@@ -50,6 +50,12 @@ const routes = [
     component: () => import('../components/UserProfile.vue'),
   },
   {
+    path: '/support',
+    name: 'support',
+    component: () => import('../components/Support.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/admin',
     name: 'admin',
     component: () => import('../components/Admin.vue'),

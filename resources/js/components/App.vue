@@ -15,6 +15,7 @@
 
 <script>
 import langMixin from '../langMixin.js'
+import { initLanguages } from '../langStore.js'
 
 export default {
   name: 'App',
@@ -30,6 +31,7 @@ export default {
   },
 
   mounted() {
+    initLanguages()
     window.addEventListener('scroll', this.onScroll, { passive: true })
     this.showCookie = true
   },

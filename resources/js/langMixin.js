@@ -8,8 +8,8 @@ export default {
     t(key) {
       return t(key)
     },
-    setLocale(locale) {
-      setLocale(locale)
+    async setLocale(locale) {
+      await setLocale(locale)
     }
   }
 }

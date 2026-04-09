@@ -15,10 +15,35 @@
         <button class="theme-btn" @click="themeStore.toggle()" :aria-label="themeStore.dark ? 'Ieslēgt gaišo režīmu' : 'Ieslēgt tumšo režīmu'">
           <span aria-hidden="true">{{ themeStore.dark ? '☀️' : '🌙' }}</span>
         </button>
-        <div class="d-flex align-items-center gap-1">
-          <button :class="['lang-btn', { active: langStore.locale === 'en' }]" @click="setLocale('en')">EN</button>
-          <span class="lang-divider" aria-hidden="true">|</span>
-          <button :class="['lang-btn', { active: langStore.locale === 'lv' }]" @click="setLocale('lv')">LV</button>
+        <!-- 2 languages: buttons; 3+: dropdown -->
+        <div class="d-flex align-items-center gap-1" v-if="langStore.languages.length <= 2">
+          <template v-for="(lang, i) in langStore.languages" :key="lang.code">
+            <span v-if="i > 0" class="lang-divider" aria-hidden="true">|</span>
+            <button :class="['lang-btn', { active: langStore.locale === lang.code }]" @click="setLocale(lang.code)">
+              <span v-if="lang.flag" :class="'fi fi-' + lang.flag" style="border-radius:2px"></span>
+              <span v-else>{{ lang.code.toUpperCase() }}</span>
+            </button>
+          </template>
+        </div>
+        <div v-else class="lang-dropdown-wrap" ref="langWrap">
+          <button class="lang-flag-btn" @click="langDropOpen = !langDropOpen" :aria-label="'Language: ' + currentLang.name">
+            <span v-if="currentLang.flag" :class="'fi fi-' + currentLang.flag" style="border-radius:2px"></span>
+            <span v-else>{{ currentLang.code.toUpperCase() }}</span>
+            ▾
+          </button>
+          <div v-if="langDropOpen" class="lang-dropdown">
+            <button
+              v-for="lang in langStore.languages"
+              :key="lang.code"
+              class="lang-dropdown-item"
+              :class="{ active: langStore.locale === lang.code }"
+              @click="setLocale(lang.code); langDropOpen = false"
+            >
+              <span v-if="lang.flag" :class="'fi fi-' + lang.flag" style="border-radius:2px"></span>
+              <span v-else>{{ lang.code.toUpperCase() }}</span>
+              {{ lang.name }}
+            </button>
+          </div>
         </div>
 
         <!-- slot: page-specific items (tikai desktop) -->
@@ -41,6 +66,7 @@
             <button class="nav-dropdown-item" @click="go('dashboard')">{{ t('nav.myLibrary') }}</button>
             <button class="nav-dropdown-item" @click="go('browse')">{{ t('nav.browse') }}</button>
             <button class="nav-dropdown-item" @click="go('messages')">{{ t('nav.messages') }}</button>
+            <button class="nav-dropdown-item" @click="go('support')">{{ t('nav.support') }}</button>
             <button class="nav-dropdown-item" @click="go('settings')">{{ t('nav.settings') }}</button>
             <template v-if="authStore.user?.is_admin">
               <div class="nav-dropdown-divider"></div>
@@ -67,6 +93,7 @@
         <button class="nav-mob-link" @click="go('dashboard')">{{ t('nav.myLibrary') }}</button>
         <button class="nav-mob-link" @click="go('browse')">{{ t('nav.browse') }}</button>
         <button class="nav-mob-link" @click="go('messages')">{{ t('nav.messages') }}</button>
+        <button class="nav-mob-link" @click="go('support')">{{ t('nav.support') }}</button>
         <button class="nav-mob-link" @click="go('settings')">{{ t('nav.settings') }}</button>
         <button v-if="authStore.user?.is_admin" class="nav-mob-link nav-mob-admin" @click="go('admin')">{{ t('nav.admin') }}</button>
         <div class="nav-mobile-divider"></div>
@@ -86,10 +113,16 @@ export default {
   name: 'AppNavbar',
   mixins: [langMixin],
   data() {
-    return { themeStore, authStore, menuOpen: false, dropdownOpen: false }
+    return { themeStore, authStore, menuOpen: false, dropdownOpen: false, langDropOpen: false }
   },
 
   computed: {
+    currentLang() {
+      return this.langStore.languages.find(l => l.code === this.langStore.locale)
+        ?? this.langStore.languages[0]
+        ?? { code: 'en', name: 'English', flag: '🇬🇧' }
+    },
+
     initials() {
       if (!this.authStore.user?.name) return '?'
       return this.authStore.user.name
@@ -135,6 +168,9 @@ export default {
     onDocClick(e) {
       if (this.$refs.dropdownWrap && !this.$refs.dropdownWrap.contains(e.target)) {
         this.dropdownOpen = false
+      }
+      if (this.$refs.langWrap && !this.$refs.langWrap.contains(e.target)) {
+        this.langDropOpen = false
       }
     }
   }

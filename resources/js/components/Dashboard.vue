@@ -41,6 +41,9 @@
               <div v-if="pendingIncoming.length > 0" class="notif-section-label">{{ t('notif.activity') }}</div>
               <div v-for="n in notifications" :key="n.id" class="notif-item" :class="{ unread: !n.read_at }" @click="handleNotifClick(n)">
                 <p class="notif-msg">{{ n.data.message }}</p>
+                <button v-if="n.data.type === 'admin_action'" class="notif-support-link" @click.stop="goSupport">
+                  {{ t('support.contactLink') }} →
+                </button>
                 <span class="notif-time">{{ formatTime(n.created_at) }}</span>
               </div>
             </template>
@@ -139,6 +142,7 @@
             <div v-if="book.status === 'Pending'" class="pending-overlay"></div>
             <div class="book-card-cover" :style="!book.cover_image ? { background: coverColor(book) } : {}">
               <img v-if="book.cover_image" :src="'/storage/' + book.cover_image" :alt="book.title" class="book-card-cover-img" />
+              <div v-if="book.status === 'UnderReview'" class="review-exclaim">!</div>
               <span class="book-card-genre">{{ book.genre }}</span>
               <!-- rediģēt / dzēst pogas -->
               <div class="dash-card-actions">
@@ -150,7 +154,9 @@
               <h3 class="book-card-title mb-1">{{ book.title }}</h3>
               <p class="book-card-author mb-2">{{ book.author }}</p>
               <div class="d-flex flex-wrap gap-1 mt-auto">
-                <span class="tag" :class="book.status === 'Available' ? 'tag-green' : 'tag-yellow'">{{ book.status }}</span>
+                <span class="tag" :class="book.status === 'Available' ? 'tag-green' : book.status === 'UnderReview' ? 'tag-red' : 'tag-yellow'">
+                  {{ book.status === 'UnderReview' ? t('admin.status.underReview') : book.status }}
+                </span>
                 <span class="tag">{{ book.condition }}</span>
               </div>
             </div>
@@ -358,6 +364,11 @@ export default {
         n.read_at = new Date().toISOString()
         this.unreadNotifCount = Math.max(0, this.unreadNotifCount - 1)
       } catch {}
+    },
+
+    goSupport() {
+      this.showNotifs = false
+      this.$router.push({ name: 'support' })
     },
 
     async handleNotifClick(n) {

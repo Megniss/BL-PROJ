@@ -13,6 +13,22 @@
           <h2 class="convo-title">{{ t('messages.title') }}</h2>
         </div>
 
+        <!-- pinned support entry -->
+        <div
+          class="convo-item convo-support"
+          role="button"
+          tabindex="0"
+          @click="$router.push({ name: 'support' })"
+          @keyup.enter="$router.push({ name: 'support' })"
+        >
+          <div class="convo-avatar convo-avatar-support">🛟</div>
+          <div class="convo-info">
+            <div class="convo-name">{{ t('support.title') }}</div>
+            <div class="convo-last">{{ t('messages.supportSub') }}</div>
+          </div>
+        </div>
+        <div class="convo-divider"></div>
+
         <div v-if="loadingConvos" class="convo-empty">{{ t('messages.loading') }}</div>
 
         <div v-else-if="convosError" class="convo-empty text-danger">{{ convosError }}</div>
@@ -235,10 +251,10 @@ export default {
 
       await this.fetchThread()
 
-      // Pārbauda jaunas ziņas ik 8s kamēr sarakstes ir atvērta
+      // Pārbauda jaunas ziņas ik 3s kamēr sarakstes ir atvērta
       this.pollTimer = setInterval(() => {
-        if (this.activeUser) this.fetchThread(true)
-      }, 8000)
+        if (this.activeUser) this.pollNewMessages()
+      }, 3000)
     },
 
     async toggleBlock() {
@@ -256,24 +272,41 @@ export default {
       } catch { /* ignore */ }
     },
 
-    async fetchThread(silent = false) {
-      if (!silent) this.loadingThread = true
+    async fetchThread() {
+      this.loadingThread = true
       this.threadError = null
       try {
         const { data } = await axios.get(`/api/messages/${this.activeUser.id}`)
         this.messages = data
 
-        // Atzīmē sarakstes kā izlasītu sarakstā
         const convo = this.conversations.find(c => c.user.id === this.activeUser.id)
         if (convo) convo.unread = 0
 
         await this.$nextTick()
         this.scrollToBottom()
       } catch (err) {
-        if (!silent) this.threadError = err.response?.data?.message || 'Failed to load messages.'
+        this.threadError = err.response?.data?.message || 'Failed to load messages.'
       } finally {
         this.loadingThread = false
       }
+    },
+
+    async pollNewMessages() {
+      if (!this.activeUser) return
+      const lastId = this.messages.at(-1)?.id ?? 0
+      try {
+        const { data } = await axios.get(`/api/messages/${this.activeUser.id}`)
+        const fresh = data.filter(m => m.id > lastId)
+        if (fresh.length === 0) return
+        this.messages.push(...fresh)
+        const convo = this.conversations.find(c => c.user.id === this.activeUser.id)
+        if (convo) {
+          convo.last_message = { body: fresh.at(-1).body }
+          convo.unread = 0
+        }
+        await this.$nextTick()
+        this.scrollToBottom()
+      } catch { /* silent */ }
     },
 
     async sendMessage() {

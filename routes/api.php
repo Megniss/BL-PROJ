@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ComplaintController;
+use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlockController;
 use App\Http\Controllers\BookController;
@@ -11,6 +13,9 @@ use App\Http\Controllers\RatingController;
 use App\Http\Controllers\SwapRequestController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/languages', [LanguageController::class, 'index']);
+Route::get('/translations/{code}', [LanguageController::class, 'translations']);
 
 Route::get('/browse', [BookController::class, 'browse']);
 Route::get('/stats', [BookController::class, 'stats']);
@@ -62,7 +67,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/swap-requests/{swap}/decline', [SwapRequestController::class, 'decline']);
     Route::delete('/swap-requests/{swap}', [SwapRequestController::class, 'destroy']);
 
+    Route::get('/complaints', [ComplaintController::class, 'index']);
+    Route::post('/complaints', [ComplaintController::class, 'store']);
+    Route::get('/complaints/{complaint}', [ComplaintController::class, 'show']);
+    Route::post('/complaints/{complaint}/messages', [ComplaintController::class, 'addMessage']);
+    Route::patch('/complaints/{complaint}/close', [ComplaintController::class, 'close']);
+
     Route::middleware('admin')->group(function () {
+        Route::get('/admin/logs', [AdminController::class, 'logs']);
+        Route::get('/admin/languages', [LanguageController::class, 'all']);
+        Route::post('/admin/languages', [LanguageController::class, 'store']);
+        Route::patch('/admin/languages/{code}', [LanguageController::class, 'update']);
+        Route::patch('/admin/languages/{code}/deactivate', [LanguageController::class, 'deactivate']);
+        Route::patch('/admin/languages/{code}/reactivate', [LanguageController::class, 'reactivate']);
+        Route::get('/admin/translations/{code}', [LanguageController::class, 'getTranslations']);
+        Route::post('/admin/translations/{code}', [LanguageController::class, 'saveTranslations']);
         Route::get('/admin/users', [AdminController::class, 'users']);
         Route::get('/admin/books', [AdminController::class, 'books']);
         Route::get('/admin/swaps', [AdminController::class, 'swaps']);
@@ -72,6 +91,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/admin/users/{user}/make-admin', [AdminController::class, 'makeAdmin']);
         Route::patch('/admin/users/{user}/remove-admin', [AdminController::class, 'removeAdmin']);
         Route::delete('/admin/books/{book}', [AdminController::class, 'deleteBook']);
+        Route::patch('/admin/books/{book}/review', [AdminController::class, 'reviewBook']);
+        Route::patch('/admin/books/{book}/unreview', [AdminController::class, 'unreviewBook']);
         Route::patch('/admin/swaps/{swap}/accept', [AdminController::class, 'acceptSwap']);
         Route::patch('/admin/swaps/{swap}/decline', [AdminController::class, 'declineSwap']);
         Route::delete('/admin/swaps/{swap}', [AdminController::class, 'deleteSwap']);

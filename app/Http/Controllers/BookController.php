@@ -15,7 +15,8 @@ class BookController extends Controller
         $query = \App\Models\Book::with('user:id,name')
             ->withAvg('ratings', 'stars')
             ->withCount('ratings')
-            ->whereIn('status', ['Available', 'Pending']);
+            ->whereIn('status', ['Available', 'Pending'])
+            ->whereHas('user', fn($q) => $q->where('is_blocked', false));
 
         // savējās grāmatas nerāda
         $user = auth('sanctum')->user();

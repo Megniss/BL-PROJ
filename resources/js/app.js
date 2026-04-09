@@ -1,4 +1,5 @@
 import 'bootstrap'
+import 'flag-icons/css/flag-icons.min.css'
 import { createApp } from 'vue'
 import axios from 'axios'
 import App from './components/App.vue'

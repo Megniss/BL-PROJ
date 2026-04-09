@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AdminLog;
 use App\Models\Book;
 use App\Models\Rating;
 use App\Models\SwapRequest;
 use App\Models\User;
+use App\Notifications\BookDeletedByAdmin;
+use App\Notifications\BookUnderReview;
 use App\Notifications\SwapAccepted;
 use App\Notifications\SwapDeclined;
 use Illuminate\Http\Request;
@@ -13,6 +16,18 @@ use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
+    private function log(Request $request, string $action, string $type, int|null $id, string $name, string $reason = null): void
+    {
+        AdminLog::create([
+            'admin_id'    => $request->user()->id,
+            'action'      => $action,
+            'target_type' => $type,
+            'target_id'   => $id,
+            'target_name' => $name,
+            'reason'      => $reason,
+        ]);
+    }
+
     public function users()
     {
         $users = User::withCount('books')
@@ -51,21 +66,21 @@ class AdminController extends Controller
 
     public function blockUser(Request $request, User $user)
     {
-        // can't block another admin or yourself
         if ($user->is_admin || $user->id === $request->user()->id) {
             return response()->json(['message' => 'Cannot block this user.'], 422);
         }
 
         $user->update(['is_blocked' => true]);
-        // revoke all tokens so they get logged out
         $user->tokens()->delete();
+        $this->log($request, 'block_user', 'user', $user->id, $user->name);
 
         return response()->json(['message' => 'User blocked.']);
     }
 
-    public function unblockUser(User $user)
+    public function unblockUser(Request $request, User $user)
     {
         $user->update(['is_blocked' => false]);
+        $this->log($request, 'unblock_user', 'user', $user->id, $user->name);
         return response()->json(['message' => 'User unblocked.']);
     }
 
@@ -76,6 +91,7 @@ class AdminController extends Controller
         }
 
         $user->update(['is_admin' => true, 'is_blocked' => false]);
+        $this->log($request, 'make_admin', 'user', $user->id, $user->name);
         return response()->json(['message' => 'Admin rights granted.']);
     }
 
@@ -86,13 +102,44 @@ class AdminController extends Controller
         }
 
         $user->update(['is_admin' => false]);
+        $this->log($request, 'remove_admin', 'user', $user->id, $user->name);
         return response()->json(['message' => 'Admin rights removed.']);
     }
 
-    public function deleteBook(Book $book)
+    public function deleteBook(Request $request, Book $book)
     {
+        $request->validate(['reason' => ['required', 'string', 'max:500']]);
+
+        $owner = $book->user;
+        $title  = $book->title;
+        $author = $book->author;
+
         $book->delete();
+
+        $this->log($request, 'delete_book', 'book', null, $title, $request->reason);
+
+        if ($owner) {
+            $owner->notify(new BookDeletedByAdmin($title, $author, $request->reason));
+        }
+
         return response()->json(['message' => 'Book deleted.']);
+    }
+
+    public function reviewBook(Request $request, Book $book)
+    {
+        $request->validate(['reason' => ['required', 'string', 'max:500']]);
+
+        $book->update(['status' => 'UnderReview']);
+        $this->log($request, 'review_book', 'book', $book->id, $book->title, $request->reason);
+        $book->user->notify(new BookUnderReview($book, $request->reason));
+        return response()->json(['status' => 'UnderReview']);
+    }
+
+    public function unreviewBook(Request $request, Book $book)
+    {
+        $book->update(['status' => 'Available']);
+        $this->log($request, 'unreview_book', 'book', $book->id, $book->title);
+        return response()->json(['status' => 'Available']);
     }
 
     public function swaps()
@@ -106,7 +153,7 @@ class AdminController extends Controller
         return response()->json($swaps);
     }
 
-    public function acceptSwap(SwapRequest $swap)
+    public function acceptSwap(Request $request, SwapRequest $swap)
     {
         if ($swap->status !== 'pending') {
             return response()->json(['message' => 'This request is no longer pending.'], 422);
@@ -140,11 +187,12 @@ class AdminController extends Controller
         });
 
         User::find($swap->requester_id)->notify(new SwapAccepted($swap));
+        $this->log($request, 'accept_swap', 'swap', $swap->id, "{$swap->offeredBook->title} ↔ {$swap->wantedBook->title}");
 
         return response()->json($swap->fresh(['offeredBook', 'wantedBook', 'requester:id,name']));
     }
 
-    public function declineSwap(SwapRequest $swap)
+    public function declineSwap(Request $request, SwapRequest $swap)
     {
         if ($swap->status !== 'pending') {
             return response()->json(['message' => 'This request is no longer pending.'], 422);
@@ -157,19 +205,42 @@ class AdminController extends Controller
         });
 
         User::find($swap->requester_id)->notify(new SwapDeclined($swap));
+        $this->log($request, 'decline_swap', 'swap', $swap->id, "{$swap->offeredBook->title} ↔ {$swap->wantedBook->title}");
 
         return response()->json($swap->fresh(['offeredBook', 'wantedBook', 'requester:id,name']));
     }
 
-    public function deleteSwap(SwapRequest $swap)
+    public function deleteSwap(Request $request, SwapRequest $swap)
     {
-        // free books if still pending
+        $label = "{$swap->offeredBook->title} ↔ {$swap->wantedBook->title}";
+
         if ($swap->status === 'pending') {
             Book::where('id', $swap->offered_book_id)->update(['status' => 'Available']);
             Book::where('id', $swap->wanted_book_id)->update(['status' => 'Available']);
         }
         $swap->delete();
+        $this->log($request, 'delete_swap', 'swap', null, $label);
+
         return response()->json(['message' => 'Swap request deleted.']);
+    }
+
+    public function logs()
+    {
+        $logs = AdminLog::with('admin:id,name')
+            ->latest()
+            ->limit(500)
+            ->get()
+            ->map(fn($l) => [
+                'id'          => $l->id,
+                'admin'       => $l->admin?->name,
+                'action'      => $l->action,
+                'target_type' => $l->target_type,
+                'target_name' => $l->target_name,
+                'reason'      => $l->reason,
+                'date'        => $l->created_at->format('Y-m-d H:i'),
+            ]);
+
+        return response()->json($logs);
     }
 
     public function ratings()

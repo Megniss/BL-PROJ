@@ -17,6 +17,7 @@ class UserController extends Controller
             : collect();
 
         $users = User::withCount(['books' => fn($q) => $q->where('status', 'Available')])
+            ->where('is_blocked', false)
             ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
             ->when($blockedIds->isNotEmpty(), fn($q) => $q->whereNotIn('id', $blockedIds))
             ->orderBy('name')

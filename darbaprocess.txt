@@ -163,4 +163,17 @@ composer run dev
 # in a second terminal:
 php artisan queue:work
 The database and book covers are already in the repo so you won't need to run migrations or re-seed anything.
+!!!!
 
+kad megina log in ir jabut blocked by admin zinai
+kad admin delet book, jabut ierakstam kapec, un jasaglaba viss ko admin dara, kad admin izdzes gramatau tas lietotajam jasanem zina kapec
+un vel under review action, kamer taja ir gramta, ta ir nobloketa
+lietotaji var sudzeties par admin action caur sudzibu lapu, un vajag lapu kura ir saruna ar admin/support
+ja users ir blocked, tad vina gramatas pazud no kataloga
+un adminm panelim vajag filtracijas sistemu
+translate/jauna valoda feature adminam
+
+nobloketam user ir japazud no kataloga
+
+vairakas vienadas gramatas pie viena lietotajam
+admin paneli salabot pogas lai nekustaas, pielabot statusu, karoc sataisit tabulas lai labak parskatamas un lai tas var labak filtret pec nosaukumieun autoriem u.t.t

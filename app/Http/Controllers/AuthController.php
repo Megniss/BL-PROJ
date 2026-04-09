@@ -45,9 +45,7 @@ class AuthController extends Controller
         }
 
         if ($user->is_blocked) {
-            throw ValidationException::withMessages([
-                'email' => ['Your account has been blocked. Contact an administrator.'],
-            ]);
+            return response()->json(['blocked' => true], 403);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;

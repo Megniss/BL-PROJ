@@ -95,8 +95,10 @@ export default {
         const { data } = await axios.post('/api/login', this.form)
         setAuth(data.user, data.token)
         this.$router.push({ name: 'dashboard' })
-      } catch {
-        this.errorMsg = this.t('login.error')
+      } catch (e) {
+        this.errorMsg = e.response?.data?.blocked
+          ? this.t('login.errorBlocked')
+          : this.t('login.error')
       } finally {
         this.loading = false
       }
