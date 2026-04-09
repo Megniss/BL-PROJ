@@ -1,7 +1,6 @@
 <template>
   <div class="profile-page">
 
-    <!-- Navigācija -->
     <AppNavbar>
       <template v-if="!authStore.user">
         <button class="btn btn-sm btn-outline-secondary" @click="$router.push({ name: 'login' })">{{ t('nav.login') }}</button>
@@ -19,7 +18,6 @@
 
     <template v-else-if="profile">
       <div class="container-xl py-4 px-3 px-md-4">
-        <!-- Profila karte -->
         <div class="card border mb-4">
           <div class="card-body d-flex flex-wrap align-items-start gap-4 p-4">
             <div class="up-avatar">{{ profile.name[0].toUpperCase() }}</div>
@@ -46,7 +44,6 @@
           </div>
         </div>
 
-        <!-- Bibliotēkas sadaļa -->
         <h2 class="dash-section-title mb-3">{{ profile.name }} — {{ t('up.library') }}</h2>
 
         <div v-if="profile.library.length === 0" class="text-center py-5 text-muted">

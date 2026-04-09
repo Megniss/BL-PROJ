@@ -1,4 +1,4 @@
-// mixin ar metodēm priekš Home.vue
+// shared logic for Home.vue
 
 export default {
 

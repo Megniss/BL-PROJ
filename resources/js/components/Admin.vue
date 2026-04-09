@@ -6,7 +6,6 @@
 
     <div v-if="error" class="alert alert-danger">{{ error }}</div>
 
-    <!-- Users -->
     <div class="admin-card mb-4">
       <h2 class="admin-section-title mb-0">
         {{ t('admin.users') }}
@@ -77,7 +76,6 @@
       </div>
     </div>
 
-    <!-- Books -->
     <div class="admin-card mb-4">
       <h2 class="admin-section-title mb-0">
         {{ t('admin.books') }}
@@ -139,7 +137,6 @@
       </div>
     </div>
 
-    <!-- Swap Requests -->
     <div class="admin-card mb-4">
       <h2 class="admin-section-title mb-0">
         {{ t('admin.swaps') }}
@@ -197,7 +194,6 @@
       </div>
     </div>
 
-    <!-- Ratings -->
     <div class="admin-card">
       <h2 class="admin-section-title mb-0">
         {{ t('admin.ratings') }}
@@ -244,7 +240,6 @@
       </div>
     </div>
 
-    <!-- Languages -->
     <div class="admin-card mt-4">
       <h2 class="admin-section-title mb-0">
         {{ t('admin.languages') }}
@@ -252,7 +247,7 @@
       </h2>
       <div v-show="!collapsed.langs" class="mt-3">
 
-        <!-- Language list -->
+        <!-- lang list -->
         <table class="table table-hover align-middle mb-3">
           <thead>
             <tr>
@@ -311,7 +306,7 @@
           </tbody>
         </table>
 
-        <!-- Add language -->
+        <!-- add new lang form toggle -->
         <div v-if="!addingLang">
           <button class="btn btn-sm btn-outline-primary" @click="addingLang = true">{{ t('admin.btn.addLang') }}</button>
         </div>
@@ -334,7 +329,7 @@
           <button class="btn btn-sm btn-outline-secondary" @click="addingLang = false">{{ t('modal.cancel') }}</button>
         </div>
 
-        <!-- Translation editor modal -->
+        <!-- translation editor modal -->
         <div v-if="editingLang" class="lang-editor-overlay" @click.self="editingLang = null">
           <div class="lang-editor-modal">
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -364,7 +359,6 @@
       </div>
     </div>
 
-    <!-- Admin Log -->
     <div class="admin-card mt-4">
       <h2 class="admin-section-title mb-0">
         {{ t('admin.logs') }}
@@ -385,6 +379,8 @@
             <option value="accept_swap">{{ t('admin.log.accept_swap') }}</option>
             <option value="decline_swap">{{ t('admin.log.decline_swap') }}</option>
             <option value="delete_swap">{{ t('admin.log.delete_swap') }}</option>
+            <option value="support_reply">{{ t('admin.log.support_reply') }}</option>
+            <option value="close_complaint">{{ t('admin.log.close_complaint') }}</option>
           </select>
         </div>
         <div class="table-responsive">
@@ -442,12 +438,12 @@ export default {
       ratings: [],
       logs: [],
       allLanguages: [],
-      editingLang: null,       // code of language being edited
-      langTranslations: {},    // { key: value } for editing
+      editingLang: null,       // which lang is open in the editor
+      langTranslations: {},    // key -> translated value
       langSaving: false,
       newLang: { code: '', name: '', flag: '' },
       addingLang: false,
-      editingLangRow: null,     // code of language row being edited inline
+      editingLangRow: null,     // which row is in inline edit mode
       langRowEdit: { flag: '', name: '' },
       error: '',
       collapsed: { users: false, books: true, swaps: true, ratings: true, langs: true, logs: true },
@@ -511,7 +507,7 @@ export default {
     },
 
     allTranslationKeys() {
-      // returns { key: englishDefault } for all known keys
+      // use EN as the master list of keys + fallback values
       return translations['en'] ?? {}
     },
 
@@ -580,7 +576,7 @@ export default {
 
     async reviewBook(b) {
       const reason = prompt(this.t('admin.prompt.reviewReason').replace('{title}', b.title))
-      if (reason === null) return  // cancelled
+      if (reason === null) return
       if (!reason.trim()) {
         alert(this.t('admin.prompt.reviewReasonRequired'))
         return
@@ -646,7 +642,7 @@ export default {
         const { data } = await axios.patch(`/api/admin/languages/${lang.code}`, this.langRowEdit)
         lang.flag = data.flag
         lang.name = data.name
-        // update switcher entry if active
+        // also update the navbar switcher if it's there
         const entry = this.langStore.languages.find(l => l.code === lang.code)
         if (entry) { entry.flag = data.flag; entry.name = data.name }
         this.editingLangRow = null
@@ -672,10 +668,10 @@ export default {
       if (!confirm(this.t('admin.confirm.deactivateLang').replace('{name}', lang.name))) return
       await axios.patch(`/api/admin/languages/${lang.code}/deactivate`)
       lang.is_active = false
-      // remove from switcher
+      // pull it out of the navbar switcher too
       const idx = this.langStore.languages.findIndex(l => l.code === lang.code)
       if (idx !== -1) this.langStore.languages.splice(idx, 1)
-      // switch to EN if current locale was removed
+      // if the user was on that lang, fall back to EN
       if (this.langStore.locale === lang.code) setLocale('en')
     },
 
@@ -689,10 +685,10 @@ export default {
 
     async openLangEditor(lang) {
       this.editingLang = lang.code
-      // pre-populate with existing static translations; new langs fall back to EN
+      // start with the static file, new langs just use EN as base
       const staticBase = { ...(translations[lang.code] ?? translations['en']) }
       const { data } = await axios.get(`/api/admin/translations/${lang.code}`)
-      // DB overrides win over static base
+      // db overrides take priority over the static file
       this.langTranslations = { ...staticBase, ...data }
     },
 
@@ -851,7 +847,7 @@ export default {
 </style>
 
 <style>
-/* admin dark mode — not scoped so [data-theme] selector works */
+/* dark mode — has to be unscoped so [data-theme] actually reaches */
 [data-theme="dark"] .admin-card {
   background: #211d18;
   box-shadow: 0 2px 8px rgba(0,0,0,.3);

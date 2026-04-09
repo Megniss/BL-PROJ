@@ -10,7 +10,7 @@ export const themeStore = reactive({
     document.documentElement.setAttribute('data-theme', theme)
   },
 
-  // izsauc pie ielādes
+  // run on page load
   init() {
     const saved = localStorage.getItem('theme') || 'light'
     this.dark = saved === 'dark'

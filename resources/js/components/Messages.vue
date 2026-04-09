@@ -1,19 +1,16 @@
 <template>
   <div class="messages-page">
 
-    <!-- Navigācija -->
     <AppNavbar />
 
-    <!-- Saturs -->
     <div class="messages-body">
 
-      <!-- Sarakstes saraksts -->
       <aside class="convo-panel" :class="{ 'hidden-mobile': showThread }">
         <div class="convo-header">
           <h2 class="convo-title">{{ t('messages.title') }}</h2>
         </div>
 
-        <!-- pinned support entry -->
+        <!-- support is always pinned at the top -->
         <div
           class="convo-item convo-support"
           role="button"
@@ -60,17 +57,14 @@
         </div>
       </aside>
 
-      <!-- Ziņojumu panelis -->
       <main class="thread-panel" :class="{ 'hidden-mobile': !showThread }">
 
-        <!-- Nav izvēlēta sarakstes -->
         <div v-if="!activeUser" class="thread-empty">
           <span class="thread-empty-icon">💬</span>
           <p>{{ t('messages.selectConvo') }}</p>
         </div>
 
         <template v-else>
-          <!-- Sarakstes galvene -->
           <div class="thread-header">
             <button class="back-btn" @click="showThread = false">{{ t('messages.back') }}</button>
             <span
@@ -85,7 +79,6 @@
             </button>
           </div>
 
-          <!-- Ziņojumi -->
           <div class="thread-messages" ref="messageList" role="log" aria-live="polite" aria-label="Ziņojumi">
             <div v-if="loadingThread" class="thread-status">{{ t('messages.loading') }}</div>
             <div v-if="threadError" class="text-center text-danger p-3">{{ threadError }}</div>
@@ -107,7 +100,6 @@
                 @touchend="cancelLongPress"
                 @touchcancel="cancelLongPress"
               >
-                <!-- rediģēšanas režīms -->
                 <template v-if="editingId === msg.id">
                   <textarea
                     v-model="editBody"
@@ -132,17 +124,15 @@
               </div>
             </div>
 
-            <!-- konteksta izvēlne -->
+            <!-- right-click / long-press menu -->
             <div v-if="ctxMenu.visible" class="msg-ctx-menu" :style="{ top: ctxMenu.y + 'px', left: ctxMenu.x + 'px' }">
               <button @click="startEdit(ctxMenu.msg); ctxMenu.visible = false">{{ t('messages.editBtn') }}</button>
               <button @click="unsendMessage(ctxMenu.msg); ctxMenu.visible = false" class="msg-ctx-danger">{{ t('messages.unsendBtn') }}</button>
             </div>
           </div>
 
-          <!-- Bloķēts paziņojums -->
           <div v-if="activeUserBlocked" class="thread-blocked-notice">{{ t('msg.blocked') }}</div>
 
-          <!-- Rakstīt ziņu -->
           <div v-else class="thread-compose">
             <textarea
               v-model="compose"
@@ -210,7 +200,7 @@ export default {
     document.addEventListener('click', this.closeCtxMenu)
     await this.fetchConversations()
 
-    // Automātiski atver sarakstes ja pārnāk no grāmatas kartiņas vai profila
+    // if we came from a book card or profile page, open that convo right away
     if (this.$route.query.userId) {
       const userId   = Number(this.$route.query.userId)
       const userName = this.$route.query.userName || 'User'
@@ -243,7 +233,7 @@ export default {
       this.showThread        = true
       clearInterval(this.pollTimer)
 
-      // pārbaudam vai bloķēts
+      // check block status before showing the thread
       try {
         const { data } = await axios.get(`/api/users/${user.id}`)
         this.activeUserBlocked = (data.is_blocked || data.they_blocked_me) ?? false
@@ -251,7 +241,7 @@ export default {
 
       await this.fetchThread()
 
-      // Pārbauda jaunas ziņas ik 3s kamēr sarakstes ir atvērta
+      // poll every 3s while this convo is open
       this.pollTimer = setInterval(() => {
         if (this.activeUser) this.pollNewMessages()
       }, 3000)
@@ -266,7 +256,7 @@ export default {
           await axios.post(`/api/blocks/${this.activeUser.id}`)
           this.activeUserBlocked = true
         }
-        // keep sidebar tag in sync
+        // sync the blocked tag in the sidebar too
         const convo = this.conversations.find(c => c.user.id === this.activeUser.id)
         if (convo) convo.is_blocked = this.activeUserBlocked
       } catch { /* ignore */ }
@@ -327,7 +317,7 @@ export default {
           }
         })
 
-        // Atjauno sarakstes sarakstu
+        // update or create the sidebar entry
         const convo = this.conversations.find(c => c.user.id === this.activeUser.id)
         if (convo) {
           convo.last_message = { body, created_at: data.created_at }
@@ -369,24 +359,23 @@ export default {
       const menuH = 88
       const gap = 6
 
-      // own messages are on the right — try left side first, else below
+      // own messages sit on the right, so try placing the menu to the left first
       let x, y
 
       if (r.left - menuW - gap >= 0) {
-        // pietiek vietas pa kreisi
         x = r.left - menuW - gap
         y = r.top
       } else if (r.right + menuW + gap <= window.innerWidth) {
-        // pa labi
+        // no room left, go right
         x = r.right + gap
         y = r.top
       } else {
-        // zem ziņas
+        // last resort: below the bubble
         x = Math.max(8, r.right - menuW)
         y = r.bottom + gap
       }
 
-      // neiziet ārpus apakšas
+      // don't let it go off the bottom of the screen
       if (y + menuH > window.innerHeight) y = r.top - menuH - gap
 
       this.ctxMenu = { visible: true, x, y, msg }

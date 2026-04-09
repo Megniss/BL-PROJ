@@ -5,7 +5,7 @@
     <div class="container py-5 px-3 px-md-4" style="max-width:680px">
       <h1 class="settings-title mb-4">{{ t('settings.title') }}</h1>
 
-      <!-- profila rediģēšana -->
+      <!-- profile info + password change -->
       <div class="settings-card mb-4">
         <h2 class="settings-section-title">{{ t('settings.editProfile') }}</h2>
 
@@ -46,7 +46,7 @@
         </form>
       </div>
 
-      <!-- privātuma iestatījumi -->
+      <!-- privacy toggles -->
       <div class="settings-card mb-4">
         <h2 class="settings-section-title">{{ t('settings.privacy') }}</h2>
 
@@ -64,7 +64,7 @@
         </div>
       </div>
 
-      <!-- bloķētie lietotāji -->
+      <!-- blocked users list -->
       <div class="settings-card">
         <h2 class="settings-section-title">{{ t('settings.blocked') }}</h2>
 

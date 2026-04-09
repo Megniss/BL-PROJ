@@ -3,7 +3,7 @@
     <div v-if="open" class="modal-overlay" @click.self="$emit('close')" role="dialog" aria-modal="true" aria-labelledby="swap-modal-title">
       <div class="modal-card">
 
-        <!-- Pieprasījums nosūtīts -->
+        <!-- success state after sending -->
         <div v-if="success" class="text-center py-2">
           <div style="font-size:2.5rem">✅</div>
           <h2 class="modal-title mt-2 mb-1">{{ t('swap.sent') }}</h2>
@@ -11,7 +11,6 @@
           <button class="btn btn-primary px-4" @click="$emit('close')">{{ t('swap.sentClose') }}</button>
         </div>
 
-        <!-- Parastā forma -->
         <template v-else>
           <h2 class="modal-title mb-2" id="swap-modal-title">{{ t('books.requestSwap') }} ⇄</h2>
           <p class="modal-desc mb-3">

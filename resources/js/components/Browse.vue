@@ -1,7 +1,6 @@
 <template>
   <div class="bookloop-home">
 
-    <!-- Navigācija -->
     <AppNavbar>
       <template v-if="!authStore.user">
         <button class="btn btn-sm btn-outline-secondary" @click="$router.push({ name: 'login' })">{{ t('nav.login') }}</button>
@@ -9,7 +8,6 @@
       </template>
     </AppNavbar>
 
-    <!-- Lapas galvene -->
     <section class="browse-header">
       <div class="container-xl">
         <h1 class="browse-header-title">{{ t('browse.title') }}</h1>
@@ -17,7 +15,6 @@
       </div>
     </section>
 
-    <!-- Filtri -->
     <section class="border-bottom py-4">
       <div class="container-xl">
         <div class="browse-toolbar mb-3">
@@ -42,11 +39,10 @@
           </div>
         </div>
 
-        <!-- Grāmatu filtri -->
         <div class="filter-area">
         <transition name="tab-fade" mode="out-in">
         <div v-if="tab === 'books'" key="books-filters">
-        <!-- row 1: search + filter toggle (always visible) -->
+        <!-- search row is always shown -->
         <div class="d-flex gap-2 mb-2">
           <input v-model="searchQuery" class="form-control" :placeholder="t('search.placeholder')" :aria-label="t('search.placeholder')" @keyup.enter="applyFilters" />
           <button class="btn btn-primary flex-shrink-0" @click="applyFilters">{{ t('search.btn') }}</button>
@@ -60,9 +56,8 @@
           </button>
         </div>
 
-        <!-- row 2: extra filters — always on desktop, toggled on mobile -->
+        <!-- extra filters — hidden on mobile unless toggled -->
         <div v-if="showMoreFilters || isDesktop" class="d-flex flex-wrap gap-2 mb-2">
-          <!-- žanrs -->
           <div class="filter-suggest-wrap" style="min-width:150px;flex:1">
             <div class="filter-suggest-inner">
               <input v-model="genreSearch" class="form-control"
@@ -77,7 +72,6 @@
             </ul>
           </div>
 
-          <!-- valoda -->
           <div class="filter-suggest-wrap" style="min-width:130px;flex:1">
             <div class="filter-suggest-inner">
               <input v-model="langSearch" class="form-control"
@@ -92,7 +86,7 @@
             </ul>
           </div>
 
-          <!-- kārtošana (tikai kartiņu skatā) -->
+          <!-- sort dropdown only makes sense in cards view, table has its own column sort -->
           <div v-show="viewMode === 'cards'" style="min-width:150px;flex:1">
             <select v-model="sortBy" class="form-select" :aria-label="t('sort.titleAsc')" @change="applyFilters">
               <option value="title_asc">{{ t('sort.titleAsc') }}</option>
@@ -106,7 +100,7 @@
           </div>
         </div>
 
-        <!-- aktīvie filtru tagi + notīrīt visus -->
+        <!-- active filter tags -->
         <div v-if="genreFilters.length || langFilters.length || searchQuery || sortBy !== 'title_asc'" class="d-flex flex-wrap align-items-center gap-1 mt-1">
           <span v-for="g in genreFilters" :key="g" class="table-genre-tag">
             {{ t('genre.' + g) }}
@@ -128,7 +122,6 @@
       </div>
     </section>
 
-    <!-- Grāmatas -->
     <section v-show="tab === 'books'" class="container-xl py-4" style="min-height:60vh">
 
       <div v-if="loadingBooks" class="text-center py-5 text-muted">
@@ -151,7 +144,6 @@
         </template>
       </div>
 
-      <!-- kartiņu skats -->
       <div v-else-if="viewMode === 'cards'" class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-3">
         <div v-for="book in books" :key="book.id" class="col">
           <div class="card h-100 book-card border" style="cursor:pointer; position:relative" @click="openDetail(book)">
@@ -182,7 +174,6 @@
         </div>
       </div>
 
-      <!-- tabulas skats -->
       <div v-else class="book-table-wrap">
         <table class="book-table">
           <thead>
@@ -214,7 +205,6 @@
         </table>
       </div>
 
-      <!-- lapošana -->
       <div v-if="lastPage > 1" class="d-flex justify-content-center align-items-center gap-3 mt-4">
         <button class="btn btn-outline-secondary" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">{{ t('pagination.prev') }}</button>
         <span class="text-muted small">{{ t('pagination.pageOf').replace('{cur}', currentPage).replace('{last}', lastPage) }}</span>
@@ -223,7 +213,6 @@
 
     </section>
 
-    <!-- Lietotāji -->
     <section v-show="tab === 'users'" class="container-xl py-4" style="min-height:60vh">
       <div v-if="loadingUsers" class="text-center py-5 text-muted">
         <div class="fs-1">⏳</div>
@@ -261,7 +250,6 @@
 
   </div>
 
-  <!-- Grāmatas detaļas modālis -->
   <BookDetailModal
     :book="detailBook"
     :blocked="detailBookBlocked"
@@ -271,7 +259,6 @@
     @profile="(user) => $router.push({ name: 'userProfile', params: { id: user.id } })"
   />
 
-  <!-- Apmaiņas modālis -->
   <SwapModal
     :open="swapModal.open"
     :wanted-book="swapModal.wantedBook"
@@ -454,7 +441,7 @@ export default {
         this.lastPage = data.last_page
         this.totalBooks = data.total
       } catch {
-        // klusām ignorē
+        // just leave the list empty
       } finally {
         this.loadingBooks = false
       }
@@ -464,7 +451,6 @@ export default {
       this.$router.push({ name: 'browse' })
     },
 
-    // žanru filtri
     selectGenre(g) {
       if (!this.genreFilters.includes(g.value)) this.genreFilters.push(g.value)
       this.genreSearch = ''
@@ -482,7 +468,6 @@ export default {
     },
     hideGenreSugg() { setTimeout(() => { this.showGenreSugg = false }, 150) },
 
-    // valodas filtri
     selectLang(l) {
       if (!this.langFilters.includes(l.value)) this.langFilters.push(l.value)
       this.langSearch = ''
@@ -500,7 +485,7 @@ export default {
     },
     hideLangSugg() { setTimeout(() => { this.showLangSugg = false }, 150) },
 
-    // tabulas kārtošana
+    // toggle direction if same col, else reset to asc
     sortTable(col) {
       if (this.tableSort.col === col) {
         this.tableSort.dir = this.tableSort.dir === 'asc' ? 'desc' : 'asc'
@@ -514,7 +499,6 @@ export default {
       return this.tableSort.dir === 'asc' ? '↑' : '↓'
     },
 
-    // swap modālis
     async openSwap(book) {
       this.detailBook = null
       this.swapModal.wantedBook = book

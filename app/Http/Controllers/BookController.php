@@ -179,6 +179,7 @@ class BookController extends Controller
         return response()->json(['message' => 'Cover removed.']);
     }
 
+    // just for the landing page counters
     public function stats()
     {
         return response()->json([

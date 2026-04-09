@@ -1,7 +1,6 @@
 <template>
   <div class="dashboard-page">
 
-    <!-- Navigācija -->
     <AppNavbar />
 
     <div class="container-xl py-4 px-3 px-md-4">
@@ -12,7 +11,6 @@
       </div>
 
       <template v-else>
-        <!-- Profila karte -->
         <div class="card border mb-4">
           <div class="card-body d-flex flex-wrap align-items-center gap-4 p-4">
             <div class="profile-avatar">{{ initials }}</div>
@@ -34,7 +32,6 @@
           </div>
         </div>
 
-        <!-- Apmaiņas vēsture -->
         <h2 class="dash-section-title mb-3">{{ t('profile.swapHistory') }}</h2>
 
         <div v-if="history.length === 0" class="text-center py-5 text-muted">

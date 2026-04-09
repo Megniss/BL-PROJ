@@ -37,7 +37,7 @@ class MessageController extends Controller
 
         $partners = User::whereIn('id', $partnerIds)->get()->keyBy('id');
 
-        // fetch all blocked ids in one query
+        // one query for all blocked ids
         $blockedIds = $request->user()->blockedUserIds();
 
         $conversations = $lastMessages->map(function ($msg) use ($me, $partners, $unreadCounts, $blockedIds) {
@@ -96,6 +96,7 @@ class MessageController extends Controller
         $sender = $request->user();
         $recipient = User::find($data['to_user_id']);
 
+        // only send a notification if there's no unread notification already waiting
         $hasUnread = Message::where('from_user_id', $sender->id)
             ->where('to_user_id', $recipient->id)
             ->whereNull('read_at')
@@ -151,7 +152,7 @@ class MessageController extends Controller
 
         $message->delete();
 
-        // ja vairs nav nelasītu ziņu no sūtītāja, dzēšam paziņojumu
+        // clean up the notification if there are no more unread messages from this sender
         $hasMoreUnread = Message::where('from_user_id', $senderId)
             ->where('to_user_id', $recipientId)
             ->whereNull('read_at')

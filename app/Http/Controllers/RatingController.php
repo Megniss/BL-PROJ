@@ -24,7 +24,7 @@ class RatingController extends Controller
 
         $userId = $request->user()->id;
 
-        // noskaidrojam kuru grāmatu lietotājs saņēma
+        // figure out which book this user actually received
         if ($userId === $swap->requester_id) {
             $bookId = $swap->wanted_book_id;
         } elseif ($userId === $swap->owner_id) {

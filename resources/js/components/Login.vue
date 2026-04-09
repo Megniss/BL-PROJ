@@ -1,7 +1,6 @@
 <template>
   <div class="auth-page">
 
-    <!-- branding panelis -->
     <div class="auth-left">
       <div class="auth-left-inner">
         <div class="auth-brand">
@@ -18,7 +17,6 @@
       </div>
     </div>
 
-    <!-- forma -->
     <div class="auth-right">
       <div class="auth-form-wrap">
         <div class="d-flex justify-content-between align-items-center mb-4">

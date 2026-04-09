@@ -1,9 +1,7 @@
 <template>
   <div class="dashboard-page">
 
-    <!-- Navigācija -->
     <AppNavbar>
-      <!-- messages button (desktop nav + mobile menu) -->
       <div class="position-relative">
         <button class="btn btn-sm btn-outline-secondary" @click="$router.push({ name: 'messages' })">
           {{ t('nav.messages') }}
@@ -11,7 +9,7 @@
         </button>
       </div>
 
-      <!-- bell: always visible, sits right next to burger on mobile -->
+      <!-- bell goes in the inline slot so it shows next to the burger on mobile -->
       <template #inline>
         <div class="notif-wrap" ref="notifWrap">
           <button class="notif-bell" @click="toggleNotifs" :aria-label="t('notif.title') + (unreadCount > 0 ? ' (' + unreadCount + ')' : '')">
@@ -56,10 +54,8 @@
       </template>
     </AppNavbar>
 
-    <!-- Galvenais saturs -->
     <div class="container-xl py-4 px-3 px-md-4">
 
-      <!-- Galvene -->
       <div class="d-flex justify-content-between align-items-start mb-4">
         <div>
           <h1 class="dashboard-title mb-1">{{ t('dash.title') }}</h1>
@@ -90,7 +86,6 @@
         <button class="btn btn-primary px-4" @click="openAddModal">{{ t('dash.addFirst') }}</button>
       </div>
 
-      <!-- Ienākošie pieprasījumi -->
       <template v-if="pendingIncoming.length > 0">
         <h2 class="dash-section-title mb-3">{{ t('dash.receivedReqs') }}</h2>
         <div class="d-flex flex-column gap-2 mb-4">
@@ -110,7 +105,6 @@
         </div>
       </template>
 
-      <!-- Nosūtītie apmaiņas pieprasījumi -->
       <template v-if="outgoing.length > 0">
         <h2 class="dash-section-title mb-3">{{ t('dash.sentReqs') }}</h2>
         <div class="d-flex flex-column gap-2 mb-4">
@@ -135,7 +129,6 @@
 
       <h2 class="dash-section-title mb-3">{{ t('dash.myBooks') }}</h2>
 
-      <!-- Grāmatu režģis -->
       <div v-if="!loading && books.length > 0" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
         <div v-for="book in books" :key="book.id" class="col">
           <div class="card h-100 book-card border" style="position:relative">
@@ -144,7 +137,6 @@
               <img v-if="book.cover_image" :src="'/storage/' + book.cover_image" :alt="book.title" class="book-card-cover-img" />
               <div v-if="book.status === 'UnderReview'" class="review-exclaim">!</div>
               <span class="book-card-genre">{{ book.genre }}</span>
-              <!-- rediģēt / dzēst pogas -->
               <div class="dash-card-actions">
                 <button class="dash-action-btn" :aria-label="t('modal.editBook')" @click="openEditModal(book)">✏️</button>
                 <button class="dash-action-btn dash-action-btn--delete" :aria-label="t('modal.deleteTitle')" @click="confirmDelete(book)">🗑️</button>
@@ -165,7 +157,6 @@
       </div>
     </div>
 
-    <!-- Grāmatas pievienošanas / rediģēšanas modālis -->
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal" role="dialog" aria-modal="true" aria-labelledby="book-modal-title">
       <div class="modal-card">
         <h2 class="modal-title mb-3" id="book-modal-title">{{ editingBook ? t('modal.editBook') : t('modal.addBook') }}</h2>
@@ -207,15 +198,13 @@
               <label for="book-description" class="form-label fw-semibold">{{ t('modal.fieldDesc') }}</label>
               <textarea id="book-description" v-model="form.description" class="form-control" rows="3" :placeholder="t('modal.descHint')"></textarea>
             </div>
-            <!-- Vāka attēls -->
             <div class="col-12">
               <label for="book-cover" class="form-label fw-semibold">{{ t('modal.cover') }}</label>
-              <!-- pašreizējais vāks (rediģēšanas režīmā, nav jauns failu) -->
+              <!-- existing cover while editing — hide if removed or new file picked -->
               <div v-if="editingBook && editingBook.cover_image && !coverRemoved && !coverPreview" class="d-flex align-items-center gap-3 mb-2">
                 <img :src="'/storage/' + editingBook.cover_image" class="cover-preview-img" :alt="editingBook.title" />
                 <button type="button" class="btn btn-sm btn-outline-danger" @click="markRemoveCover">{{ t('modal.removeCover') }}</button>
               </div>
-              <!-- priekšskatījums jaunam failam -->
               <div v-if="coverPreview" class="d-flex align-items-center gap-3 mb-2">
                 <img :src="coverPreview" class="cover-preview-img" :alt="t('modal.cover')" />
                 <button type="button" class="btn btn-sm btn-outline-secondary" @click="clearCoverFile">{{ t('modal.cancelCover') }}</button>
@@ -234,7 +223,6 @@
       </div>
     </div>
 
-    <!-- Dzēšanas apstiprinājuma modālis -->
     <div v-if="deletingBook" class="modal-overlay" @click.self="deletingBook = null" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
       <div class="modal-card modal-card--sm">
         <h2 class="modal-title mb-2" id="delete-modal-title">{{ t('modal.deleteTitle') }}</h2>
@@ -518,7 +506,7 @@ export default {
           savedBook = this.books[0]
         }
 
-        // vāka augšupielāde vai dzēšana
+        // cover upload / remove is a separate request
         if (savedBook && this.coverFile) {
           const fd = new FormData()
           fd.append('cover', this.coverFile)

@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class LanguageController extends Controller
 {
-    // public: active languages for the switcher
+    // what the navbar needs
     public function index()
     {
         return response()->json(
@@ -16,7 +16,7 @@ class LanguageController extends Controller
         );
     }
 
-    // public: DB overrides for a locale
+    // DB overrides for a locale (merged with file translations on the frontend)
     public function translations(string $code)
     {
         return response()->json(
@@ -24,13 +24,12 @@ class LanguageController extends Controller
         );
     }
 
-    // admin: all languages (including inactive)
+    // admin view, includes inactive ones too
     public function all()
     {
         return response()->json(Language::orderBy('sort_order')->get());
     }
 
-    // admin: add a new language
     public function store(Request $request)
     {
         $request->validate([
@@ -50,7 +49,6 @@ class LanguageController extends Controller
         return response()->json($lang, 201);
     }
 
-    // admin: update name/flag of an existing language
     public function update(Request $request, string $code)
     {
         $request->validate([
@@ -63,9 +61,9 @@ class LanguageController extends Controller
         return response()->json($lang);
     }
 
-    // admin: deactivate a language (frontend stops using it; data stays)
     public function deactivate(string $code)
     {
+        // english is the fallback, can't remove it
         if ($code === 'en') {
             return response()->json(['message' => 'Cannot remove the default language.'], 422);
         }
@@ -75,7 +73,6 @@ class LanguageController extends Controller
         return response()->json(['message' => 'Language removed.']);
     }
 
-    // admin: reactivate a language
     public function reactivate(string $code)
     {
         $lang = Language::findOrFail($code);
@@ -83,7 +80,6 @@ class LanguageController extends Controller
         return response()->json(['message' => 'Language restored.']);
     }
 
-    // admin: get current overrides for editing
     public function getTranslations(string $code)
     {
         return response()->json(
@@ -91,7 +87,6 @@ class LanguageController extends Controller
         );
     }
 
-    // admin: save batch overrides
     public function saveTranslations(Request $request, string $code)
     {
         $request->validate([
@@ -101,6 +96,7 @@ class LanguageController extends Controller
 
         foreach ($request->overrides as $key => $value) {
             if ($value === null || $value === '') {
+                // empty = delete the override, fall back to file
                 TranslationOverride::where('language_code', $code)->where('key', $key)->delete();
             } else {
                 TranslationOverride::updateOrCreate(

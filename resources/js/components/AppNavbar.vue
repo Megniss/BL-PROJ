@@ -2,7 +2,6 @@
   <nav class="bookloop-navbar">
     <div class="container-xl d-flex align-items-center py-2 gap-3">
 
-      <!-- logo -->
       <div class="d-flex align-items-center gap-2 me-auto" role="button" tabindex="0"
         @click="$router.push({ name: 'home' })"
         @keyup.enter="$router.push({ name: 'home' })"
@@ -15,7 +14,7 @@
         <button class="theme-btn" @click="themeStore.toggle()" :aria-label="themeStore.dark ? 'Ieslēgt gaišo režīmu' : 'Ieslēgt tumšo režīmu'">
           <span aria-hidden="true">{{ themeStore.dark ? '☀️' : '🌙' }}</span>
         </button>
-        <!-- 2 languages: buttons; 3+: dropdown -->
+        <!-- buttons if 2 langs, dropdown if more -->
         <div class="d-flex align-items-center gap-1" v-if="langStore.languages.length <= 2">
           <template v-for="(lang, i) in langStore.languages" :key="lang.code">
             <span v-if="i > 0" class="lang-divider" aria-hidden="true">|</span>
@@ -46,15 +45,15 @@
           </div>
         </div>
 
-        <!-- slot: page-specific items (tikai desktop) -->
+        <!-- extra nav items from parent, hidden on mobile -->
         <div class="d-none d-lg-flex align-items-center gap-2">
           <slot />
         </div>
 
-        <!-- always-visible slot (bell utt.) -->
+        <!-- stuff like the bell icon that should always show -->
         <slot name="inline" />
 
-        <!-- avatar dropdown (tikai desktop) -->
+        <!-- avatar + dropdown, desktop only -->
         <div v-if="authStore.user" class="nav-user-wrap d-none d-lg-block" ref="dropdownWrap">
           <button class="nav-avatar-btn" @click="dropdownOpen = !dropdownOpen" :aria-label="authStore.user.name">
             {{ initials }}
@@ -77,14 +76,14 @@
           </div>
         </div>
 
-        <!-- burger (mobile, vienmēr) -->
+        <!-- burger menu for mobile -->
         <button class="burger-btn d-lg-none" @click="menuOpen = !menuOpen" :aria-label="menuOpen ? 'Aizvērt izvēlni' : 'Atvērt izvēlni'">
           {{ menuOpen ? '✕' : '☰' }}
         </button>
       </div>
     </div>
 
-    <!-- mobilais menu -->
+    <!-- mobile nav panel -->
     <div v-if="menuOpen" class="nav-mobile-menu d-lg-none">
       <slot />
       <template v-if="authStore.user">

@@ -103,6 +103,7 @@ class SwapRequestController extends Controller
             if (!$isRequester) {
                 return response()->json(['message' => 'Decline the request before dismissing it.'], 422);
             }
+            // requester cancels their own pending request
             DB::transaction(function () use ($swap) {
                 Book::where('id', $swap->offered_book_id)->update(['status' => 'Available']);
                 Book::where('id', $swap->wanted_book_id)->update(['status' => 'Available']);

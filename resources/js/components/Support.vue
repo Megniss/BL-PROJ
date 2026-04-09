@@ -4,7 +4,6 @@
 
     <div class="messages-body">
 
-      <!-- Left panel: complaint list -->
       <aside class="convo-panel" :class="{ 'hidden-mobile': showThread }">
         <div class="convo-header">
           <h2 class="convo-title">{{ t('support.title') }}</h2>
@@ -13,7 +12,6 @@
           </button>
         </div>
 
-        <!-- New complaint form -->
         <div v-if="showNew" class="support-new-form">
           <input v-model="newSubject" class="form-control form-control-sm mb-2" :placeholder="t('support.subjectPlaceholder')" maxlength="200" />
           <textarea v-model="newBody" class="form-control form-control-sm mb-2" :placeholder="t('support.messagePlaceholder')" rows="3" maxlength="2000"></textarea>
@@ -50,7 +48,6 @@
         </div>
       </aside>
 
-      <!-- Right panel: chat -->
       <main class="thread-panel" :class="{ 'hidden-mobile': !showThread }">
 
         <div v-if="!active" class="thread-empty">
@@ -65,6 +62,11 @@
             <span class="support-status-badge ms-2" :class="active.status === 'closed' ? 'badge-closed' : 'badge-open'">
               {{ active.status === 'closed' ? t('support.closed') : t('support.open') }}
             </span>
+            <router-link v-if="authStore.user?.is_admin && active.user"
+              :to="{ name: 'userProfile', params: { id: active.user.id } }"
+              class="support-user-link ms-2">
+              {{ active.user.name }}
+            </router-link>
             <button v-if="authStore.user?.is_admin && active.status === 'open'"
               class="btn btn-sm btn-outline-secondary ms-auto"
               @click="closeComplaint">{{ t('support.closeBtn') }}</button>
@@ -84,8 +86,8 @@
                 <p class="msg-body">{{ msg.body }}</p>
                 <div class="msg-meta">
                   <template v-if="msg.sender?.is_admin">
-                    <span class="support-admin-tag">{{ t('support.adminTag') }}</span>
-                    <span class="support-admin-name">{{ msg.sender.name }}</span>
+                    <span class="support-admin-tag" :data-name="msg.sender.name">{{ t('support.adminTag') }}</span>
+                    <span v-if="authStore.user?.is_admin" class="support-admin-name">{{ msg.sender.name }}</span>
                   </template>
                   <span class="msg-time">{{ formatTime(msg.created_at) }}</span>
                 </div>
@@ -151,7 +153,7 @@ export default {
   async mounted() {
     await this.loadList()
 
-    // open complaint from query param (e.g. /support?new=1)
+    // ?new=1 means jump straight to the new complaint form
     if (this.$route.query.new) {
       this.showNew = true
     }
@@ -175,7 +177,7 @@ export default {
       try {
         const { data } = await axios.get(`/api/complaints/${c.id}`)
         this.active = data
-        // update list entry
+        // refresh the preview text in the sidebar
         const idx = this.complaints.findIndex(x => x.id === c.id)
         if (idx !== -1) this.complaints[idx].last_msg = data.messages?.at(-1)?.body ?? this.complaints[idx].last_msg
         this.$nextTick(() => this.scrollBottom())
@@ -212,12 +214,12 @@ export default {
       try {
         const { data } = await axios.post(`/api/complaints/${this.active.id}/messages`, { body })
         this.active.messages.push(data)
-        // update list preview
+        // keep sidebar preview in sync
         const idx = this.complaints.findIndex(x => x.id === this.active.id)
         if (idx !== -1) this.complaints[idx].last_msg = body
         this.$nextTick(() => this.scrollBottom())
       } catch {
-        this.compose = body // restore if failed
+        this.compose = body // put it back so the user doesn't lose their message
       } finally {
         this.sending = false
       }
@@ -277,6 +279,26 @@ export default {
   text-transform: uppercase;
   letter-spacing: .04em;
   margin-right: .3rem;
+  position: relative;
+  cursor: default;
+}
+/* hover tooltip shows the admin's name */
+.support-admin-tag[data-name]:hover::after {
+  content: attr(data-name);
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1f2937;
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 500;
+  padding: .2rem .5rem;
+  border-radius: 5px;
+  white-space: nowrap;
+  pointer-events: none;
+  text-transform: none;
+  letter-spacing: 0;
 }
 .support-admin-name {
   font-size: .65rem;
@@ -287,6 +309,14 @@ export default {
   padding: .05rem .35rem;
   margin-right: .3rem;
 }
+.support-user-link {
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--color-primary, #3a6b3e);
+  text-decoration: none;
+  border-bottom: 1px dotted currentColor;
+}
+.support-user-link:hover { opacity: .75; }
 
 [data-theme="dark"] .badge-open   { background: #064e3b; color: #6ee7b7; }
 [data-theme="dark"] .badge-closed { background: #2e2820; color: #9a9088; }

@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AdminLog;
 use App\Models\Complaint;
 use App\Models\ComplaintMessage;
 use Illuminate\Http\Request;
 
 class ComplaintController extends Controller
 {
-    // list: user sees own, admin sees all
+    // user sees own complaints, admin sees all
     public function index(Request $request)
     {
         $user = $request->user();
@@ -30,7 +31,6 @@ class ComplaintController extends Controller
         ]));
     }
 
-    // create complaint + first message
     public function store(Request $request)
     {
         $request->validate([
@@ -53,7 +53,6 @@ class ComplaintController extends Controller
         return response()->json($this->formatComplaint($complaint), 201);
     }
 
-    // get complaint with all messages
     public function show(Request $request, Complaint $complaint)
     {
         $user = $request->user();
@@ -67,7 +66,6 @@ class ComplaintController extends Controller
         return response()->json($this->formatComplaint($complaint));
     }
 
-    // send a message to an existing complaint
     public function addMessage(Request $request, Complaint $complaint)
     {
         $user = $request->user();
@@ -76,6 +74,7 @@ class ComplaintController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
+        // only admin can message on a closed complaint
         if ($complaint->status === 'closed' && !$user->is_admin) {
             return response()->json(['message' => 'This complaint is closed.'], 422);
         }
@@ -88,11 +87,23 @@ class ComplaintController extends Controller
             'body'         => $request->body,
         ]);
 
-        // re-open if closed and admin replies
+        // admin replying to a closed complaint reopens it
         if ($complaint->status === 'closed' && $user->is_admin) {
             $complaint->update(['status' => 'open', 'updated_at' => now()]);
         } else {
             $complaint->touch();
+        }
+
+        if ($user->is_admin) {
+            $complaint->loadMissing('user:id,name');
+            AdminLog::create([
+                'admin_id'    => $user->id,
+                'action'      => 'support_reply',
+                'target_type' => 'complaint',
+                'target_id'   => $complaint->id,
+                'target_name' => $complaint->user->name . ' — ' . $complaint->subject,
+                'reason'      => $request->body,
+            ]);
         }
 
         $msg->load('sender:id,name,is_admin');
@@ -106,7 +117,6 @@ class ComplaintController extends Controller
         ], 201);
     }
 
-    // admin closes a complaint
     public function close(Request $request, Complaint $complaint)
     {
         if (!$request->user()->is_admin) {
@@ -114,6 +124,17 @@ class ComplaintController extends Controller
         }
 
         $complaint->update(['status' => 'closed']);
+
+        $complaint->loadMissing('user:id,name');
+        AdminLog::create([
+            'admin_id'    => $request->user()->id,
+            'action'      => 'close_complaint',
+            'target_type' => 'complaint',
+            'target_id'   => $complaint->id,
+            'target_name' => $complaint->user->name . ' — ' . $complaint->subject,
+            'reason'      => null,
+        ]);
+
         return response()->json(['status' => 'closed']);
     }
 

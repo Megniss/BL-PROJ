@@ -9,7 +9,7 @@ import { themeStore } from './themeStore.js'
 
 themeStore.init()
 
-// Automātiski izraksta lietotāju ja serveris atgriež 401 (nederīgs vai beidzies tokens)
+// if the token expires the server returns 401 — log the user out automatically
 axios.interceptors.response.use(
   response => response,
   error => {
@@ -23,7 +23,7 @@ axios.interceptors.response.use(
 
 createApp(App).use(router).mount('#app')
 
-// service worker reģistrācija (PWA)
+// PWA service worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')

@@ -14,6 +14,7 @@ use App\Http\Controllers\SwapRequestController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
+// public routes
 Route::get('/languages', [LanguageController::class, 'index']);
 Route::get('/translations/{code}', [LanguageController::class, 'translations']);
 
@@ -46,7 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/books/{book}/cover', [BookController::class, 'uploadCover']);
     Route::delete('/books/{book}/cover', [BookController::class, 'removeCover']);
 
-    // unread-count pirms {user} — citādi Laravel domā ka tas ir id
+    // unread-count must be before {user} or Laravel treats it as an id
     Route::get('/messages/unread-count', [MessageController::class, 'unreadCount']);
     Route::get('/messages', [MessageController::class, 'index']);
     Route::get('/messages/{user}', [MessageController::class, 'show']);

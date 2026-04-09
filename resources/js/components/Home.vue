@@ -1,7 +1,6 @@
 <template>
   <div class="bookloop-home">
 
-    <!-- Navigācija -->
     <AppNavbar>
       <button class="btn btn-sm btn-link text-secondary text-decoration-none" @click="$router.push({ name: 'browse' })">{{ t('nav.browse') }}</button>
       <button class="btn btn-sm btn-link text-secondary text-decoration-none" @click="scrollToHowItWorks">{{ t('nav.howItWorks') }}</button>
@@ -11,11 +10,10 @@
       </template>
     </AppNavbar>
 
-    <!-- Galvenais bloks -->
+    <!-- hero -->
     <section class="hero-section py-5">
       <div class="container-xl py-3 d-flex align-items-center gap-5">
 
-        <!-- teksts -->
         <div class="flex-grow-1">
           <h1 class="hero-title mb-3">
             {{ t('hero.title1') }}<br>
@@ -34,7 +32,6 @@
           </button>
         </div>
 
-        <!-- grāmatas animācija -->
         <div class="hero-book-wrap d-none d-lg-block">
           <div class="hero-book-float">
           <div class="hero-book-open">
@@ -60,7 +57,6 @@
       </div>
     </section>
 
-    <!-- Tikko pievienotās -->
     <section class="container-xl py-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="section-title mb-0">{{ t('featured.recent') }}</h2>
@@ -102,7 +98,6 @@
       </div></div>
     </section>
 
-    <!-- Populārākās grāmatas -->
     <section class="container-xl py-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="section-title mb-0">{{ t('featured.popular') }}</h2>
@@ -144,7 +139,7 @@
       </div></div>
     </section>
 
-    <!-- Augstāk vērtētās -->
+    <!-- tikai rāda ja ir kas ar vērtējumu -->
     <section v-if="booksLoading || topRatedBooks.length" class="container-xl py-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="section-title mb-0">{{ t('featured.topRated') }}</h2>
@@ -183,7 +178,6 @@
       </div></div>
     </section>
 
-    <!-- Meklēšanas josla — apakšā -->
     <section class="border-top py-5 scroll-reveal" id="books">
       <div class="container-xl text-center">
         <h2 class="section-title mb-2">{{ t('search.title') }}</h2>
@@ -198,7 +192,6 @@
       </div>
     </section>
 
-    <!-- Kā tas strādā -->
     <section class="how-section py-5" id="how-it-works">
       <div class="container-xl">
         <h2 class="section-title text-center">{{ t('how.title') }}</h2>
@@ -216,12 +209,10 @@
       </div>
     </section>
 
-    <!-- Kājene -->
     <AppFooter />
 
   </div>
 
-  <!-- Grāmatas detaļas -->
   <BookDetailModal
     :book="detailBook"
     :blocked="detailBookBlocked"
@@ -298,7 +289,7 @@ export default {
         this.topRatedBooks = rated.data.data.filter(b => b.ratings_count > 0)
         this.stats = statsRes.data
       } catch {
-        // klusām ignorē
+        // ignore, home page just won't show stats
       } finally {
         this.booksLoading = false
       }
@@ -339,8 +330,9 @@ export default {
       if (authStore.user) {
         try {
           const { data } = await axios.get('/api/books')
+          // only show books the user can actually offer
           this.swapModal.myBooks = data.filter(b => b.status === 'Available')
-        } catch { /* ignorē */ }
+        } catch { /* ignore */ }
       }
     },
 
@@ -354,7 +346,7 @@ export default {
           offered_book_id: this.swapModal.selectedBookId,
           wanted_book_id:  this.swapModal.wantedBook.id,
         })
-        // noņem no visu sarakstiem
+        // remove from all three lists so it disappears immediately
         const id = this.swapModal.wantedBook.id
         this.recentBooks   = this.recentBooks.filter(b => b.id !== id)
         this.popularBooks  = this.popularBooks.filter(b => b.id !== id)

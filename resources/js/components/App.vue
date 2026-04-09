@@ -5,7 +5,6 @@
     <router-view></router-view>
     <button v-if="showBackToTop" class="back-to-top" @click="scrollToTop" aria-label="Atgriezties uz augšu">↑</button>
 
-    <!-- Cookie banner -->
     <div v-if="showCookie" class="cookie-banner" role="alert">
       <p class="cookie-text">{{ t('cookie.text') }}</p>
       <button class="cookie-btn" @click="acceptCookie">{{ t('cookie.btn') }}</button>

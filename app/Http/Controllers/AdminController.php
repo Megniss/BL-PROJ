@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
+    // shortcut so I don't repeat this everywhere
     private function log(Request $request, string $action, string $type, int|null $id, string $name, string $reason = null): void
     {
         AdminLog::create([
@@ -66,6 +67,7 @@ class AdminController extends Controller
 
     public function blockUser(Request $request, User $user)
     {
+        // can't block other admins or yourself
         if ($user->is_admin || $user->id === $request->user()->id) {
             return response()->json(['message' => 'Cannot block this user.'], 422);
         }
@@ -118,6 +120,7 @@ class AdminController extends Controller
 
         $this->log($request, 'delete_book', 'book', null, $title, $request->reason);
 
+        // notify the owner so they know why it was removed
         if ($owner) {
             $owner->notify(new BookDeletedByAdmin($title, $author, $request->reason));
         }
@@ -167,6 +170,7 @@ class AdminController extends Controller
             Book::where('id', $swap->wanted_book_id)->update(['user_id' => $requesterId, 'status' => 'Available']);
             $swap->update(['status' => 'accepted']);
 
+            // cancel any other pending swaps that involve these same books
             $conflicting = SwapRequest::where('id', '!=', $swap->id)
                 ->where('status', 'pending')
                 ->where(function ($q) use ($swap) {
@@ -214,6 +218,7 @@ class AdminController extends Controller
     {
         $label = "{$swap->offeredBook->title} ↔ {$swap->wantedBook->title}";
 
+        // free both books if still pending
         if ($swap->status === 'pending') {
             Book::where('id', $swap->offered_book_id)->update(['status' => 'Available']);
             Book::where('id', $swap->wanted_book_id)->update(['status' => 'Available']);

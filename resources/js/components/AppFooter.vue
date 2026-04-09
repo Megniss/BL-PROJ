@@ -27,7 +27,7 @@ export default {
   methods: {
     goHowItWorks() {
       if (this.$route.name === 'home') {
-        // uz mājas lapas ritinām uz sadaļu
+        // already on home, just scroll down to the section
         const el = document.getElementById('how-it-works')
         if (el) el.scrollIntoView({ behavior: 'smooth' })
       } else {

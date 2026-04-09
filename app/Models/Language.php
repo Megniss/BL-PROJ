@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable(['code', 'name', 'flag', 'is_active', 'sort_order'])]
 class Language extends Model
 {
+    // primary key is the language code, not an int
     protected $primaryKey = 'code';
     protected $keyType    = 'string';
     public    $incrementing = false;
