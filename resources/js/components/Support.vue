@@ -78,9 +78,9 @@
               v-for="msg in active.messages"
               :key="msg.id"
               class="msg-row"
-              :class="{ 'msg-mine': msg.sender_id === authStore.user.id }"
+              :class="{ 'msg-mine': msg.sender?.is_admin }"
             >
-              <div class="msg-bubble" :class="msg.sender_id === authStore.user.id ? 'msg-bubble-sent' : ''">
+              <div class="msg-bubble" :class="msg.sender?.is_admin ? 'msg-bubble-sent' : ''">
                 <p class="msg-body">{{ msg.body }}</p>
                 <div class="msg-meta">
                   <span v-if="msg.sender?.is_admin" class="support-admin-tag">{{ t('support.adminTag') }}</span>
