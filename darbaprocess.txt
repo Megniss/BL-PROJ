@@ -142,27 +142,22 @@ gramatu validaija paec nosaukuma un autora un burtu check
 
 e main api token: a158e5aa574ef1d3575ffb5efd4f564a
 
-home PC, the full steps would be:
+home PC / work PC setup steps:
 
+composer run setup      <- first time only (installs deps, copies .env, generates key, migrates, builds)
 
-git clone <your-repo>
-cd my-laravel-app
-composer install
-npm install
-copy .env.example .env
-php artisan key:generate
-php artisan storage:link
-Then open .env and replace:
+Then open .env and set:
+MAILTRAP_API_KEY=<your token from mailtrap.io -> Email Testing -> inbox -> Show Credentials>
+MAILTRAP_INBOX_ID=<number in the URL: mailtrap.io/inboxes/XXXXXX/messages>
 
-MAILTRAP_API_KEY — your key from mailtrap.io
-MAILTRAP_INBOX_ID — your inbox ID (4526912)
-Then run:
+Then clear config cache:
+php artisan config:clear
 
-
+Then run the dev server:
 composer run dev
-# in a second terminal:
-php artisan queue:work
-The database and book covers are already in the repo so you won't need to run migrations or re-seed anything.
+
+NOTE: .env is never committed — you must fill in Mailtrap credentials on every new PC.
+NOTE: check php.ini has extension=curl enabled (was missing on home PC, had to uncomment it)
 !!!!
 
 kad megina log in ir jabut blocked by admin zinai
