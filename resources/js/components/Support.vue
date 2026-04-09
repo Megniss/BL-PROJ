@@ -78,12 +78,15 @@
               v-for="msg in active.messages"
               :key="msg.id"
               class="msg-row"
-              :class="{ 'msg-mine': msg.sender?.is_admin }"
+              :class="{ 'msg-mine': authStore.user?.is_admin ? msg.sender?.is_admin : msg.sender_id === authStore.user.id }"
             >
-              <div class="msg-bubble" :class="msg.sender?.is_admin ? 'msg-bubble-sent' : ''">
+              <div class="msg-bubble" :class="(authStore.user?.is_admin ? msg.sender?.is_admin : msg.sender_id === authStore.user.id) ? 'msg-bubble-sent' : ''">
                 <p class="msg-body">{{ msg.body }}</p>
                 <div class="msg-meta">
-                  <span v-if="msg.sender?.is_admin" class="support-admin-tag">{{ t('support.adminTag') }}</span>
+                  <template v-if="msg.sender?.is_admin">
+                    <span class="support-admin-tag">{{ t('support.adminTag') }}</span>
+                    <span class="support-admin-name">{{ msg.sender.name }}</span>
+                  </template>
                   <span class="msg-time">{{ formatTime(msg.created_at) }}</span>
                 </div>
               </div>
@@ -273,6 +276,15 @@ export default {
   color: var(--color-primary, #3a6b3e);
   text-transform: uppercase;
   letter-spacing: .04em;
+  margin-right: .3rem;
+}
+.support-admin-name {
+  font-size: .65rem;
+  font-weight: 600;
+  background: var(--color-primary, #3a6b3e);
+  color: #fff;
+  border-radius: 4px;
+  padding: .05rem .35rem;
   margin-right: .3rem;
 }
 
