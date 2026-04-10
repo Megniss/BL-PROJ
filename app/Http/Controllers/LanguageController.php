@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AdminLog;
 use App\Models\Language;
 use App\Models\TranslationOverride;
 use Illuminate\Http\Request;
@@ -46,6 +47,15 @@ class LanguageController extends Controller
             'sort_order' => (Language::max('sort_order') ?? 0) + 1,
         ]);
 
+        AdminLog::create([
+            'admin_id'    => $request->user()->id,
+            'action'      => 'add_language',
+            'target_type' => 'language',
+            'target_id'   => null,
+            'target_name' => $lang->name . ' (' . $lang->code . ')',
+            'reason'      => null,
+        ]);
+
         return response()->json($lang, 201);
     }
 
@@ -58,10 +68,20 @@ class LanguageController extends Controller
 
         $lang = Language::findOrFail($code);
         $lang->update(['name' => $request->name, 'flag' => strtolower($request->flag)]);
+
+        AdminLog::create([
+            'admin_id'    => $request->user()->id,
+            'action'      => 'edit_language',
+            'target_type' => 'language',
+            'target_id'   => null,
+            'target_name' => $lang->name . ' (' . $lang->code . ')',
+            'reason'      => null,
+        ]);
+
         return response()->json($lang);
     }
 
-    public function deactivate(string $code)
+    public function deactivate(Request $request, string $code)
     {
         // english is the fallback, can't remove it
         if ($code === 'en') {
@@ -70,13 +90,33 @@ class LanguageController extends Controller
 
         $lang = Language::findOrFail($code);
         $lang->update(['is_active' => false]);
+
+        AdminLog::create([
+            'admin_id'    => $request->user()->id,
+            'action'      => 'remove_language',
+            'target_type' => 'language',
+            'target_id'   => null,
+            'target_name' => $lang->name . ' (' . $lang->code . ')',
+            'reason'      => null,
+        ]);
+
         return response()->json(['message' => 'Language removed.']);
     }
 
-    public function reactivate(string $code)
+    public function reactivate(Request $request, string $code)
     {
         $lang = Language::findOrFail($code);
         $lang->update(['is_active' => true]);
+
+        AdminLog::create([
+            'admin_id'    => $request->user()->id,
+            'action'      => 'restore_language',
+            'target_type' => 'language',
+            'target_id'   => null,
+            'target_name' => $lang->name . ' (' . $lang->code . ')',
+            'reason'      => null,
+        ]);
+
         return response()->json(['message' => 'Language restored.']);
     }
 
@@ -105,6 +145,16 @@ class LanguageController extends Controller
                 );
             }
         }
+
+        $lang = Language::find($code);
+        AdminLog::create([
+            'admin_id'    => $request->user()->id,
+            'action'      => 'edit_translations',
+            'target_type' => 'language',
+            'target_id'   => null,
+            'target_name' => $lang ? $lang->name . ' (' . $code . ')' : $code,
+            'reason'      => count($request->overrides) . ' keys updated',
+        ]);
 
         return response()->json(['message' => 'Translations saved.']);
     }

@@ -120,9 +120,11 @@ class AdminController extends Controller
 
         $this->log($request, 'delete_book', 'book', null, $title, $request->reason);
 
-        // notify the owner so they know why it was removed
+        // notify the owner so they know why it was removed (mail might fail on rate limit, that's fine)
         if ($owner) {
-            $owner->notify(new BookDeletedByAdmin($title, $author, $request->reason));
+            try {
+                $owner->notify(new BookDeletedByAdmin($title, $author, $request->reason));
+            } catch (\Exception $e) {}
         }
 
         return response()->json(['message' => 'Book deleted.']);
@@ -134,7 +136,9 @@ class AdminController extends Controller
 
         $book->update(['status' => 'UnderReview']);
         $this->log($request, 'review_book', 'book', $book->id, $book->title, $request->reason);
-        $book->user->notify(new BookUnderReview($book, $request->reason));
+        try {
+            $book->user->notify(new BookUnderReview($book, $request->reason));
+        } catch (\Exception $e) {}
         return response()->json(['status' => 'UnderReview']);
     }
 
@@ -190,7 +194,9 @@ class AdminController extends Controller
             }
         });
 
-        User::find($swap->requester_id)->notify(new SwapAccepted($swap));
+        try {
+            User::find($swap->requester_id)->notify(new SwapAccepted($swap));
+        } catch (\Exception $e) {}
         $this->log($request, 'accept_swap', 'swap', $swap->id, "{$swap->offeredBook->title} ↔ {$swap->wantedBook->title}");
 
         return response()->json($swap->fresh(['offeredBook', 'wantedBook', 'requester:id,name']));
@@ -208,7 +214,9 @@ class AdminController extends Controller
             $swap->update(['status' => 'declined']);
         });
 
-        User::find($swap->requester_id)->notify(new SwapDeclined($swap));
+        try {
+            User::find($swap->requester_id)->notify(new SwapDeclined($swap));
+        } catch (\Exception $e) {}
         $this->log($request, 'decline_swap', 'swap', $swap->id, "{$swap->offeredBook->title} ↔ {$swap->wantedBook->title}");
 
         return response()->json($swap->fresh(['offeredBook', 'wantedBook', 'requester:id,name']));

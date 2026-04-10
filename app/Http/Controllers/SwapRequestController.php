@@ -164,7 +164,9 @@ class SwapRequestController extends Controller
             }
         });
 
-        User::find($swap->requester_id)->notify(new SwapAccepted($swap));
+        try {
+            User::find($swap->requester_id)->notify(new SwapAccepted($swap));
+        } catch (\Exception $e) {}
 
         return response()->json($swap->fresh(['offeredBook', 'wantedBook', 'requester:id,name']));
     }
@@ -185,7 +187,9 @@ class SwapRequestController extends Controller
             $swap->update(['status' => 'declined']);
         });
 
-        User::find($swap->requester_id)->notify(new SwapDeclined($swap));
+        try {
+            User::find($swap->requester_id)->notify(new SwapDeclined($swap));
+        } catch (\Exception $e) {}
 
         return response()->json($swap->fresh(['offeredBook', 'wantedBook', 'requester:id,name']));
     }

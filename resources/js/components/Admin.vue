@@ -40,7 +40,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="u in filteredUsers" :key="u.id">
+            <tr v-for="u in pagedUsers" :key="u.id">
               <td class="fw-semibold">{{ u.name }}</td>
               <td class="text-muted">{{ u.email }}</td>
               <td class="text-center">{{ u.books_count }}</td>
@@ -72,6 +72,11 @@
             </tr>
           </tbody>
         </table>
+        </div>
+        <div v-if="totalPagesUsers > 1" class="pagination-bar">
+          <button class="btn btn-sm btn-outline-secondary" :disabled="pages.users === 1" @click="pages.users--">‹ Prev</button>
+          <span class="pagination-info">{{ pages.users }} / {{ totalPagesUsers }}</span>
+          <button class="btn btn-sm btn-outline-secondary" :disabled="pages.users === totalPagesUsers" @click="pages.users++">Next ›</button>
         </div>
       </div>
     </div>
@@ -107,7 +112,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="b in filteredBooks" :key="b.id">
+            <tr v-for="b in pagedBooks" :key="b.id">
               <td class="fw-semibold">{{ b.title }}</td>
               <td>{{ b.author }}</td>
               <td>{{ b.genre }}</td>
@@ -133,6 +138,11 @@
             </tr>
           </tbody>
         </table>
+        </div>
+        <div v-if="totalPagesBooks > 1" class="pagination-bar">
+          <button class="btn btn-sm btn-outline-secondary" :disabled="pages.books === 1" @click="pages.books--">‹ Prev</button>
+          <span class="pagination-info">{{ pages.books }} / {{ totalPagesBooks }}</span>
+          <button class="btn btn-sm btn-outline-secondary" :disabled="pages.books === totalPagesBooks" @click="pages.books++">Next ›</button>
         </div>
       </div>
     </div>
@@ -166,7 +176,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="s in filteredSwaps" :key="s.id">
+            <tr v-for="s in pagedSwaps" :key="s.id">
               <td class="fw-semibold">{{ s.requester?.name }}</td>
               <td>{{ s.offered_book?.title }}</td>
               <td>{{ s.wanted_book?.title }}</td>
@@ -190,6 +200,11 @@
             </tr>
           </tbody>
         </table>
+        </div>
+        <div v-if="totalPagesSwaps > 1" class="pagination-bar">
+          <button class="btn btn-sm btn-outline-secondary" :disabled="pages.swaps === 1" @click="pages.swaps--">‹ Prev</button>
+          <span class="pagination-info">{{ pages.swaps }} / {{ totalPagesSwaps }}</span>
+          <button class="btn btn-sm btn-outline-secondary" :disabled="pages.swaps === totalPagesSwaps" @click="pages.swaps++">Next ›</button>
         </div>
       </div>
     </div>
@@ -224,7 +239,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="r in filteredRatings" :key="r.id">
+            <tr v-for="r in pagedRatings" :key="r.id">
               <td class="fw-semibold">{{ r.book }}</td>
               <td>{{ r.author }}</td>
               <td>{{ r.rater }}</td>
@@ -236,6 +251,11 @@
             </tr>
           </tbody>
         </table>
+        </div>
+        <div v-if="totalPagesRatings > 1" class="pagination-bar">
+          <button class="btn btn-sm btn-outline-secondary" :disabled="pages.ratings === 1" @click="pages.ratings--">‹ Prev</button>
+          <span class="pagination-info">{{ pages.ratings }} / {{ totalPagesRatings }}</span>
+          <button class="btn btn-sm btn-outline-secondary" :disabled="pages.ratings === totalPagesRatings" @click="pages.ratings++">Next ›</button>
         </div>
       </div>
     </div>
@@ -381,6 +401,11 @@
             <option value="delete_swap">{{ t('admin.log.delete_swap') }}</option>
             <option value="support_reply">{{ t('admin.log.support_reply') }}</option>
             <option value="close_complaint">{{ t('admin.log.close_complaint') }}</option>
+            <option value="add_language">{{ t('admin.log.add_language') }}</option>
+            <option value="edit_language">{{ t('admin.log.edit_language') }}</option>
+            <option value="remove_language">{{ t('admin.log.remove_language') }}</option>
+            <option value="restore_language">{{ t('admin.log.restore_language') }}</option>
+            <option value="edit_translations">{{ t('admin.log.edit_translations') }}</option>
           </select>
         </div>
         <div class="table-responsive">
@@ -398,7 +423,7 @@
               <tr v-if="filteredLogs.length === 0">
                 <td colspan="5" class="text-center text-muted py-3">{{ t('admin.logs.empty') }}</td>
               </tr>
-              <tr v-for="l in filteredLogs" :key="l.id">
+              <tr v-for="l in pagedLogs" :key="l.id">
                 <td class="text-nowrap">{{ l.date }}</td>
                 <td>{{ l.admin }}</td>
                 <td><span class="log-action-badge">{{ t('admin.log.' + l.action) }}</span></td>
@@ -407,6 +432,11 @@
               </tr>
             </tbody>
           </table>
+        </div>
+        <div v-if="totalPagesLogs > 1" class="pagination-bar">
+          <button class="btn btn-sm btn-outline-secondary" :disabled="pages.logs === 1" @click="pages.logs--">‹ Prev</button>
+          <span class="pagination-info">{{ pages.logs }} / {{ totalPagesLogs }}</span>
+          <button class="btn btn-sm btn-outline-secondary" :disabled="pages.logs === totalPagesLogs" @click="pages.logs++">Next ›</button>
         </div>
       </div>
     </div>
@@ -454,7 +484,17 @@ export default {
         ratings: { search: '', stars: '' },
         logs:    { search: '', action: '' },
       },
+      pages: { users: 1, books: 1, swaps: 1, ratings: 1, logs: 1 },
+      perPage: 6,
     }
+  },
+
+  watch: {
+    'filters.users':   { deep: true, handler() { this.pages.users   = 1 } },
+    'filters.books':   { deep: true, handler() { this.pages.books   = 1 } },
+    'filters.swaps':   { deep: true, handler() { this.pages.swaps   = 1 } },
+    'filters.ratings': { deep: true, handler() { this.pages.ratings = 1 } },
+    'filters.logs':    { deep: true, handler() { this.pages.logs    = 1 } },
   },
 
   computed: {
@@ -518,6 +558,18 @@ export default {
       if (this.filters.logs.action) list = list.filter(l => l.action === this.filters.logs.action)
       return list
     },
+
+    pagedUsers()   { return this.paginate(this.filteredUsers,   this.pages.users)   },
+    pagedBooks()   { return this.paginate(this.filteredBooks,   this.pages.books)   },
+    pagedSwaps()   { return this.paginate(this.filteredSwaps,   this.pages.swaps)   },
+    pagedRatings() { return this.paginate(this.filteredRatings, this.pages.ratings) },
+    pagedLogs()    { return this.paginate(this.filteredLogs,    this.pages.logs)    },
+
+    totalPagesUsers()   { return Math.ceil(this.filteredUsers.length   / this.perPage) || 1 },
+    totalPagesBooks()   { return Math.ceil(this.filteredBooks.length   / this.perPage) || 1 },
+    totalPagesSwaps()   { return Math.ceil(this.filteredSwaps.length   / this.perPage) || 1 },
+    totalPagesRatings() { return Math.ceil(this.filteredRatings.length / this.perPage) || 1 },
+    totalPagesLogs()    { return Math.ceil(this.filteredLogs.length    / this.perPage) || 1 },
   },
 
   async mounted() {
@@ -525,6 +577,11 @@ export default {
   },
 
   methods: {
+    paginate(list, page) {
+      const start = (page - 1) * this.perPage
+      return list.slice(start, start + this.perPage)
+    },
+
     toggle(section) {
       this.collapsed[section] = !this.collapsed[section]
     },
@@ -764,6 +821,19 @@ export default {
 .stag-purple { background: #ede9fe; color: #5b21b6; }
 
 .stars-display { color: #f5a623; letter-spacing: .1em; }
+
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-top: .75rem;
+}
+.pagination-info {
+  font-size: .82rem;
+  color: var(--muted, #888);
+  min-width: 48px;
+  text-align: center;
+}
 
 .admin-section-title {
   display: flex;

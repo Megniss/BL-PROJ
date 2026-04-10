@@ -109,7 +109,9 @@ class MessageController extends Controller
         ]);
 
         if (!$hasUnread) {
-            $recipient->notify(new NewMessage($sender, $data['body']));
+            try {
+                $recipient->notify(new NewMessage($sender, $data['body']));
+            } catch (\Exception $e) {}
         }
 
         return response()->json($message->load('sender:id,name'), 201);
