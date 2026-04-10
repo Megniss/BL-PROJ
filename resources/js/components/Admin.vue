@@ -6,12 +6,19 @@
 
     <div v-if="error" class="alert alert-danger">{{ error }}</div>
 
-    <div class="admin-card mb-4">
-      <h2 class="admin-section-title mb-0">
-        {{ t('admin.users') }}
-        <button class="toggle-arrow" :class="{ rotated: !collapsed.users }" @click="toggle('users')" :aria-expanded="!collapsed.users" :aria-label="t('admin.users')">▶</button>
-      </h2>
-      <div v-show="!collapsed.users" class="mt-3">
+    <!-- tab strip -->
+    <div class="admin-tabs mb-4">
+      <button v-for="tab in tabs" :key="tab.key"
+        class="admin-tab-btn"
+        :class="{ active: activeTabs.includes(tab.key) }"
+        @click="setTab(tab.key)">
+        {{ t(tab.label) }}
+      </button>
+    </div>
+
+    <!-- users -->
+    <div v-show="activeTabs.includes('users')" class="admin-card">
+      <div class="mt-1">
         <div class="filter-bar mb-3">
           <input v-model="filters.users.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.search')" />
           <select v-model="filters.users.role" class="form-select form-select-sm">
@@ -73,20 +80,13 @@
           </tbody>
         </table>
         </div>
-        <div v-if="totalPagesUsers > 1" class="pagination-bar">
-          <button class="btn btn-sm btn-outline-secondary" :disabled="pages.users === 1" @click="pages.users--">‹ Prev</button>
-          <span class="pagination-info">{{ pages.users }} / {{ totalPagesUsers }}</span>
-          <button class="btn btn-sm btn-outline-secondary" :disabled="pages.users === totalPagesUsers" @click="pages.users++">Next ›</button>
-        </div>
+        <Pagination :current="pages.users" :total="totalPagesUsers" @change="pages.users = $event" />
       </div>
     </div>
 
-    <div class="admin-card mb-4">
-      <h2 class="admin-section-title mb-0">
-        {{ t('admin.books') }}
-        <button class="toggle-arrow" :class="{ rotated: !collapsed.books }" @click="toggle('books')" :aria-expanded="!collapsed.books" :aria-label="t('admin.books')">▶</button>
-      </h2>
-      <div v-show="!collapsed.books" class="mt-3">
+    <!-- books -->
+    <div v-show="activeTabs.includes('books')" class="admin-card">
+      <div class="mt-1">
         <div class="filter-bar mb-3">
           <input v-model="filters.books.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.searchBooks')" />
           <select v-model="filters.books.status" class="form-select form-select-sm">
@@ -139,20 +139,13 @@
           </tbody>
         </table>
         </div>
-        <div v-if="totalPagesBooks > 1" class="pagination-bar">
-          <button class="btn btn-sm btn-outline-secondary" :disabled="pages.books === 1" @click="pages.books--">‹ Prev</button>
-          <span class="pagination-info">{{ pages.books }} / {{ totalPagesBooks }}</span>
-          <button class="btn btn-sm btn-outline-secondary" :disabled="pages.books === totalPagesBooks" @click="pages.books++">Next ›</button>
-        </div>
+        <Pagination :current="pages.books" :total="totalPagesBooks" @change="pages.books = $event" />
       </div>
     </div>
 
-    <div class="admin-card mb-4">
-      <h2 class="admin-section-title mb-0">
-        {{ t('admin.swaps') }}
-        <button class="toggle-arrow" :class="{ rotated: !collapsed.swaps }" @click="toggle('swaps')" :aria-expanded="!collapsed.swaps" :aria-label="t('admin.swaps')">▶</button>
-      </h2>
-      <div v-show="!collapsed.swaps" class="mt-3">
+    <!-- swaps -->
+    <div v-show="activeTabs.includes('swaps')" class="admin-card">
+      <div class="mt-1">
         <div class="filter-bar mb-3">
           <input v-model="filters.swaps.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.searchSwaps')" />
           <select v-model="filters.swaps.status" class="form-select form-select-sm">
@@ -201,20 +194,13 @@
           </tbody>
         </table>
         </div>
-        <div v-if="totalPagesSwaps > 1" class="pagination-bar">
-          <button class="btn btn-sm btn-outline-secondary" :disabled="pages.swaps === 1" @click="pages.swaps--">‹ Prev</button>
-          <span class="pagination-info">{{ pages.swaps }} / {{ totalPagesSwaps }}</span>
-          <button class="btn btn-sm btn-outline-secondary" :disabled="pages.swaps === totalPagesSwaps" @click="pages.swaps++">Next ›</button>
-        </div>
+        <Pagination :current="pages.swaps" :total="totalPagesSwaps" @change="pages.swaps = $event" />
       </div>
     </div>
 
-    <div class="admin-card">
-      <h2 class="admin-section-title mb-0">
-        {{ t('admin.ratings') }}
-        <button class="toggle-arrow" :class="{ rotated: !collapsed.ratings }" @click="toggle('ratings')" :aria-expanded="!collapsed.ratings" :aria-label="t('admin.ratings')">▶</button>
-      </h2>
-      <div v-show="!collapsed.ratings" class="mt-3">
+    <!-- ratings -->
+    <div v-show="activeTabs.includes('ratings')" class="admin-card">
+      <div class="mt-1">
         <div class="filter-bar mb-3">
           <input v-model="filters.ratings.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.searchBookRater')" />
           <select v-model="filters.ratings.stars" class="form-select form-select-sm">
@@ -252,20 +238,13 @@
           </tbody>
         </table>
         </div>
-        <div v-if="totalPagesRatings > 1" class="pagination-bar">
-          <button class="btn btn-sm btn-outline-secondary" :disabled="pages.ratings === 1" @click="pages.ratings--">‹ Prev</button>
-          <span class="pagination-info">{{ pages.ratings }} / {{ totalPagesRatings }}</span>
-          <button class="btn btn-sm btn-outline-secondary" :disabled="pages.ratings === totalPagesRatings" @click="pages.ratings++">Next ›</button>
-        </div>
+        <Pagination :current="pages.ratings" :total="totalPagesRatings" @change="pages.ratings = $event" />
       </div>
     </div>
 
-    <div class="admin-card mt-4">
-      <h2 class="admin-section-title mb-0">
-        {{ t('admin.languages') }}
-        <button class="toggle-arrow" :class="{ rotated: !collapsed.langs }" @click="toggle('langs')" :aria-expanded="!collapsed.langs" :aria-label="t('admin.languages')">▶</button>
-      </h2>
-      <div v-show="!collapsed.langs" class="mt-3">
+    <!-- languages -->
+    <div v-show="activeTabs.includes('langs')" class="admin-card">
+      <div class="mt-1">
 
         <!-- lang list -->
         <div style="overflow-x:auto">
@@ -368,12 +347,9 @@
       </div>
     </div>
 
-    <div class="admin-card mt-4">
-      <h2 class="admin-section-title mb-0">
-        {{ t('admin.logs') }}
-        <button class="toggle-arrow" :class="{ rotated: !collapsed.logs }" @click="toggle('logs')" :aria-expanded="!collapsed.logs" :aria-label="t('admin.logs')">▶</button>
-      </h2>
-      <div v-show="!collapsed.logs" class="mt-3">
+    <!-- logs -->
+    <div v-show="activeTabs.includes('logs')" class="admin-card">
+      <div class="mt-1">
         <div class="filter-bar mb-3">
           <input v-model="filters.logs.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.search')" />
           <select v-model="filters.logs.action" class="form-select form-select-sm">
@@ -422,11 +398,7 @@
             </tbody>
           </table>
         </div>
-        <div v-if="totalPagesLogs > 1" class="pagination-bar">
-          <button class="btn btn-sm btn-outline-secondary" :disabled="pages.logs === 1" @click="pages.logs--">‹ Prev</button>
-          <span class="pagination-info">{{ pages.logs }} / {{ totalPagesLogs }}</span>
-          <button class="btn btn-sm btn-outline-secondary" :disabled="pages.logs === totalPagesLogs" @click="pages.logs++">Next ›</button>
-        </div>
+        <Pagination :current="pages.logs" :total="totalPagesLogs" @change="pages.logs = $event" />
       </div>
     </div>
 
@@ -442,11 +414,12 @@ import { invalidateOverrides, setLocale } from '../langStore.js'
 import { translations } from '../translations.js'
 import AppNavbar from './AppNavbar.vue'
 import AppFooter from './AppFooter.vue'
+import Pagination from './Pagination.vue'
 import langMixin from '../langMixin.js'
 
 export default {
   name: 'AdminPanel',
-  components: { AppNavbar, AppFooter },
+  components: { AppNavbar, AppFooter, Pagination },
   mixins: [langMixin],
 
   data() {
@@ -457,15 +430,23 @@ export default {
       ratings: [],
       logs: [],
       allLanguages: [],
-      editingLang: null,       // which lang is open in the editor
-      langTranslations: {},    // key -> translated value
+      editingLang: null,
+      langTranslations: {},
       langSaving: false,
       newLang: { code: '', name: '', flag: '' },
       addingLang: false,
-      editingLangRow: null,     // which row is in inline edit mode
+      editingLangRow: null,
       langRowEdit: { flag: '', name: '' },
       error: '',
-      collapsed: { users: false, books: true, swaps: true, ratings: true, langs: true, logs: true },
+      activeTabs: this.$route?.query?.tabs ? this.$route.query.tabs.split(',') : ['users'],
+      tabs: [
+        { key: 'users',   label: 'admin.users' },
+        { key: 'books',   label: 'admin.books' },
+        { key: 'swaps',   label: 'admin.swaps' },
+        { key: 'ratings', label: 'admin.ratings' },
+        { key: 'langs',   label: 'admin.languages' },
+        { key: 'logs',    label: 'admin.logs' },
+      ],
       filters: {
         users:   { search: '', role: '', status: '' },
         books:   { search: '', status: '' },
@@ -476,14 +457,6 @@ export default {
       pages: { users: 1, books: 1, swaps: 1, ratings: 1, logs: 1 },
       perPage: 6,
     }
-  },
-
-  watch: {
-    'filters.users':   { deep: true, handler() { this.pages.users   = 1 } },
-    'filters.books':   { deep: true, handler() { this.pages.books   = 1 } },
-    'filters.swaps':   { deep: true, handler() { this.pages.swaps   = 1 } },
-    'filters.ratings': { deep: true, handler() { this.pages.ratings = 1 } },
-    'filters.logs':    { deep: true, handler() { this.pages.logs    = 1 } },
   },
 
   computed: {
@@ -561,7 +534,24 @@ export default {
     totalPagesLogs()    { return Math.ceil(this.filteredLogs.length    / this.perPage) || 1 },
   },
 
+  watch: {
+    '$route.query.tabs'(val) {
+      this.activeTabs = val ? val.split(',') : ['users']
+    },
+    'filters.users':   { deep: true, handler() { this.pages.users   = 1 } },
+    'filters.books':   { deep: true, handler() { this.pages.books   = 1 } },
+    'filters.swaps':   { deep: true, handler() { this.pages.swaps   = 1 } },
+    'filters.ratings': { deep: true, handler() { this.pages.ratings = 1 } },
+    'filters.logs':    { deep: true, handler() { this.pages.logs    = 1 } },
+  },
+
   async mounted() {
+    this.$router.replace({
+      query: {
+        admin: authStore.user?.name ?? 'unknown',
+        tabs: this.$route.query.tabs ?? this.activeTabs.join(','),
+      }
+    })
     await this.load()
   },
 
@@ -571,8 +561,11 @@ export default {
       return list.slice(start, start + this.perPage)
     },
 
-    toggle(section) {
-      this.collapsed[section] = !this.collapsed[section]
+    setTab(key) {
+      const i = this.activeTabs.indexOf(key)
+      if (i === -1) this.activeTabs.push(key)
+      else this.activeTabs.splice(i, 1)
+      this.$router.replace({ query: { ...this.$route.query, tabs: this.activeTabs.join(',') } })
     },
 
     async load() {
@@ -755,6 +748,29 @@ export default {
 <style scoped>
 .admin-page { max-width: 1200px; }
 
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 0;
+}
+.admin-tab-btn {
+  background: none;
+  border: none;
+  padding: 8px 18px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  border-radius: 4px 4px 0 0;
+  transition: color 0.15s, border-color 0.15s;
+}
+.admin-tab-btn:hover { color: var(--ink); }
+.admin-tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+
 .filter-bar {
   display: flex;
   gap: .5rem;
@@ -811,18 +827,6 @@ export default {
 
 .stars-display { color: #f5a623; letter-spacing: .1em; }
 
-.pagination-bar {
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-  margin-top: .75rem;
-}
-.pagination-info {
-  font-size: .82rem;
-  color: var(--muted, #888);
-  min-width: 48px;
-  text-align: center;
-}
 
 .admin-section-title {
   display: flex;

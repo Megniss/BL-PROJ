@@ -2014,6 +2014,35 @@ body {
   .auth-right { padding: 32px 20px; align-items: flex-start; padding-top: 48px; }
 }
 
+/* ---- pagination ---- */
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.pg-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.pg-btn:hover:not(:disabled) { background: var(--primary); color: #fff; border-color: var(--primary); }
+.pg-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 600; }
+.pg-btn:disabled { opacity: 0.35; cursor: default; }
+.pg-ellipsis { padding: 0 4px; color: var(--muted); font-size: 0.85rem; line-height: 32px; }
+
+[data-theme="dark"] .pg-btn { background: #2a2520; border-color: #3a3228; color: #e8e0d5; }
+[data-theme="dark"] .pg-btn:hover:not(:disabled) { background: var(--primary); border-color: var(--primary); }
+
 /* ---- toasts ---- */
 .toast-wrap {
   position: fixed;

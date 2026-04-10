@@ -214,11 +214,7 @@
         </table>
       </div>
 
-      <div v-if="lastPage > 1" class="d-flex justify-content-center align-items-center gap-3 mt-4">
-        <button class="btn btn-outline-secondary" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">{{ t('pagination.prev') }}</button>
-        <span class="text-muted small">{{ t('pagination.pageOf').replace('{cur}', currentPage).replace('{last}', lastPage) }}</span>
-        <button class="btn btn-outline-secondary" :disabled="currentPage >= lastPage" @click="goToPage(currentPage + 1)">{{ t('pagination.next') }}</button>
-      </div>
+      <Pagination :current="currentPage" :total="lastPage" @change="goToPage" />
 
     </section>
 
@@ -293,11 +289,12 @@ import BookDetailModal from './BookDetailModal.vue'
 import SwapModal from './SwapModal.vue'
 import AppNavbar from './AppNavbar.vue'
 import AppFooter from './AppFooter.vue'
+import Pagination from './Pagination.vue'
 
 export default {
   name: 'Browse',
 
-  components: { BookDetailModal, SwapModal, AppNavbar, AppFooter },
+  components: { BookDetailModal, SwapModal, AppNavbar, AppFooter, Pagination },
 
   mixins: [langMixin],
 
