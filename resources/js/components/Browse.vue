@@ -45,7 +45,6 @@
         <!-- meklēšana vienmēr redzama -->
         <div class="d-flex gap-2 mb-2">
           <input v-model="searchQuery" class="form-control" :placeholder="t('search.placeholder')" :aria-label="t('search.placeholder')" @input="debouncedSearch" @keyup.enter="applyFilters" />
-          <button class="btn btn-primary flex-shrink-0" @click="applyFilters">{{ t('search.btn') }}</button>
           <button class="filter-more-btn d-lg-none" :class="{ active: showMoreFilters }" @click="showMoreFilters = !showMoreFilters" :aria-label="t('search.moreFilters')">
             <svg aria-hidden="true" width="16" height="13" viewBox="0 0 16 13" fill="none">
               <rect x="0" y="0"  width="16" height="2" rx="1" fill="currentColor"/>

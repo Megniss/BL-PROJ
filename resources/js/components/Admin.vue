@@ -268,13 +268,13 @@
       <div v-show="!collapsed.langs" class="mt-3">
 
         <!-- lang list -->
-        <table class="table table-hover align-middle mb-3">
+        <div style="overflow-x:auto">
+        <table class="table table-hover align-middle mb-3" style="min-width:560px">
           <thead>
             <tr>
               <th>{{ t('admin.col.flag') }}</th>
               <th>{{ t('admin.col.code') }}</th>
               <th>{{ t('admin.col.name') }}</th>
-              <th>{{ t('admin.col.status') }}</th>
               <th>{{ t('admin.col.actions') }}</th>
             </tr>
           </thead>
@@ -287,9 +287,6 @@
                 </td>
                 <td><code>{{ lang.code }}</code></td>
                 <td><input v-model="langRowEdit.name" class="form-control form-control-sm" style="width:130px" /></td>
-                <td>
-                  <span class="status-dot" :class="lang.is_active ? 'dot-active' : 'dot-muted'" :title="lang.is_active ? t('admin.status.active') : t('admin.status.inactive')"></span>
-                </td>
                 <td>
                   <div class="d-flex gap-2 flex-wrap">
                     <button class="btn btn-sm btn-primary" @click="saveLangRow(lang)">{{ t('admin.btn.save') }}</button>
@@ -304,27 +301,19 @@
                 </td>
                 <td><code>{{ lang.code }}</code></td>
                 <td>{{ lang.name }}</td>
-                <td>
-                  <span class="status-dot" :class="lang.is_active ? 'dot-active' : 'dot-muted'" :title="lang.is_active ? t('admin.status.active') : t('admin.status.inactive')"></span>
-                </td>
-                <td>
-                  <div class="d-flex gap-2 flex-wrap">
+                <td style="white-space:nowrap">
+                  <div class="d-flex gap-1 align-items-center">
                     <button class="btn btn-sm btn-outline-secondary" @click="startEditLangRow(lang)">{{ t('admin.btn.edit') }}</button>
-                    <button class="btn btn-sm btn-outline-primary" @click="openLangEditor(lang)">
-                      {{ t('admin.btn.editTranslations') }}
-                    </button>
-                    <button v-if="lang.is_active && lang.code !== 'en'" class="btn btn-sm btn-outline-danger" @click="deactivateLang(lang)">
-                      {{ t('admin.btn.removeLang') }}
-                    </button>
-                    <button v-if="!lang.is_active" class="btn btn-sm btn-outline-success" @click="reactivateLang(lang)">
-                      {{ t('admin.btn.restoreLang') }}
-                    </button>
+                    <button class="btn btn-sm btn-outline-primary" @click="openLangEditor(lang)">{{ t('admin.btn.editTranslations') }}</button>
+                    <button v-if="lang.is_active && lang.code !== 'en'" class="btn btn-sm btn-outline-danger" @click="deactivateLang(lang)">{{ t('admin.btn.removeLang') }}</button>
+                    <button v-if="!lang.is_active" class="btn btn-sm btn-outline-success" @click="reactivateLang(lang)">{{ t('admin.btn.restoreLang') }}</button>
                   </div>
                 </td>
               </template>
             </tr>
           </tbody>
         </table>
+        </div>
 
         <!-- add new lang form toggle -->
         <div v-if="!addingLang">
