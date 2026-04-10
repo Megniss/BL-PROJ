@@ -7,17 +7,28 @@
     <div v-if="error" class="alert alert-danger">{{ error }}</div>
 
     <!-- tab strip -->
-    <div class="admin-tabs mb-4">
-      <button v-for="tab in tabs" :key="tab.key"
-        class="admin-tab-btn"
-        :class="{ active: activeTabs.includes(tab.key) }"
-        @click="setTab(tab.key)">
-        {{ t(tab.label) }}
-      </button>
+    <div class="admin-tabs-wrap mb-4">
+      <div class="admin-tabs">
+        <button v-for="tab in tabs" :key="tab.key"
+          class="admin-tab-btn"
+          :class="{ active: activeTab === tab.key }"
+          @click="setTab(tab.key)">
+          {{ t(tab.label) }}
+        </button>
+      </div>
+      <div class="admin-tabs-controls">
+        <button class="admin-open-all-btn" @click="openAll">{{ t('admin.openAll') }}</button>
+        <select class="form-select form-select-sm" style="width:auto" v-model.number="perPage">
+          <option :value="5">5</option>
+          <option :value="10">10</option>
+          <option :value="25">25</option>
+          <option :value="50">50</option>
+        </select>
+      </div>
     </div>
 
     <!-- users -->
-    <div v-show="activeTabs.includes('users')" class="admin-card">
+    <div v-show="activeTab === 'users' || activeTab === 'all'" class="admin-card">
       <div class="mt-1">
         <div class="filter-bar mb-3">
           <input v-model="filters.users.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.search')" />
@@ -85,7 +96,7 @@
     </div>
 
     <!-- books -->
-    <div v-show="activeTabs.includes('books')" class="admin-card">
+    <div v-show="activeTab === 'books' || activeTab === 'all'" class="admin-card">
       <div class="mt-1">
         <div class="filter-bar mb-3">
           <input v-model="filters.books.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.searchBooks')" />
@@ -144,7 +155,7 @@
     </div>
 
     <!-- swaps -->
-    <div v-show="activeTabs.includes('swaps')" class="admin-card">
+    <div v-show="activeTab === 'swaps' || activeTab === 'all'" class="admin-card">
       <div class="mt-1">
         <div class="filter-bar mb-3">
           <input v-model="filters.swaps.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.searchSwaps')" />
@@ -199,7 +210,7 @@
     </div>
 
     <!-- ratings -->
-    <div v-show="activeTabs.includes('ratings')" class="admin-card">
+    <div v-show="activeTab === 'ratings' || activeTab === 'all'" class="admin-card">
       <div class="mt-1">
         <div class="filter-bar mb-3">
           <input v-model="filters.ratings.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.searchBookRater')" />
@@ -243,7 +254,7 @@
     </div>
 
     <!-- languages -->
-    <div v-show="activeTabs.includes('langs')" class="admin-card">
+    <div v-show="activeTab === 'langs' || activeTab === 'all'" class="admin-card">
       <div class="mt-1">
 
         <!-- lang list -->
@@ -348,7 +359,7 @@
     </div>
 
     <!-- logs -->
-    <div v-show="activeTabs.includes('logs')" class="admin-card">
+    <div v-show="activeTab === 'logs' || activeTab === 'all'" class="admin-card">
       <div class="mt-1">
         <div class="filter-bar mb-3">
           <input v-model="filters.logs.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.search')" />
@@ -438,7 +449,7 @@ export default {
       editingLangRow: null,
       langRowEdit: { flag: '', name: '' },
       error: '',
-      activeTabs: this.$route?.query?.tabs ? this.$route.query.tabs.split(',') : ['users'],
+      activeTab: this.$route?.query?.tab || 'users',
       tabs: [
         { key: 'users',   label: 'admin.users' },
         { key: 'books',   label: 'admin.books' },
@@ -455,7 +466,7 @@ export default {
         logs:    { search: '', action: '' },
       },
       pages: { users: 1, books: 1, swaps: 1, ratings: 1, logs: 1 },
-      perPage: 6,
+      perPage: 10,
     }
   },
 
@@ -535,8 +546,8 @@ export default {
   },
 
   watch: {
-    '$route.query.tabs'(val) {
-      this.activeTabs = val ? val.split(',') : ['users']
+    '$route.query.tab'(val) {
+      if (val) this.activeTab = val
     },
     'filters.users':   { deep: true, handler() { this.pages.users   = 1 } },
     'filters.books':   { deep: true, handler() { this.pages.books   = 1 } },
@@ -549,7 +560,7 @@ export default {
     this.$router.replace({
       query: {
         admin: authStore.user?.name ?? 'unknown',
-        tabs: this.$route.query.tabs ?? this.activeTabs.join(','),
+        tab: this.$route.query.tab ?? this.activeTab,
       }
     })
     await this.load()
@@ -562,10 +573,13 @@ export default {
     },
 
     setTab(key) {
-      const i = this.activeTabs.indexOf(key)
-      if (i === -1) this.activeTabs.push(key)
-      else this.activeTabs.splice(i, 1)
-      this.$router.replace({ query: { ...this.$route.query, tabs: this.activeTabs.join(',') } })
+      this.activeTab = key
+      this.$router.replace({ query: { ...this.$route.query, tab: key } })
+    },
+
+    openAll() {
+      this.activeTab = 'all'
+      this.$router.replace({ query: { ...this.$route.query, tab: 'all' } })
     },
 
     async load() {
@@ -748,13 +762,37 @@ export default {
 <style scoped>
 .admin-page { max-width: 1200px; }
 
+.admin-tabs-wrap {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-bottom: 2px solid var(--border);
+}
 .admin-tabs {
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
-  border-bottom: 2px solid var(--border);
-  padding-bottom: 0;
 }
+.admin-tabs-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 4px;
+}
+.admin-open-all-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+}
+.admin-open-all-btn:hover { color: var(--ink); border-color: var(--ink); }
 .admin-tab-btn {
   background: none;
   border: none;
