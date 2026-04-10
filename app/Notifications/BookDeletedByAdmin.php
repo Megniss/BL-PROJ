@@ -5,6 +5,7 @@ namespace App\Notifications;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
+// grāmata dzēsta — īpašnieks saņem iemeslu
 class BookDeletedByAdmin extends Notification
 {
     public function __construct(

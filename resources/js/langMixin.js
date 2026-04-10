@@ -1,3 +1,4 @@
+// mixin lai katrs komponents dabū t() bez tieša importa
 import { langStore, t, setLocale } from './langStore.js'
 
 export default {

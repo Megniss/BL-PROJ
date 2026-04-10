@@ -3,7 +3,7 @@
     <div v-if="open" class="modal-overlay" @click.self="$emit('close')" role="dialog" aria-modal="true" aria-labelledby="swap-modal-title">
       <div class="modal-card">
 
-        <!-- success state after sending -->
+        <!-- veiksmīgi nosūtīts -->
         <div v-if="success" class="text-center py-2">
           <div style="font-size:2.5rem">✅</div>
           <h2 class="modal-title mt-2 mb-1">{{ t('swap.sent') }}</h2>

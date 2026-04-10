@@ -9,7 +9,7 @@
         </button>
       </div>
 
-      <!-- bell goes in the inline slot so it shows next to the burger on mobile -->
+      <!-- zvans blakus hamburgeram mobilajā -->
       <template #inline>
         <div class="notif-wrap" ref="notifWrap">
           <button class="notif-bell" @click="toggleNotifs" :aria-label="t('notif.title') + (unreadCount > 0 ? ' (' + unreadCount + ')' : '')">
@@ -200,7 +200,7 @@
             </div>
             <div class="col-12">
               <label for="book-cover" class="form-label fw-semibold">{{ t('modal.cover') }}</label>
-              <!-- existing cover while editing — hide if removed or new file picked -->
+              <!-- esošais vāks rediģējot — slēpj ja noņemts vai jauns fails izvēlēts -->
               <div v-if="editingBook && editingBook.cover_image && !coverRemoved && !coverPreview" class="d-flex align-items-center gap-3 mb-2">
                 <img :src="'/storage/' + editingBook.cover_image" class="cover-preview-img" :alt="editingBook.title" />
                 <button type="button" class="btn btn-sm btn-outline-danger" @click="markRemoveCover">{{ t('modal.removeCover') }}</button>
@@ -506,7 +506,7 @@ export default {
           savedBook = this.books[0]
         }
 
-        // cover upload / remove is a separate request
+        // vāka augšupielāde / noņemšana ir atsevišķs pieprasījums
         if (savedBook && this.coverFile) {
           const fd = new FormData()
           fd.append('cover', this.coverFile)

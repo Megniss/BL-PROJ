@@ -20,6 +20,7 @@ Route::get('/translations/{code}', [LanguageController::class, 'translations']);
 
 Route::get('/browse', [BookController::class, 'browse']);
 Route::get('/stats', [BookController::class, 'stats']);
+Route::get('/books/{book}/suggestions', [BookController::class, 'suggestions']);
 Route::get('/users', [UserController::class, 'search'])->middleware('throttle:30,1');
 Route::get('/users/{user}', [UserController::class, 'show'])->middleware('throttle:60,1');
 

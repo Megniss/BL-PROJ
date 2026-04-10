@@ -14,7 +14,7 @@
         <button class="theme-btn" @click="themeStore.toggle()" :aria-label="themeStore.dark ? 'Ieslēgt gaišo režīmu' : 'Ieslēgt tumšo režīmu'">
           <span aria-hidden="true">{{ themeStore.dark ? '☀️' : '🌙' }}</span>
         </button>
-        <!-- buttons if 2 langs, dropdown if more -->
+        <!-- pogas ja 2 valodas, dropdown ja vairāk -->
         <div class="d-flex align-items-center gap-1" v-if="langStore.languages.length <= 2">
           <template v-for="(lang, i) in langStore.languages" :key="lang.code">
             <span v-if="i > 0" class="lang-divider" aria-hidden="true">|</span>
@@ -45,15 +45,15 @@
           </div>
         </div>
 
-        <!-- extra nav items from parent, hidden on mobile -->
+        <!-- papildus pogas no parent, mobilajā slēptas -->
         <div class="d-none d-lg-flex align-items-center gap-2">
           <slot />
         </div>
 
-        <!-- stuff like the bell icon that should always show -->
+        <!-- zvans un tamlīdzīgi, vienmēr redzami -->
         <slot name="inline" />
 
-        <!-- avatar + dropdown, desktop only -->
+        <!-- avatars un dropdown, tikai desktop -->
         <div v-if="authStore.user" class="nav-user-wrap d-none d-lg-block" ref="dropdownWrap">
           <button class="nav-avatar-btn" @click="dropdownOpen = !dropdownOpen" :aria-label="authStore.user.name">
             {{ initials }}
@@ -76,14 +76,14 @@
           </div>
         </div>
 
-        <!-- burger menu for mobile -->
+        <!-- burger mobilajiem -->
         <button class="burger-btn d-lg-none" @click="menuOpen = !menuOpen" :aria-label="menuOpen ? 'Aizvērt izvēlni' : 'Atvērt izvēlni'">
           {{ menuOpen ? '✕' : '☰' }}
         </button>
       </div>
     </div>
 
-    <!-- mobile nav panel -->
+    <!-- mobilā izvēlne -->
     <div v-if="menuOpen" class="nav-mobile-menu d-lg-none">
       <slot />
       <template v-if="authStore.user">

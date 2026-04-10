@@ -8,6 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
+// pieprasījums noraidīts, grāmata atkal brīva
 class SwapDeclined extends Notification implements ShouldQueue
 {
     use Queueable;

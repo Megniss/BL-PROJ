@@ -147,16 +147,21 @@ export default {
       formError: '',
       compose: '',
       sending: false,
+      pollTimer: null,
     }
   },
 
   async mounted() {
     await this.loadList()
 
-    // ?new=1 means jump straight to the new complaint form
+    // ?new=1 nozīmē uzreiz atvērt jauna pieteikuma formu
     if (this.$route.query.new) {
       this.showNew = true
     }
+  },
+
+  beforeUnmount() {
+    clearInterval(this.pollTimer)
   },
 
   methods: {
@@ -171,19 +176,45 @@ export default {
     },
 
     async open(c) {
+      clearInterval(this.pollTimer)
       this.showThread = true
       this.loadingThread = true
       this.active = { ...c, messages: [] }
       try {
         const { data } = await axios.get(`/api/complaints/${c.id}`)
         this.active = data
-        // refresh the preview text in the sidebar
+        // atsvaidzina priekšskatījuma tekstu sānbārā
         const idx = this.complaints.findIndex(x => x.id === c.id)
         if (idx !== -1) this.complaints[idx].last_msg = data.messages?.at(-1)?.body ?? this.complaints[idx].last_msg
         this.$nextTick(() => this.scrollBottom())
       } finally {
         this.loadingThread = false
       }
+
+      // reizi 4 sekundēs pārbauda jaunas ziņas
+      this.pollTimer = setInterval(() => {
+        if (this.active) this.pollMessages()
+      }, 4000)
+    },
+
+    async pollMessages() {
+      const lastId = this.active.messages?.at(-1)?.id ?? 0
+      try {
+        const { data } = await axios.get(`/api/complaints/${this.active.id}`)
+        const fresh = (data.messages ?? []).filter(m => m.id > lastId)
+        if (fresh.length) {
+          this.active.messages.push(...fresh)
+          const idx = this.complaints.findIndex(x => x.id === this.active.id)
+          if (idx !== -1) this.complaints[idx].last_msg = fresh.at(-1).body
+          this.$nextTick(() => this.scrollBottom())
+        }
+        // sinhronizē statusu ja admins aizvēra
+        if (data.status !== this.active.status) {
+          this.active.status = data.status
+          const idx = this.complaints.findIndex(x => x.id === this.active.id)
+          if (idx !== -1) this.complaints[idx].status = data.status
+        }
+      } catch { /* klusums */ }
     },
 
     async createComplaint() {
@@ -214,12 +245,12 @@ export default {
       try {
         const { data } = await axios.post(`/api/complaints/${this.active.id}/messages`, { body })
         this.active.messages.push(data)
-        // keep sidebar preview in sync
+        // sānbāra priekšskatījums sinhronā
         const idx = this.complaints.findIndex(x => x.id === this.active.id)
         if (idx !== -1) this.complaints[idx].last_msg = body
         this.$nextTick(() => this.scrollBottom())
       } catch {
-        this.compose = body // put it back so the user doesn't lose their message
+        this.compose = body // atdod atpakaļ lai lietotājs nezaudē ziņu
       } finally {
         this.sending = false
       }
@@ -282,7 +313,7 @@ export default {
   position: relative;
   cursor: default;
 }
-/* hover tooltip shows the admin's name */
+/* uzbraucot rāda admina vārdu */
 .support-admin-tag[data-name]:hover::after {
   content: attr(data-name);
   position: absolute;

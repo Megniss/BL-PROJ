@@ -6,9 +6,9 @@ use App\Models\Book;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
+// admins atzīmēja grāmatu pārbaudei
 class BookUnderReview extends Notification
 {
-
     public function __construct(public Book $book, public string $reason) {}
 
     public function via(object $notifiable): array

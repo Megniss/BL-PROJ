@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
-    // shortcut so I don't repeat this everywhere
+    // lai nesanāk copy paste katrā metodē
     private function log(Request $request, string $action, string $type, int|null $id, string $name, string $reason = null): void
     {
         AdminLog::create([
@@ -25,7 +25,7 @@ class AdminController extends Controller
             'target_type' => $type,
             'target_id'   => $id,
             'target_name' => $name,
-            'reason'      => $reason,
+            'reason' => $reason,
         ]);
     }
 
@@ -37,8 +37,8 @@ class AdminController extends Controller
             ->map(fn($u) => [
                 'id' => $u->id,
                 'name' => $u->name,
-                'email' => $u->email,
-                'is_admin' => $u->is_admin,
+                'email'      => $u->email,
+                'is_admin'   => $u->is_admin,
                 'is_blocked' => $u->is_blocked,
                 'books_count' => $u->books_count,
                 'joined' => $u->created_at->toDateString(),
@@ -53,8 +53,8 @@ class AdminController extends Controller
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(fn($b) => [
-                'id' => $b->id,
-                'title' => $b->title,
+                'id'     => $b->id,
+                'title'  => $b->title,
                 'author' => $b->author,
                 'genre' => $b->genre,
                 'status' => $b->status,
@@ -67,7 +67,7 @@ class AdminController extends Controller
 
     public function blockUser(Request $request, User $user)
     {
-        // can't block other admins or yourself
+        // adminiem un sev nevar bloķēt
         if ($user->is_admin || $user->id === $request->user()->id) {
             return response()->json(['message' => 'Cannot block this user.'], 422);
         }
@@ -112,7 +112,7 @@ class AdminController extends Controller
     {
         $request->validate(['reason' => ['required', 'string', 'max:500']]);
 
-        $owner = $book->user;
+        $owner  = $book->user;
         $title  = $book->title;
         $author = $book->author;
 
@@ -120,7 +120,7 @@ class AdminController extends Controller
 
         $this->log($request, 'delete_book', 'book', null, $title, $request->reason);
 
-        // notify the owner so they know why it was removed (mail might fail on rate limit, that's fine)
+        // grāmata dzēsta — pazino īpašnieku
         if ($owner) {
             try {
                 $owner->notify(new BookDeletedByAdmin($title, $author, $request->reason));
@@ -174,7 +174,7 @@ class AdminController extends Controller
             Book::where('id', $swap->wanted_book_id)->update(['user_id' => $requesterId, 'status' => 'Available']);
             $swap->update(['status' => 'accepted']);
 
-            // cancel any other pending swaps that involve these same books
+            // noraida konfliktējošos
             $conflicting = SwapRequest::where('id', '!=', $swap->id)
                 ->where('status', 'pending')
                 ->where(function ($q) use ($swap) {
@@ -226,7 +226,7 @@ class AdminController extends Controller
     {
         $label = "{$swap->offeredBook->title} ↔ {$swap->wantedBook->title}";
 
-        // free both books if still pending
+        // atbrīvo grāmatas ja vēl pending
         if ($swap->status === 'pending') {
             Book::where('id', $swap->offered_book_id)->update(['status' => 'Available']);
             Book::where('id', $swap->wanted_book_id)->update(['status' => 'Available']);
@@ -249,8 +249,8 @@ class AdminController extends Controller
                 'action'      => $l->action,
                 'target_type' => $l->target_type,
                 'target_name' => $l->target_name,
-                'reason'      => $l->reason,
-                'date'        => $l->created_at->format('Y-m-d H:i'),
+                'reason' => $l->reason,
+                'date'   => $l->created_at->format('Y-m-d H:i'),
             ]);
 
         return response()->json($logs);
@@ -262,10 +262,10 @@ class AdminController extends Controller
             'book:id,title,author',
             'rater:id,name',
         ])->latest()->get()->map(fn($r) => [
-            'id' => $r->id,
-            'book' => $r->book?->title,
+            'id'     => $r->id,
+            'book'   => $r->book?->title,
             'author' => $r->book?->author,
-            'rater' => $r->rater?->name,
+            'rater'  => $r->rater?->name,
             'stars' => $r->stars,
             'review' => $r->review,
             'date' => $r->created_at->toDateString(),

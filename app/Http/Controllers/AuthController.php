@@ -44,7 +44,7 @@ class AuthController extends Controller
             ]);
         }
 
-        // blocked users can't log in
+        // bloķētie nevar ielogoties
         if ($user->is_blocked) {
             return response()->json(['blocked' => true], 403);
         }

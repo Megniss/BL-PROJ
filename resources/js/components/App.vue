@@ -32,6 +32,7 @@ export default {
   mounted() {
     initLanguages()
     window.addEventListener('scroll', this.onScroll, { passive: true })
+    // rāda katru reizi, vienkāršāk tā
     this.showCookie = true
   },
 

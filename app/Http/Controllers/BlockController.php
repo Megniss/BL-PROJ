@@ -15,6 +15,7 @@ class BlockController extends Controller
 
     public function store(Request $request, User $user)
     {
+        // sevi bloķēt nevar
         if ($user->id === $request->user()->id) {
             return response()->json(['message' => 'You cannot block yourself.'], 422);
         }

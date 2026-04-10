@@ -16,7 +16,7 @@ Rezultātā sanāca pilnvērtīga platforma ar lietotāju kontiem, grāmatu kata
 
 | Slānis | Tehnoloģija |
 |--------|-------------|
-| **Backend** | Laravel 11 (PHP) |
+| **Backend** | Laravel 13 (PHP) |
 | **Frontend** | Vue 3 (SPA) |
 | **Datubāze** | SQLite |
 | **Autentifikācija** | Laravel Sanctum |
@@ -186,7 +186,7 @@ Lietotne ir instalējama kā progresīvā tīmekļa lietotne (PWA):
 app/Http/Controllers/   ← 11 API kontrolieri (ieskaitot AdminController)
 app/Http/Middleware/    ← AdminMiddleware
 app/Models/             ← User, Book, SwapRequest, Message, Rating, Block
-app/Notifications/      ← SwapAccepted, SwapDeclined, NewMessage
+app/Notifications/      ← SwapAccepted, SwapDeclined, NewMessage, BookUnderReview, BookDeletedByAdmin
 resources/js/
   components/           ← 18+ Vue komponentes (ieskaitot Admin.vue)
   router/router.js      ← Vue Router (ar admin maršrutu un sardzi)
@@ -202,22 +202,16 @@ routes/api.php          ← ~45 REST API galapunkti
 **Pirmo reizi:**
 ```bash
 composer install
-copy .env.example .env
-php artisan key:generate
 php artisan storage:link
 npm install
 ```
+
+> `.env` fails ar visiem iestatījumiem ir iekļauts repozitorijā — nekas papildus nav jākonfigurē.
 
 **Palaist izstrādes vidi:**
 ```bash
 composer run dev
 ```
-
-**Rindas apstrādātājs (e-pasta paziņojumiem):**
-```bash
-php artisan queue:work
-```
-> Šis process jāpalaiž atsevišķā terminālī un jātur atvērts — tas apstrādā e-pasta sūtīšanas rindas uzdevumus.
 
 **Testi:**
 ```bash

@@ -10,7 +10,7 @@
           <h2 class="convo-title">{{ t('messages.title') }}</h2>
         </div>
 
-        <!-- support is always pinned at the top -->
+        <!-- atbalsts vienmēr pirmais -->
         <div
           class="convo-item convo-support"
           role="button"
@@ -124,7 +124,7 @@
               </div>
             </div>
 
-            <!-- right-click / long-press menu -->
+            <!-- labā poga / garš pieskāriens -->
             <div v-if="ctxMenu.visible" class="msg-ctx-menu" :style="{ top: ctxMenu.y + 'px', left: ctxMenu.x + 'px' }">
               <button @click="startEdit(ctxMenu.msg); ctxMenu.visible = false">{{ t('messages.editBtn') }}</button>
               <button @click="unsendMessage(ctxMenu.msg); ctxMenu.visible = false" class="msg-ctx-danger">{{ t('messages.unsendBtn') }}</button>
@@ -200,7 +200,7 @@ export default {
     document.addEventListener('click', this.closeCtxMenu)
     await this.fetchConversations()
 
-    // if we came from a book card or profile page, open that convo right away
+    // ja atnācām no grāmatas kartītes vai profila, uzreiz atver sarunu
     if (this.$route.query.userId) {
       const userId   = Number(this.$route.query.userId)
       const userName = this.$route.query.userName || 'User'
@@ -233,15 +233,15 @@ export default {
       this.showThread        = true
       clearInterval(this.pollTimer)
 
-      // check block status before showing the thread
+      // pārbauda bloķēšanu pirms rāda sarunu
       try {
         const { data } = await axios.get(`/api/users/${user.id}`)
         this.activeUserBlocked = (data.is_blocked || data.they_blocked_me) ?? false
-      } catch { /* ignore */ }
+      } catch { /* ignorē */ }
 
       await this.fetchThread()
 
-      // poll every 3s while this convo is open
+      // reizi 3 sekundēs pārbauda jaunas ziņas
       this.pollTimer = setInterval(() => {
         if (this.activeUser) this.pollNewMessages()
       }, 3000)
@@ -256,10 +256,10 @@ export default {
           await axios.post(`/api/blocks/${this.activeUser.id}`)
           this.activeUserBlocked = true
         }
-        // sync the blocked tag in the sidebar too
+        // atjaunina bloķēšanas tagu sānbārā arī
         const convo = this.conversations.find(c => c.user.id === this.activeUser.id)
         if (convo) convo.is_blocked = this.activeUserBlocked
-      } catch { /* ignore */ }
+      } catch { /* ignorē */ }
     },
 
     async fetchThread() {
@@ -296,7 +296,7 @@ export default {
         }
         await this.$nextTick()
         this.scrollToBottom()
-      } catch { /* silent */ }
+      } catch { /* klusums */ }
     },
 
     async sendMessage() {
@@ -317,7 +317,7 @@ export default {
           }
         })
 
-        // update or create the sidebar entry
+        // atjaunina vai izveido ierakstu sānbārā
         const convo = this.conversations.find(c => c.user.id === this.activeUser.id)
         if (convo) {
           convo.last_message = { body, created_at: data.created_at }
@@ -359,23 +359,23 @@ export default {
       const menuH = 88
       const gap = 6
 
-      // own messages sit on the right, so try placing the menu to the left first
+      // savas ziņas ir labajā pusē, mēģina izvietot kreisajā
       let x, y
 
       if (r.left - menuW - gap >= 0) {
         x = r.left - menuW - gap
         y = r.top
       } else if (r.right + menuW + gap <= window.innerWidth) {
-        // no room left, go right
+        // pa kreisi nav vietas, liek pa labi
         x = r.right + gap
         y = r.top
       } else {
-        // last resort: below the bubble
+        // pēdējā iespēja: zem burbuļa
         x = Math.max(8, r.right - menuW)
         y = r.bottom + gap
       }
 
-      // don't let it go off the bottom of the screen
+      // nedrīkst iziet ārpus ekrāna apakšas
       if (y + menuH > window.innerHeight) y = r.top - menuH - gap
 
       this.ctxMenu = { visible: true, x, y, msg }

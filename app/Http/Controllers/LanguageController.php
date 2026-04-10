@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class LanguageController extends Controller
 {
-    // what the navbar needs
+    // navigācijai vajag tikai aktīvās
     public function index()
     {
         return response()->json(
@@ -17,7 +17,7 @@ class LanguageController extends Controller
         );
     }
 
-    // DB overrides for a locale (merged with file translations on the frontend)
+    // db override tulkojumi konkrētai valodai
     public function translations(string $code)
     {
         return response()->json(
@@ -25,7 +25,7 @@ class LanguageController extends Controller
         );
     }
 
-    // admin view, includes inactive ones too
+    // admin redz visas, arī neaktīvās
     public function all()
     {
         return response()->json(Language::orderBy('sort_order')->get());
@@ -40,10 +40,10 @@ class LanguageController extends Controller
         ]);
 
         $lang = Language::create([
-            'code'       => strtolower($request->code),
-            'name'       => $request->name,
-            'flag'       => strtolower($request->flag),
-            'is_active'  => true,
+            'code'      => strtolower($request->code),
+            'name'      => $request->name,
+            'flag'      => strtolower($request->flag),
+            'is_active' => true,
             'sort_order' => (Language::max('sort_order') ?? 0) + 1,
         ]);
 
@@ -53,7 +53,7 @@ class LanguageController extends Controller
             'target_type' => 'language',
             'target_id'   => null,
             'target_name' => $lang->name . ' (' . $lang->code . ')',
-            'reason'      => null,
+            'reason' => null,
         ]);
 
         return response()->json($lang, 201);
@@ -73,9 +73,9 @@ class LanguageController extends Controller
             'admin_id'    => $request->user()->id,
             'action'      => 'edit_language',
             'target_type' => 'language',
-            'target_id'   => null,
+            'target_id' => null,
             'target_name' => $lang->name . ' (' . $lang->code . ')',
-            'reason'      => null,
+            'reason' => null,
         ]);
 
         return response()->json($lang);
@@ -83,7 +83,7 @@ class LanguageController extends Controller
 
     public function deactivate(Request $request, string $code)
     {
-        // english is the fallback, can't remove it
+        // en ir rezerves valoda, to nedrīkst noņemt
         if ($code === 'en') {
             return response()->json(['message' => 'Cannot remove the default language.'], 422);
         }
@@ -97,7 +97,7 @@ class LanguageController extends Controller
             'target_type' => 'language',
             'target_id'   => null,
             'target_name' => $lang->name . ' (' . $lang->code . ')',
-            'reason'      => null,
+            'reason' => null,
         ]);
 
         return response()->json(['message' => 'Language removed.']);
@@ -112,9 +112,9 @@ class LanguageController extends Controller
             'admin_id'    => $request->user()->id,
             'action'      => 'restore_language',
             'target_type' => 'language',
-            'target_id'   => null,
+            'target_id' => null,
             'target_name' => $lang->name . ' (' . $lang->code . ')',
-            'reason'      => null,
+            'reason' => null,
         ]);
 
         return response()->json(['message' => 'Language restored.']);
@@ -136,7 +136,7 @@ class LanguageController extends Controller
 
         foreach ($request->overrides as $key => $value) {
             if ($value === null || $value === '') {
-                // empty = delete the override, fall back to file
+                // tukšs = dzēš override, atgriežas pie faila
                 TranslationOverride::where('language_code', $code)->where('key', $key)->delete();
             } else {
                 TranslationOverride::updateOrCreate(
@@ -151,9 +151,9 @@ class LanguageController extends Controller
             'admin_id'    => $request->user()->id,
             'action'      => 'edit_translations',
             'target_type' => 'language',
-            'target_id'   => null,
+            'target_id' => null,
             'target_name' => $lang ? $lang->name . ' (' . $code . ')' : $code,
-            'reason'      => count($request->overrides) . ' keys updated',
+            'reason' => count($request->overrides) . ' keys updated',
         ]);
 
         return response()->json(['message' => 'Translations saved.']);

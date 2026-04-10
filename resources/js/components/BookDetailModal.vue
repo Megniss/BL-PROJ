@@ -51,11 +51,38 @@
         </div>
       </div>
 
+      <!-- ieteikumi -->
+      <div v-if="suggestions.length" class="book-suggestions">
+        <p class="suggestions-label">{{ t('bookDetail.suggestions') }}</p>
+        <div class="suggestions-scroll">
+          <div
+            v-for="s in suggestions"
+            :key="s.id"
+            class="suggestion-card"
+            role="button"
+            tabindex="0"
+            @click="$emit('suggest', s)"
+            @keyup.enter="$emit('suggest', s)"
+          >
+            <div class="suggestion-cover" :style="!s.cover_image ? { background: coverColor(s) } : {}">
+              <img v-if="s.cover_image" :src="'/storage/' + s.cover_image" :alt="s.title" />
+              <span v-else class="suggestion-genre-text">{{ t('genre.' + s.genre) }}</span>
+            </div>
+            <div class="suggestion-info">
+              <p class="suggestion-title">{{ s.title }}</p>
+              <p class="suggestion-author">{{ s.author }}</p>
+              <span class="tag" style="font-size:0.65rem">{{ t('genre.' + s.genre) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
 
 <script>
+import axios from 'axios'
 import langMixin from '../langMixin.js'
 import { coverColor } from '../coverColor.js'
 import { authStore } from '../authStore.js'
@@ -67,17 +94,30 @@ export default {
     book: { type: Object, default: null },
     blocked: { type: Boolean, default: false },
   },
-  emits: ['close', 'swap', 'message', 'profile'],
+  emits: ['close', 'swap', 'message', 'profile', 'suggest'],
   data() {
-    return { authStore }
+    return { authStore, suggestions: [] }
   },
   computed: {
     isOwnBook() {
       return authStore.user && this.book?.user?.id === authStore.user.id
     }
   },
+  watch: {
+    book(val) {
+      this.suggestions = []
+      if (val) this.fetchSuggestions(val.id)
+    }
+  },
   methods: {
     coverColor,
+
+    async fetchSuggestions(bookId) {
+      try {
+        const { data } = await axios.get(`/api/books/${bookId}/suggestions`)
+        this.suggestions = data
+      } catch { /* klusums */ }
+    },
   }
 }
 </script>

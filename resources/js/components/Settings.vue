@@ -5,7 +5,7 @@
     <div class="container py-5 px-3 px-md-4" style="max-width:680px">
       <h1 class="settings-title mb-4">{{ t('settings.title') }}</h1>
 
-      <!-- profile info + password change -->
+      <!-- profila info un parole -->
       <div class="settings-card mb-4">
         <h2 class="settings-section-title">{{ t('settings.editProfile') }}</h2>
 
@@ -46,7 +46,7 @@
         </form>
       </div>
 
-      <!-- privacy toggles -->
+      <!-- privātuma iestatījumi -->
       <div class="settings-card mb-4">
         <h2 class="settings-section-title">{{ t('settings.privacy') }}</h2>
 
@@ -61,10 +61,15 @@
             <input type="checkbox" v-model="privacyForm.show_swaps" @change="savePrivacy" />
             <span class="privacy-toggle-switch"></span>
           </label>
+          <label class="privacy-toggle">
+            <span class="privacy-toggle-label">{{ t('profile.showSwapHistory') }}</span>
+            <input type="checkbox" v-model="privacyForm.show_swap_history" @change="savePrivacy" />
+            <span class="privacy-toggle-switch"></span>
+          </label>
         </div>
       </div>
 
-      <!-- blocked users list -->
+      <!-- bloķētie -->
       <div class="settings-card">
         <h2 class="settings-section-title">{{ t('settings.blocked') }}</h2>
 
@@ -115,7 +120,7 @@ export default {
       profileError: '',
       profileSuccess: '',
 
-      privacyForm: { show_joined: true, show_swaps: true },
+      privacyForm: { show_joined: true, show_swaps: true, show_swap_history: true },
 
       blockedUsers: [],
       blockedLoading: true,
@@ -129,8 +134,9 @@ export default {
     ])
     this.profileForm.name = profile.data.name
     this.profileForm.email = profile.data.email
-    this.privacyForm.show_joined = profile.data.show_joined
-    this.privacyForm.show_swaps = profile.data.show_swaps
+    this.privacyForm.show_joined       = profile.data.show_joined
+    this.privacyForm.show_swaps        = profile.data.show_swaps
+    this.privacyForm.show_swap_history = profile.data.show_swap_history
   },
 
   methods: {

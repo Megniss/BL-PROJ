@@ -68,6 +68,7 @@ export default {
   },
 
   watch: {
+    // kad modal atveras, notieram
     open(val) {
       if (val) {
         this.stars = 0

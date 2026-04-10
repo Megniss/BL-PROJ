@@ -9,7 +9,7 @@ export const authStore = reactive({
   token: savedToken ? savedToken : null,
 })
 
-// restore auth header if user was already logged in
+// ja lietotājs jau bija ielogojies, atjauno headeri
 if (authStore.token) {
   axios.defaults.headers.common['Authorization'] = `Bearer ${authStore.token}`
 }

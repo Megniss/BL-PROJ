@@ -8,18 +8,18 @@ const saved = typeof localStorage !== 'undefined'
 
 export const langStore = reactive({
   locale: saved || 'en',
-  // static fallback until we get the real list from DB
+  // rezerves kamēr neatnāk no DB
   languages: [
     { code: 'en', name: 'English', flag: 'gb' },
     { code: 'lv', name: 'Latvian', flag: 'lv' },
   ],
-  overrides: {}, // { 'en': { 'nav.home': 'Home' }, 'lv': { ... } }
+  overrides: {},
 })
 
 export function t(key) {
   const override = langStore.overrides[langStore.locale]?.[key]
   if (override !== undefined && override !== '') return override
-  // fall back to static file, then english, then just the key
+  // statiskais fails, tad angļu, tad atgriežam pašu atslēgu
   return translations[langStore.locale]?.[key]
     ?? translations['en']?.[key]
     ?? key
@@ -32,7 +32,7 @@ export async function setLocale(locale) {
 }
 
 async function _fetchOverrides(code) {
-  // skip if we already loaded this language
+  // ja jau ielādēts, izlaižam
   if (langStore.overrides[code] !== undefined) return
   try {
     const { data } = await axios.get(`/api/translations/${code}`)
@@ -46,7 +46,7 @@ export async function initLanguages() {
   try {
     const { data } = await axios.get('/api/languages')
     langStore.languages = data
-    // make sure saved locale is still valid
+    // pārbaudām vai saglabātā valoda vēl aktīva
     if (!data.find(l => l.code === langStore.locale)) {
       langStore.locale = 'en'
       localStorage.setItem('bookloop_locale', 'en')
@@ -56,7 +56,7 @@ export async function initLanguages() {
   await _fetchOverrides(langStore.locale)
 }
 
-// call this after admin saves translations so we re-fetch
+// pēc admin saglabāšanas - dzēšam kešu lai pārlādē
 export function invalidateOverrides(code) {
   delete langStore.overrides[code]
 }

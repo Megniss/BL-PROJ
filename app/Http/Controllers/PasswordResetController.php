@@ -18,6 +18,7 @@ class PasswordResetController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
+        // ja nav tāda lietotāja
         if (!$user) {
             return response()->json(['message' => 'Lietotājs ar šādu e-pastu nav atrasts.'], 422);
         }
@@ -31,8 +32,8 @@ class PasswordResetController extends Controller
     public function reset(Request $request)
     {
         $request->validate([
-            'token' => ['required'],
-            'email' => ['required', 'email'],
+            'token'    => ['required'],
+            'email'    => ['required', 'email'],
             'password' => ['required', 'confirmed', Rules\Password::min(8)->mixedCase()->numbers()->symbols()],
         ]);
 

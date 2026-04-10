@@ -60,9 +60,9 @@ class BookController extends Controller
         return response()->json($request->user()->books()->latest()->get());
     }
 
+    // pirmie burti lieli, atstarpes ārā
     private function toPascalCase(string $value): string
     {
-        // capitalize each word then strip spaces: "harry potter" -> "HarryPotter"
         return str_replace(' ', '', ucwords(mb_strtolower($value)));
     }
 
@@ -138,6 +138,7 @@ class BookController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
+        // ja grāmata pending, nevar dzēst
         if ($book->status === 'Pending') {
             return response()->json(['message' => 'This book is part of a pending swap. Cancel the swap first.'], 422);
         }
@@ -179,7 +180,31 @@ class BookController extends Controller
         return response()->json(['message' => 'Cover removed.']);
     }
 
-    // just for the landing page counters
+    // līdzīgas grāmatas — tāds pats žanrs vai valoda
+    public function suggestions(Book $book)
+    {
+        $authUser = auth('sanctum')->user();
+
+        $similar = Book::with('user:id,name')
+            ->withAvg('ratings', 'stars')
+            ->withCount('ratings')
+            ->where('status', 'Available')
+            ->where('id', '!=', $book->id)
+            ->where('user_id', '!=', $book->user_id)
+            ->when($authUser, fn($q) => $q->where('user_id', '!=', $authUser->id))
+            ->whereHas('user', fn($q) => $q->where('is_blocked', false))
+            ->where(function ($q) use ($book) {
+                $q->where('genre', $book->genre)
+                  ->orWhere('language', $book->language);
+            })
+            ->inRandomOrder()
+            ->limit(6)
+            ->get();
+
+        return response()->json($similar);
+    }
+
+    // skaitļi priekš galvenās lapas
     public function stats()
     {
         return response()->json([

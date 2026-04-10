@@ -731,6 +731,50 @@ body {
 .detail-actions .btn-msg-owner { white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; }
 .btn-icon { font-size: 13px; line-height: 1; }
 
+/* ieteikumu josla modāļa apakšā */
+.book-suggestions {
+  border-top: 1px solid var(--border);
+  padding: 16px 20px 4px;
+  margin-top: 4px;
+}
+.suggestions-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.suggestions-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  scrollbar-width: thin;
+}
+.suggestion-card {
+  flex: 0 0 110px;
+  cursor: pointer;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.suggestion-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+.suggestion-cover {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.suggestion-cover img { width: 100%; height: 100%; object-fit: cover; }
+.suggestion-genre-text { font-size: 0.6rem; color: #fff; font-weight: 600; text-align: center; padding: 4px; }
+.suggestion-info { padding: 6px 7px 8px; }
+.suggestion-title { font-size: 0.7rem; font-weight: 600; line-height: 1.3; margin: 0 0 2px; color: var(--ink); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
+.suggestion-author { font-size: 0.65rem; color: var(--muted); margin: 0 0 4px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
 @media (max-width: 600px) {
   .book-detail-layout { flex-direction: column; }
   .book-detail-cover-wrap { width: 100%; min-height: 200px; }

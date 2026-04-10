@@ -83,6 +83,22 @@
             </div>
           </div>
         </div>
+
+        <template v-if="profile.swap_history && profile.swap_history.length">
+          <h2 class="dash-section-title mt-4 mb-3">{{ profile.name }} — {{ t('profile.swapHistory') }}</h2>
+          <div class="d-flex flex-column gap-2 mb-4">
+            <div v-for="(swap, i) in profile.swap_history" :key="i" class="card border">
+              <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2 p-3">
+                <p class="mb-0 small">
+                  <strong>{{ profile.name }}</strong> {{ t('up.gave') }} <strong>{{ swap.gave }}</strong>
+                  {{ t('profile.andReceived') }} <strong>{{ swap.received }}</strong>
+                </p>
+                <span class="text-muted" style="font-size:12px">{{ swap.date }}</span>
+              </div>
+            </div>
+          </div>
+        </template>
+
       </div>
     </template>
 
@@ -180,7 +196,7 @@ export default {
         try {
           const { data } = await axios.get('/api/books')
           this.swapModal.myBooks = data.filter(b => b.status === 'Available')
-        } catch { /* ignore */ }
+        } catch { /* ignorē */ }
       }
     },
 
@@ -215,7 +231,7 @@ export default {
           await axios.post(`/api/blocks/${this.profile.id}`)
           this.isBlocked = true
         }
-      } catch { /* ignore */ }
+      } catch { /* ignorē */ }
     },
 
     coverColor,

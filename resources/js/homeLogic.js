@@ -1,4 +1,4 @@
-// shared logic for Home.vue
+// priekš Home.vue
 
 export default {
 

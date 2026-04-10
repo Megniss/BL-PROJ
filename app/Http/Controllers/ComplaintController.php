@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class ComplaintController extends Controller
 {
-    // user sees own complaints, admin sees all
+    // lietotājs redz savus, admin redz visus
     public function index(Request $request)
     {
         $user = $request->user();
@@ -22,12 +22,12 @@ class ComplaintController extends Controller
         }
 
         return response()->json($query->get()->map(fn($c) => [
-            'id'          => $c->id,
-            'subject'     => $c->subject,
-            'status'      => $c->status,
-            'user'        => $c->user,
-            'last_msg'    => $c->latestMessage->first()?->body,
-            'updated_at'  => $c->updated_at,
+            'id'         => $c->id,
+            'subject'    => $c->subject,
+            'status'     => $c->status,
+            'user'       => $c->user,
+            'last_msg'   => $c->latestMessage->first()?->body,
+            'updated_at' => $c->updated_at,
         ]));
     }
 
@@ -74,7 +74,7 @@ class ComplaintController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
-        // only admin can message on a closed complaint
+        // slēgtā sūdzībā var rakstīt tikai admin
         if ($complaint->status === 'closed' && !$user->is_admin) {
             return response()->json(['message' => 'This complaint is closed.'], 422);
         }
@@ -87,7 +87,7 @@ class ComplaintController extends Controller
             'body'         => $request->body,
         ]);
 
-        // admin replying to a closed complaint reopens it
+        // ja admin raksta uz slēgtu — atver atpakaļ
         if ($complaint->status === 'closed' && $user->is_admin) {
             $complaint->update(['status' => 'open', 'updated_at' => now()]);
         } else {
@@ -102,7 +102,7 @@ class ComplaintController extends Controller
                 'target_type' => 'complaint',
                 'target_id'   => $complaint->id,
                 'target_name' => $complaint->user->name . ' — ' . $complaint->subject,
-                'reason'      => $request->body,
+                'reason' => $request->body,
             ]);
         }
 
@@ -132,7 +132,7 @@ class ComplaintController extends Controller
             'target_type' => 'complaint',
             'target_id'   => $complaint->id,
             'target_name' => $complaint->user->name . ' — ' . $complaint->subject,
-            'reason'      => null,
+            'reason' => null,
         ]);
 
         return response()->json(['status' => 'closed']);
@@ -141,10 +141,10 @@ class ComplaintController extends Controller
     private function formatComplaint(Complaint $complaint): array
     {
         return [
-            'id'       => $complaint->id,
-            'subject'  => $complaint->subject,
-            'status'   => $complaint->status,
-            'user'     => $complaint->user,
+            'id'      => $complaint->id,
+            'subject' => $complaint->subject,
+            'status'  => $complaint->status,
+            'user'    => $complaint->user,
             'messages' => $complaint->messages?->map(fn($m) => [
                 'id'         => $m->id,
                 'sender_id'  => $m->sender_id,

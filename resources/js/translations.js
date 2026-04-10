@@ -111,6 +111,7 @@ export const translations = {
     'bookDetail.owner': 'Owner',
     'bookDetail.noDesc': 'No description provided.',
     'bookDetail.close': 'Close',
+    'bookDetail.suggestions': 'You might also like',
 
     // Pārlūkošanas lapa
     'browse.title': 'Browse Books',
@@ -208,6 +209,7 @@ export const translations = {
 
     // Lietotāja profils
     'up.message': 'Message',
+    'up.gave': 'gave',
     'up.library': 'Library',
     'up.noBooks': 'No books available right now.',
     'up.notFound': 'User not found.',
@@ -311,6 +313,7 @@ export const translations = {
     'profile.privacy': 'Privacy',
     'profile.showJoined': 'Show join date on my public profile',
     'profile.showSwaps': 'Show swap count on my public profile',
+    'profile.showSwapHistory': 'Show swap history on my public profile',
     'profile.rate': 'Rate',
     'profile.rated': 'Rated',
     'profile.ratingTitle': 'Rate this book',
@@ -602,6 +605,7 @@ export const translations = {
     'bookDetail.owner': 'Īpašnieks',
     'bookDetail.noDesc': 'Apraksts nav norādīts.',
     'bookDetail.close': 'Aizvērt',
+    'bookDetail.suggestions': 'Varētu patikt arī',
 
     // Pārlūkošanas lapa
     'browse.title': 'Pārlūkot Grāmatas',
@@ -699,6 +703,7 @@ export const translations = {
 
     // Lietotāja profils
     'up.message': 'Rakstīt',
+    'up.gave': 'atdeva',
     'up.library': 'Bibliotēka',
     'up.noBooks': 'Pašlaik nav pieejamu grāmatu.',
     'up.notFound': 'Lietotājs nav atrasts.',
@@ -802,6 +807,7 @@ export const translations = {
     'profile.privacy': 'Privātums',
     'profile.showJoined': 'Rādīt pievienošanās datumu publiskajā profilā',
     'profile.showSwaps': 'Rādīt apmaiņu skaitu publiskajā profilā',
+    'profile.showSwapHistory': 'Rādīt apmaiņu vēsturi publiskajā profilā',
     'profile.rate': 'Novērtēt',
     'profile.rated': 'Novērtēts',
     'profile.ratingTitle': 'Novērtē šo grāmatu',

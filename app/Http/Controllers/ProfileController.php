@@ -21,14 +21,15 @@ class ProfileController extends Controller
             ->count();
 
         return response()->json([
-            'id' => $user->id,
-            'name' => $user->name,
+            'id'    => $user->id,
+            'name'  => $user->name,
             'email' => $user->email,
             'joined' => $user->created_at->toDateString(),
             'books' => $booksCount,
             'swaps' => $swapsCount,
-            'show_joined' => $user->show_joined,
-            'show_swaps' => $user->show_swaps,
+            'show_joined'        => $user->show_joined,
+            'show_swaps'         => $user->show_swaps,
+            'show_swap_history'  => $user->show_swap_history,
         ]);
     }
 
@@ -37,7 +38,7 @@ class ProfileController extends Controller
         $user = $request->user();
 
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name'  => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email,' . $user->id],
             'current_password' => ['nullable', 'string'],
             'new_password' => ['nullable', 'confirmed', Rules\Password::min(8)->mixedCase()->numbers()->symbols()],
@@ -53,13 +54,13 @@ class ProfileController extends Controller
             $user->password = Hash::make($data['new_password']);
         }
 
-        $user->name = $data['name'];
+        $user->name  = $data['name'];
         $user->email = $data['email'];
         $user->save();
 
         return response()->json([
-            'id' => $user->id,
-            'name' => $user->name,
+            'id'    => $user->id,
+            'name'  => $user->name,
             'email' => $user->email,
         ]);
     }
@@ -68,15 +69,21 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         $data = $request->validate([
-            'show_joined' => ['required', 'boolean'],
-            'show_swaps' => ['required', 'boolean'],
+            'show_joined'       => ['required', 'boolean'],
+            'show_swaps'        => ['required', 'boolean'],
+            'show_swap_history' => ['required', 'boolean'],
         ]);
 
-        $user->show_joined = $data['show_joined'];
-        $user->show_swaps = $data['show_swaps'];
+        $user->show_joined       = $data['show_joined'];
+        $user->show_swaps        = $data['show_swaps'];
+        $user->show_swap_history = $data['show_swap_history'];
         $user->save();
 
-        return response()->json(['show_joined' => $user->show_joined, 'show_swaps' => $user->show_swaps]);
+        return response()->json([
+            'show_joined'       => $user->show_joined,
+            'show_swaps'        => $user->show_swaps,
+            'show_swap_history' => $user->show_swap_history,
+        ]);
     }
 
     public function history(Request $request)

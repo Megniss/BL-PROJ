@@ -10,7 +10,7 @@
       </template>
     </AppNavbar>
 
-    <!-- hero -->
+    <!-- varonis -->
     <section class="hero-section py-5">
       <div class="container-xl py-3 d-flex align-items-center gap-5">
 
@@ -289,7 +289,7 @@ export default {
         this.topRatedBooks = rated.data.data.filter(b => b.ratings_count > 0)
         this.stats = statsRes.data
       } catch {
-        // ignore, home page just won't show stats
+        // ignorē, galvenā lapa vienkārši nerādīs statistiku
       } finally {
         this.booksLoading = false
       }
@@ -316,7 +316,7 @@ export default {
         try {
           const { data } = await axios.get(`/api/users/${book.user.id}`)
           this.detailBookBlocked = (data.is_blocked || data.they_blocked_me) ?? false
-        } catch { /* ignore */ }
+        } catch { /* ignorē */ }
       }
     },
 
@@ -330,9 +330,9 @@ export default {
       if (authStore.user) {
         try {
           const { data } = await axios.get('/api/books')
-          // only show books the user can actually offer
+          // tikai grāmatas ko lietotājs var piedāvāt
           this.swapModal.myBooks = data.filter(b => b.status === 'Available')
-        } catch { /* ignore */ }
+        } catch { /* ignorē */ }
       }
     },
 
@@ -346,7 +346,7 @@ export default {
           offered_book_id: this.swapModal.selectedBookId,
           wanted_book_id:  this.swapModal.wantedBook.id,
         })
-        // remove from all three lists so it disappears immediately
+        // noņem no visiem trim sarakstiem uzreiz
         const id = this.swapModal.wantedBook.id
         this.recentBooks   = this.recentBooks.filter(b => b.id !== id)
         this.popularBooks  = this.popularBooks.filter(b => b.id !== id)

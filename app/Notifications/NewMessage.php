@@ -8,6 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
+// sūta tikai vienu reizi kamēr nav izlasīts
 class NewMessage extends Notification implements ShouldQueue
 {
     use Queueable;

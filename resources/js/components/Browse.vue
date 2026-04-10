@@ -42,9 +42,9 @@
         <div class="filter-area">
         <transition name="tab-fade" mode="out-in">
         <div v-if="tab === 'books'" key="books-filters">
-        <!-- search row is always shown -->
+        <!-- meklēšana vienmēr redzama -->
         <div class="d-flex gap-2 mb-2">
-          <input v-model="searchQuery" class="form-control" :placeholder="t('search.placeholder')" :aria-label="t('search.placeholder')" @keyup.enter="applyFilters" />
+          <input v-model="searchQuery" class="form-control" :placeholder="t('search.placeholder')" :aria-label="t('search.placeholder')" @input="debouncedSearch" @keyup.enter="applyFilters" />
           <button class="btn btn-primary flex-shrink-0" @click="applyFilters">{{ t('search.btn') }}</button>
           <button class="filter-more-btn d-lg-none" :class="{ active: showMoreFilters }" @click="showMoreFilters = !showMoreFilters" :aria-label="t('search.moreFilters')">
             <svg aria-hidden="true" width="16" height="13" viewBox="0 0 16 13" fill="none">
@@ -56,7 +56,7 @@
           </button>
         </div>
 
-        <!-- extra filters — hidden on mobile unless toggled -->
+        <!-- papildu filtri — mobilajā slēpti līdz pogai -->
         <div v-if="showMoreFilters || isDesktop" class="d-flex flex-wrap gap-2 mb-2">
           <div class="filter-suggest-wrap" style="min-width:150px;flex:1">
             <div class="filter-suggest-inner">
@@ -86,7 +86,7 @@
             </ul>
           </div>
 
-          <!-- sort dropdown only makes sense in cards view, table has its own column sort -->
+          <!-- kārtošana tikai kartiņu skatā, tabulā ir savas kolonnas -->
           <div v-show="viewMode === 'cards'" style="min-width:150px;flex:1">
             <select v-model="sortBy" class="form-select" :aria-label="t('sort.titleAsc')" @change="applyFilters">
               <option value="title_asc">{{ t('sort.titleAsc') }}</option>
@@ -100,7 +100,7 @@
           </div>
         </div>
 
-        <!-- active filter tags -->
+        <!-- aktīvie filtra tagi -->
         <div v-if="genreFilters.length || langFilters.length || searchQuery || sortBy !== 'title_asc'" class="d-flex flex-wrap align-items-center gap-1 mt-1">
           <span v-for="g in genreFilters" :key="g" class="table-genre-tag">
             {{ t('genre.' + g) }}
@@ -257,6 +257,7 @@
     @swap="openSwap"
     @message="goToMessages"
     @profile="(user) => $router.push({ name: 'userProfile', params: { id: user.id } })"
+    @suggest="openDetail"
   />
 
   <SwapModal
@@ -393,6 +394,11 @@ export default {
   },
 
   methods: {
+    debouncedSearch() {
+      clearTimeout(this._searchTimer)
+      this._searchTimer = setTimeout(() => this.applyFilters(), 350)
+    },
+
     readRouteParams(q) {
       this.searchQuery = q.search || ''
       this.sortBy = q.sort || 'title_asc'
@@ -441,7 +447,7 @@ export default {
         this.lastPage = data.last_page
         this.totalBooks = data.total
       } catch {
-        // just leave the list empty
+        // atstāj sarakstu tukšu
       } finally {
         this.loadingBooks = false
       }
@@ -485,7 +491,7 @@ export default {
     },
     hideLangSugg() { setTimeout(() => { this.showLangSugg = false }, 150) },
 
-    // toggle direction if same col, else reset to asc
+    // tas pats stabiņš — apgriež virzienu, citādi no sākuma
     sortTable(col) {
       if (this.tableSort.col === col) {
         this.tableSort.dir = this.tableSort.dir === 'asc' ? 'desc' : 'asc'
@@ -558,7 +564,7 @@ export default {
         try {
           const { data } = await axios.get(`/api/users/${book.user.id}`)
           this.detailBookBlocked = (data.is_blocked || data.they_blocked_me) ?? false
-        } catch { /* ignore */ }
+        } catch { /* ignorē */ }
       }
     },
 

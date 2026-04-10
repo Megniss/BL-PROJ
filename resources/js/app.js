@@ -9,7 +9,7 @@ import { themeStore } from './themeStore.js'
 
 themeStore.init()
 
-// if the token expires the server returns 401 — log the user out automatically
+// ja tokens beidzies, serveris atgriež 401 — izlogojas
 axios.interceptors.response.use(
   response => response,
   error => {
@@ -23,7 +23,7 @@ axios.interceptors.response.use(
 
 createApp(App).use(router).mount('#app')
 
-// PWA service worker
+// service worker reģistrācija
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')

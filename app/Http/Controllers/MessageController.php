@@ -37,7 +37,7 @@ class MessageController extends Controller
 
         $partners = User::whereIn('id', $partnerIds)->get()->keyBy('id');
 
-        // one query for all blocked ids
+        // vienā query visus bloķētos
         $blockedIds = $request->user()->blockedUserIds();
 
         $conversations = $lastMessages->map(function ($msg) use ($me, $partners, $unreadCounts, $blockedIds) {
@@ -93,10 +93,10 @@ class MessageController extends Controller
             return response()->json(['message' => 'You cannot message this user.'], 422);
         }
 
-        $sender = $request->user();
+        $sender    = $request->user();
         $recipient = User::find($data['to_user_id']);
 
-        // only send a notification if there's no unread notification already waiting
+        // nesūta notifikāciju ja jau ir nelasīta
         $hasUnread = Message::where('from_user_id', $sender->id)
             ->where('to_user_id', $recipient->id)
             ->whereNull('read_at')
@@ -117,7 +117,7 @@ class MessageController extends Controller
         return response()->json($message->load('sender:id,name'), 201);
     }
 
-    // rediģēt ziņu (tikai sūtītājs, tikai ja nav izlasīta)
+    // rediģēt ziņu — tikai sūtītājs, tikai ja nav izlasīta
     public function update(Request $request, Message $message)
     {
         if ($message->from_user_id !== $request->user()->id) {
@@ -138,7 +138,7 @@ class MessageController extends Controller
         return response()->json($message->load('sender:id,name'));
     }
 
-    // dzēst ziņu (tikai sūtītājs, tikai ja nav izlasīta)
+    // dzēst ziņu — tikai sūtītājs, tikai ja nav izlasīta
     public function destroy(Request $request, Message $message)
     {
         if ($message->from_user_id !== $request->user()->id) {
@@ -154,7 +154,7 @@ class MessageController extends Controller
 
         $message->delete();
 
-        // clean up the notification if there are no more unread messages from this sender
+        // dzēš notifikāciju ja vairs nav nelasītu ziņu
         $hasMoreUnread = Message::where('from_user_id', $senderId)
             ->where('to_user_id', $recipientId)
             ->whereNull('read_at')

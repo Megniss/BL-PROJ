@@ -27,7 +27,7 @@ export default {
   methods: {
     goHowItWorks() {
       if (this.$route.name === 'home') {
-        // already on home, just scroll down to the section
+        // jau ir home, tikai noskrollojam
         const el = document.getElementById('how-it-works')
         if (el) el.scrollIntoView({ behavior: 'smooth' })
       } else {
