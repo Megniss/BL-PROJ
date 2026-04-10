@@ -9,15 +9,20 @@
       <p class="cookie-text">{{ t('cookie.text') }}</p>
       <button class="cookie-btn" @click="acceptCookie">{{ t('cookie.btn') }}</button>
     </div>
+
+    <ToastContainer />
   </div>
 </template>
 
 <script>
 import langMixin from '../langMixin.js'
 import { initLanguages } from '../langStore.js'
+import ToastContainer from './ToastContainer.vue'
 
 export default {
   name: 'App',
+
+  components: { ToastContainer },
 
   mixins: [langMixin],
 

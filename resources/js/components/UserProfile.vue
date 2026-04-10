@@ -64,7 +64,7 @@
                 <p class="book-card-author mb-2">{{ book.author }}</p>
                 <div class="d-flex flex-wrap gap-1 mb-2">
                   <span class="tag">{{ book.language }}</span>
-                  <span class="tag">{{ book.condition }}</span>
+                  <span class="tag" :class="conditionClass(book.condition)">{{ book.condition }}</span>
                   <span class="tag" :class="book.status === 'Available' ? 'tag-green' : 'tag-yellow'">{{ book.status }}</span>
                 </div>
                 <div class="mb-2" style="font-size:0.8rem; color:#888">
@@ -127,6 +127,7 @@ import SwapModal from './SwapModal.vue'
 import AppNavbar from './AppNavbar.vue'
 import AppFooter from './AppFooter.vue'
 import { coverColor } from '../coverColor.js'
+import { conditionClass } from '../conditionClass.js'
 import langMixin from '../langMixin.js'
 
 export default {
@@ -235,6 +236,7 @@ export default {
     },
 
     coverColor,
+    conditionClass,
 
     formatDate(dateStr) {
       return new Date(dateStr).toLocaleDateString('en-GB', {

@@ -37,9 +37,6 @@
             </div>
           </div>
 
-          <div v-if="profileError" class="alert alert-danger py-2 px-3 mb-3">{{ profileError }}</div>
-          <div v-if="profileSuccess" class="alert alert-success py-2 px-3 mb-3">{{ profileSuccess }}</div>
-
           <button type="submit" class="btn btn-primary" :disabled="profileSaving">
             {{ profileSaving ? t('profile.saving') : t('profile.save') }}
           </button>
@@ -94,6 +91,7 @@
 <script>
 import axios from 'axios'
 import { authStore, updateUser } from '../authStore.js'
+import { showToast } from '../toast.js'
 import AppNavbar from './AppNavbar.vue'
 import AppFooter from './AppFooter.vue'
 import langMixin from '../langMixin.js'
@@ -117,8 +115,6 @@ export default {
         new_password_confirmation: '',
       },
       profileSaving: false,
-      profileError: '',
-      profileSuccess: '',
 
       privacyForm: { show_joined: true, show_swaps: true, show_swap_history: true },
 
@@ -152,12 +148,11 @@ export default {
         this.profileForm.current_password = ''
         this.profileForm.new_password = ''
         this.profileForm.new_password_confirmation = ''
-        this.profileSuccess = this.t('profile.saved')
+        showToast(this.t('profile.saved'))
       } catch (err) {
         const errors = err.response?.data?.errors
-        this.profileError = errors
-          ? Object.values(errors).flat()[0]
-          : err.response?.data?.message || 'Something went wrong.'
+        const msg = errors ? Object.values(errors).flat()[0] : err.response?.data?.message || this.t('dash.genericError')
+        showToast(msg, 'error')
       } finally {
         this.profileSaving = false
       }

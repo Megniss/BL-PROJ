@@ -17,7 +17,7 @@
           <div class="d-flex flex-wrap gap-1 mb-3">
             <span class="tag">{{ t('genre.' + book.genre) }}</span>
             <span class="tag">{{ t('lang.' + book.language) }}</span>
-            <span class="tag">{{ book.condition }}</span>
+            <span class="tag" :class="conditionClass(book.condition)">{{ book.condition }}</span>
             <span class="tag" :class="book.status === 'Available' ? 'tag-green' : 'tag-yellow'">
               {{ t('books.status.' + book.status) }}
             </span>
@@ -85,6 +85,7 @@
 import axios from 'axios'
 import langMixin from '../langMixin.js'
 import { coverColor } from '../coverColor.js'
+import { conditionClass } from '../conditionClass.js'
 import { authStore } from '../authStore.js'
 
 export default {
@@ -111,6 +112,7 @@ export default {
   },
   methods: {
     coverColor,
+    conditionClass,
 
     async fetchSuggestions(bookId) {
       try {

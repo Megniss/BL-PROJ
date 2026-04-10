@@ -123,9 +123,17 @@
 
     <section v-show="tab === 'books'" class="container-xl py-4" style="min-height:60vh">
 
-      <div v-if="loadingBooks" class="text-center py-5 text-muted">
-        <div class="fs-1">⏳</div>
-        <p>{{ t('dash.loading') }}</p>
+      <div v-if="loadingBooks" class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-3">
+        <div v-for="n in 10" :key="n" class="col">
+          <div class="card h-100 book-card border skeleton-card">
+            <div class="skeleton-cover"></div>
+            <div class="card-body p-3">
+              <div class="skeleton-line mb-2" style="width:80%"></div>
+              <div class="skeleton-line mb-3" style="width:55%"></div>
+              <div class="skeleton-line" style="width:40%"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div v-else-if="books.length === 0" class="text-center py-5 text-muted">
@@ -147,6 +155,7 @@
         <div v-for="book in books" :key="book.id" class="col">
           <div class="card h-100 book-card border" style="cursor:pointer; position:relative" @click="openDetail(book)">
             <div v-if="book.status === 'Pending'" class="pending-overlay"></div>
+            <div v-if="isNew(book)" class="new-ribbon">{{ t('books.newRibbon') }}</div>
             <div class="book-card-cover" :style="!book.cover_image ? { background: coverColor(book) } : {}">
               <img v-if="book.cover_image" :src="'/storage/' + book.cover_image" :alt="book.title" class="book-card-cover-img" />
               <span class="book-card-genre">{{ t('genre.' + book.genre) }}</span>
@@ -159,6 +168,7 @@
               </p>
               <div class="d-flex flex-wrap gap-1 mb-2">
                 <span class="tag">{{ t('lang.' + book.language) }}</span>
+                <span class="tag" :class="conditionClass(book.condition)">{{ book.condition }}</span>
                 <span class="tag" :class="book.status === 'Available' ? 'tag-green' : 'tag-yellow'">{{ t('books.status.' + book.status) }}</span>
               </div>
               <div class="mt-auto book-card-rating">
@@ -278,6 +288,7 @@ import axios from 'axios'
 import langMixin from '../langMixin.js'
 import { authStore } from '../authStore.js'
 import { coverColor } from '../coverColor.js'
+import { conditionClass } from '../conditionClass.js'
 import BookDetailModal from './BookDetailModal.vue'
 import SwapModal from './SwapModal.vue'
 import AppNavbar from './AppNavbar.vue'
@@ -530,7 +541,7 @@ export default {
         this.books = this.books.filter(b => b.id !== this.swapModal.wantedBook.id)
         this.swapModal.success = true
       } catch (err) {
-        this.swapModal.error = err.response?.data?.message || 'Something went wrong.'
+        this.swapModal.error = err.response?.data?.message || this.t('dash.genericError')
       } finally {
         this.swapModal.sending = false
       }
@@ -568,6 +579,11 @@ export default {
     },
 
     coverColor,
+    conditionClass,
+
+    isNew(book) {
+      return (Date.now() - new Date(book.created_at)) < 7 * 24 * 60 * 60 * 1000
+    },
 
     avatarColor(user) {
       const colors = ['#4f7c52','#7c5c4f','#4f5d7c','#7c4f6f','#4f7a7c','#7c7a4f']

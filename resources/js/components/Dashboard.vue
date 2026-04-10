@@ -65,7 +65,6 @@
       </div>
 
       <div v-if="fetchError" class="alert alert-danger mb-4" role="alert">{{ t('dash.fetchError') }}</div>
-      <div v-if="actionError" class="alert alert-danger mb-4" role="alert">{{ actionError }}</div>
 
       <div v-if="loading" class="text-center py-5 text-muted">
         <div class="fs-1">⏳</div>
@@ -149,7 +148,7 @@
                 <span class="tag" :class="book.status === 'Available' ? 'tag-green' : book.status === 'UnderReview' ? 'tag-red' : 'tag-yellow'">
                   {{ book.status === 'UnderReview' ? t('admin.status.underReview') : book.status }}
                 </span>
-                <span class="tag">{{ book.condition }}</span>
+                <span class="tag" :class="conditionClass(book.condition)">{{ book.condition }}</span>
               </div>
             </div>
           </div>
@@ -247,6 +246,8 @@
 import axios from 'axios'
 import { authStore } from '../authStore.js'
 import { coverColor } from '../coverColor.js'
+import { conditionClass } from '../conditionClass.js'
+import { showToast } from '../toast.js'
 import langMixin from '../langMixin.js'
 import AppNavbar from './AppNavbar.vue'
 import AppFooter from './AppFooter.vue'
@@ -266,7 +267,6 @@ export default {
       outgoing: [],
       loading: true,
       fetchError: '',
-      actionError: '',
       unreadMessages: 0,
       showModal: false,
       editingBook: null,
@@ -330,15 +330,14 @@ export default {
         this.unreadNotifCount = notifs.data.data.filter(n => !n.read_at).length
         this.unreadMessages = msgCount.data.count
       } catch {
-        this.fetchError = 'Failed to load your library. Please refresh the page.'
+        this.fetchError = this.t('dash.fetchError')
       } finally {
         this.loading = false
       }
     },
 
     flashError(msg) {
-      this.actionError = msg
-      setTimeout(() => { this.actionError = '' }, 4000)
+      showToast(msg, 'error')
     },
 
     toggleNotifs() {
@@ -403,7 +402,7 @@ export default {
         this.showNotifs = false
         await this.fetchAll()
       } catch (err) {
-        this.flashError(err.response?.data?.message || 'Something went wrong.')
+        this.flashError(err.response?.data?.message || this.t('dash.genericError'))
       }
     },
 
@@ -413,17 +412,17 @@ export default {
         this.showNotifs = false
         await this.fetchAll()
       } catch (err) {
-        this.flashError(err.response?.data?.message || 'Something went wrong.')
+        this.flashError(err.response?.data?.message || this.t('dash.genericError'))
       }
     },
 
     async cancelSwap(req) {
-      if (!confirm(`Cancel your swap request for "${req.wanted_book.title}"?`)) return
+      if (!confirm(`${this.t('dash.cancelConfirm')} "${req.wanted_book.title}"?`)) return
       try {
         await axios.delete(`/api/swap-requests/${req.id}`)
         await this.fetchAll()
       } catch (err) {
-        this.flashError(err.response?.data?.message || 'Something went wrong.')
+        this.flashError(err.response?.data?.message || this.t('dash.genericError'))
       }
     },
 
@@ -433,7 +432,7 @@ export default {
         this.incoming = this.incoming.filter(r => r.id !== req.id)
         this.outgoing = this.outgoing.filter(r => r.id !== req.id)
       } catch (err) {
-        this.flashError(err.response?.data?.message || 'Something went wrong.')
+        this.flashError(err.response?.data?.message || this.t('dash.genericError'))
       }
     },
 
@@ -487,6 +486,7 @@ export default {
     },
 
     coverColor,
+    conditionClass,
 
     async saveBook() {
       this.formError = ''
@@ -517,13 +517,14 @@ export default {
           savedBook.cover_image = null
         }
 
+        showToast(this.editingBook ? this.t('dash.bookSaved') : this.t('dash.bookAdded'))
         this.closeModal()
       } catch (err) {
         const errors = err.response?.data?.errors
         if (errors) {
           this.formError = Object.values(errors).flat()[0]
         } else {
-          this.formError = 'Something went wrong. Please try again.'
+          this.formError = this.t('dash.genericError')
         }
       } finally {
         this.saving = false
@@ -540,8 +541,9 @@ export default {
         await axios.delete(`/api/books/${this.deletingBook.id}`)
         this.books = this.books.filter(b => b.id !== this.deletingBook.id)
         this.deletingBook = null
+        showToast(this.t('dash.bookDeleted'))
       } catch (err) {
-        this.flashError(err.response?.data?.message || 'Failed to delete the book. Please try again.')
+        this.flashError(err.response?.data?.message || this.t('dash.deleteError'))
       } finally {
         this.saving = false
       }

@@ -258,6 +258,13 @@ export const translations = {
     'dash.ownedBy': 'owned by',
     'dash.cancel': '✕ Cancel',
     'dash.dismiss': '✕ Dismiss',
+    'dash.bookAdded': 'Book added!',
+    'dash.bookSaved': 'Book saved!',
+    'dash.bookDeleted': 'Book deleted!',
+    'dash.cancelConfirm': 'Cancel your swap request for',
+    'dash.genericError': 'Something went wrong.',
+    'dash.deleteError': 'Failed to delete the book. Please try again.',
+    'books.newRibbon': 'NEW',
 
     // Grāmatas modālis
     'modal.addBook': 'Add Book',
@@ -752,6 +759,13 @@ export const translations = {
     'dash.ownedBy': 'pieder',
     'dash.cancel': '✕ Atcelt',
     'dash.dismiss': '✕ Aizvērt',
+    'dash.bookAdded': 'Grāmata pievienota!',
+    'dash.bookSaved': 'Grāmata saglabāta!',
+    'dash.bookDeleted': 'Grāmata dzēsta!',
+    'dash.cancelConfirm': 'Atcelt apmaiņas pieprasījumu par',
+    'dash.genericError': 'Kaut kas nogāja greizi.',
+    'dash.deleteError': 'Neizdevās dzēst grāmatu. Mēģini vēlreiz.',
+    'books.newRibbon': 'JAUNA',
 
     // Grāmatas modālis
     'modal.addBook': 'Pievienot Grāmatu',
