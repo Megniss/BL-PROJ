@@ -221,7 +221,7 @@ export default {
         const { data } = await axios.get('/api/messages')
         this.conversations = data
       } catch (err) {
-        this.convosError = err.response?.data?.message || 'Failed to load conversations.'
+        this.convosError = err.response?.data?.message || this.t('messages.loadConvosError')
       } finally {
         this.loadingConvos = false
       }
@@ -275,7 +275,7 @@ export default {
         await this.$nextTick()
         this.scrollToBottom()
       } catch (err) {
-        this.threadError = err.response?.data?.message || 'Failed to load messages.'
+        this.threadError = err.response?.data?.message || this.t('messages.loadError')
       } finally {
         this.loadingThread = false
       }
@@ -332,7 +332,7 @@ export default {
         await this.$nextTick()
         this.scrollToBottom()
       } catch (err) {
-        alert(err.response?.data?.message || 'Failed to send message.')
+        alert(err.response?.data?.message || this.t('messages.sendError'))
       } finally {
         this.sending = false
       }
@@ -415,7 +415,7 @@ export default {
         if (idx !== -1) this.messages[idx] = data
         this.cancelEdit()
       } catch (err) {
-        alert(err.response?.data?.message || 'Could not edit message.')
+        alert(err.response?.data?.message || this.t('messages.editError'))
       } finally {
         this.editSaving = false
       }
@@ -427,7 +427,7 @@ export default {
         await axios.delete(`/api/messages/${msg.id}`)
         this.messages = this.messages.filter(m => m.id !== msg.id)
       } catch (err) {
-        alert(err.response?.data?.message || 'Could not unsend message.')
+        alert(err.response?.data?.message || this.t('messages.unsendError'))
       }
     },
 

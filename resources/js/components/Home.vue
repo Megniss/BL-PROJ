@@ -353,7 +353,7 @@ export default {
         this.topRatedBooks = this.topRatedBooks.filter(b => b.id !== id)
         this.closeSwapModal()
       } catch (err) {
-        this.swapModal.error = err.response?.data?.message || 'Something went wrong.'
+        this.swapModal.error = err.response?.data?.message || this.t('dash.genericError')
       } finally {
         this.swapModal.sending = false
       }

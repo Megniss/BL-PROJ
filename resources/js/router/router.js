@@ -56,7 +56,7 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/admin',
+    path: '/admin/:tab?',
     name: 'admin',
     component: () => import('../components/Admin.vue'),
     meta: { requiresAdmin: true },

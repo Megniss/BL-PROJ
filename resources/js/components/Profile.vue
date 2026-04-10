@@ -213,7 +213,7 @@ export default {
         if (swap) swap.ratings.push(data)
         this.ratingModal.open = false
       } catch (err) {
-        this.ratingModal.error = err.response?.data?.message || 'Something went wrong.'
+        this.ratingModal.error = err.response?.data?.message || this.t('dash.genericError')
       } finally {
         this.ratingModal.sending = false
       }

@@ -357,6 +357,11 @@ export const translations = {
     'messages.unsendBtn': '🗑️ Unsend',
     'messages.placeholder': 'Type a message…',
     'messages.unsendConfirm': 'Unsend this message?',
+    'messages.loadConvosError': 'Failed to load conversations.',
+    'messages.loadError': 'Failed to load messages.',
+    'messages.sendError': 'Failed to send message.',
+    'messages.editError': 'Could not edit message.',
+    'messages.unsendError': 'Could not unsend message.',
     'messages.supportSub': 'Chat with support',
 
     // Sīkdatnes
@@ -396,7 +401,8 @@ export const translations = {
     'nav.admin': 'Admin Panel',
     'admin.title': 'Admin Panel',
     'admin.loadError': 'Failed to load admin data.',
-    'admin.openAll': 'Open All',
+    'admin.openAll': 'Show All Rows',
+    'admin.collapseAll': 'Collapse Rows',
     'admin.users': 'Users',
     'admin.books': 'All Books',
     'admin.swaps': 'Swap Requests',
@@ -859,6 +865,11 @@ export const translations = {
     'messages.unsendBtn': '🗑️ Atsaukt',
     'messages.placeholder': 'Raksti ziņu…',
     'messages.unsendConfirm': 'Atsaukt šo ziņu?',
+    'messages.loadConvosError': 'Neizdevās ielādēt sarakstes.',
+    'messages.loadError': 'Neizdevās ielādēt ziņas.',
+    'messages.sendError': 'Neizdevās nosūtīt ziņu.',
+    'messages.editError': 'Neizdevās rediģēt ziņu.',
+    'messages.unsendError': 'Neizdevās atsaukt ziņu.',
     'messages.supportSub': 'Rakstīt atbalstam',
 
     // Sīkdatnes
@@ -898,7 +909,8 @@ export const translations = {
     'nav.admin': 'Admin Panelis',
     'admin.title': 'Admin Panelis',
     'admin.loadError': 'Neizdevās ielādēt admin datus.',
-    'admin.openAll': 'Atvērt Visu',
+    'admin.openAll': 'Rādīt Visas Rindas',
+    'admin.collapseAll': 'Samazināt Rindas',
     'admin.users': 'Lietotāji',
     'admin.books': 'Visas Grāmatas',
     'admin.swaps': 'Apmaiņas Pieprasījumi',

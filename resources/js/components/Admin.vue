@@ -17,7 +17,7 @@
         </button>
       </div>
       <div class="admin-tabs-controls">
-        <button class="admin-open-all-btn" @click="openAll">{{ t('admin.openAll') }}</button>
+        <button class="admin-open-all-btn" :class="{ active: perPage === 99999 }" @click="openAll">{{ perPage === 99999 ? t('admin.collapseAll') : t('admin.openAll') }}</button>
         <select class="form-select form-select-sm" style="width:auto" v-model.number="perPage">
           <option :value="5">5</option>
           <option :value="10">10</option>
@@ -28,7 +28,7 @@
     </div>
 
     <!-- users -->
-    <div v-show="activeTab === 'users' || activeTab === 'all'" class="admin-card">
+    <div v-show="activeTab === 'users'" class="admin-card">
       <div class="mt-1">
         <div class="filter-bar mb-3">
           <input v-model="filters.users.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.search')" />
@@ -96,7 +96,7 @@
     </div>
 
     <!-- books -->
-    <div v-show="activeTab === 'books' || activeTab === 'all'" class="admin-card">
+    <div v-show="activeTab === 'books'" class="admin-card">
       <div class="mt-1">
         <div class="filter-bar mb-3">
           <input v-model="filters.books.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.searchBooks')" />
@@ -155,7 +155,7 @@
     </div>
 
     <!-- swaps -->
-    <div v-show="activeTab === 'swaps' || activeTab === 'all'" class="admin-card">
+    <div v-show="activeTab === 'swaps'" class="admin-card">
       <div class="mt-1">
         <div class="filter-bar mb-3">
           <input v-model="filters.swaps.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.searchSwaps')" />
@@ -210,7 +210,7 @@
     </div>
 
     <!-- ratings -->
-    <div v-show="activeTab === 'ratings' || activeTab === 'all'" class="admin-card">
+    <div v-show="activeTab === 'ratings'" class="admin-card">
       <div class="mt-1">
         <div class="filter-bar mb-3">
           <input v-model="filters.ratings.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.searchBookRater')" />
@@ -254,7 +254,7 @@
     </div>
 
     <!-- languages -->
-    <div v-show="activeTab === 'langs' || activeTab === 'all'" class="admin-card">
+    <div v-show="activeTab === 'langs'" class="admin-card">
       <div class="mt-1">
 
         <!-- lang list -->
@@ -359,7 +359,7 @@
     </div>
 
     <!-- logs -->
-    <div v-show="activeTab === 'logs' || activeTab === 'all'" class="admin-card">
+    <div v-show="activeTab === 'logs'" class="admin-card">
       <div class="mt-1">
         <div class="filter-bar mb-3">
           <input v-model="filters.logs.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.search')" />
@@ -449,7 +449,7 @@ export default {
       editingLangRow: null,
       langRowEdit: { flag: '', name: '' },
       error: '',
-      activeTab: this.$route?.query?.tab || 'users',
+      activeTab: this.$route?.params?.tab || 'users',
       tabs: [
         { key: 'users',   label: 'admin.users' },
         { key: 'books',   label: 'admin.books' },
@@ -465,8 +465,13 @@ export default {
         ratings: { search: '', stars: '' },
         logs:    { search: '', action: '' },
       },
-      pages: { users: 1, books: 1, swaps: 1, ratings: 1, logs: 1 },
-      perPage: 10,
+      pages: (() => {
+        const tab = window.location.pathname.split('/admin/')[1] || 'users'
+        const page = Number(new URLSearchParams(window.location.search).get('page')) || 1
+        return { users: 1, books: 1, swaps: 1, ratings: 1, logs: 1, [tab]: page }
+      })(),
+      perPage: this.$route?.query?.per_page === 'all' ? 99999 : (Number(this.$route?.query?.per_page) || 10),
+
     }
   },
 
@@ -546,9 +551,20 @@ export default {
   },
 
   watch: {
-    '$route.query.tab'(val) {
+    '$route.params.tab'(val) {
       if (val) this.activeTab = val
     },
+    '$route.query'(q) {
+      if (q.per_page) this.perPage = q.per_page === 'all' ? 99999 : Number(q.per_page)
+      if (q.page) this.pages[this.activeTab] = Number(q.page)
+    },
+    activeTab(val) { this.syncUrl() },
+    perPage(val)   { this.pages = { users: 1, books: 1, swaps: 1, ratings: 1, logs: 1 }; this.syncUrl() },
+    'pages.users'()   { this.syncUrl() },
+    'pages.books'()   { this.syncUrl() },
+    'pages.swaps'()   { this.syncUrl() },
+    'pages.ratings'() { this.syncUrl() },
+    'pages.logs'()    { this.syncUrl() },
     'filters.users':   { deep: true, handler() { this.pages.users   = 1 } },
     'filters.books':   { deep: true, handler() { this.pages.books   = 1 } },
     'filters.swaps':   { deep: true, handler() { this.pages.swaps   = 1 } },
@@ -557,12 +573,7 @@ export default {
   },
 
   async mounted() {
-    this.$router.replace({
-      query: {
-        admin: authStore.user?.name ?? 'unknown',
-        tab: this.$route.query.tab ?? this.activeTab,
-      }
-    })
+    this.syncUrl()
     await this.load()
   },
 
@@ -572,14 +583,25 @@ export default {
       return list.slice(start, start + this.perPage)
     },
 
+    syncUrl() {
+      const tab = this.activeTab
+      this.$router.replace({
+        name: 'admin',
+        params: { tab },
+        query: {
+          page: this.pages[tab] ?? 1,
+          per_page: this.perPage === 99999 ? 'all' : this.perPage,
+        },
+      })
+    },
+
     setTab(key) {
       this.activeTab = key
-      this.$router.replace({ query: { ...this.$route.query, tab: key } })
     },
 
     openAll() {
-      this.activeTab = 'all'
-      this.$router.replace({ query: { ...this.$route.query, tab: 'all' } })
+      this.perPage = this.perPage === 99999 ? 10 : 99999
+      this.pages = { users: 1, books: 1, swaps: 1, ratings: 1, logs: 1 }
     },
 
     async load() {
@@ -700,7 +722,7 @@ export default {
         if (entry) { entry.flag = data.flag; entry.name = data.name }
         this.editingLangRow = null
       } catch (e) {
-        alert(e.response?.data?.message || 'Failed to save.')
+        alert(e.response?.data?.message || this.t('dash.genericError'))
       }
     },
 
@@ -713,7 +735,7 @@ export default {
         this.newLang = { code: '', name: '', flag: '' }
         this.addingLang = false
       } catch (e) {
-        alert(e.response?.data?.message || 'Failed to add language.')
+        alert(e.response?.data?.message || this.t('dash.genericError'))
       }
     },
 
@@ -792,22 +814,23 @@ export default {
   white-space: nowrap;
   transition: color 0.15s, border-color 0.15s;
 }
-.admin-open-all-btn:hover { color: var(--ink); border-color: var(--ink); }
+.admin-open-all-btn:hover { color: #1a1612; border-color: #1a1612; }
+.admin-open-all-btn.active { color: #3a6b3e; border-color: #3a6b3e; font-weight: 600; }
 .admin-tab-btn {
   background: none;
   border: none;
   padding: 8px 18px;
   font-size: 0.9rem;
   font-weight: 500;
-  color: var(--muted);
+  color: #7a7068;
   cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
   border-radius: 4px 4px 0 0;
   transition: color 0.15s, border-color 0.15s;
 }
-.admin-tab-btn:hover { color: var(--ink); }
-.admin-tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+.admin-tab-btn:hover { color: #1a1612; }
+.admin-tab-btn.active { color: #3a6b3e; border-bottom-color: #3a6b3e; font-weight: 600; }
 
 .filter-bar {
   display: flex;
@@ -889,6 +912,16 @@ export default {
 }
 
 .toggle-arrow.rotated { transform: rotate(90deg); }
+
+/* dark mode overrides */
+:global([data-theme="dark"]) .admin-tab-btn { color: #9a9088; }
+:global([data-theme="dark"]) .admin-tab-btn:hover { color: #e8e0d5; }
+:global([data-theme="dark"]) .admin-tab-btn.active { color: #6aab6e; border-bottom-color: #6aab6e; }
+:global([data-theme="dark"]) .admin-open-all-btn { color: #9a9088; border-color: #4a4038; }
+:global([data-theme="dark"]) .admin-open-all-btn:hover { color: #e8e0d5; border-color: #9a9088; }
+:global([data-theme="dark"]) .admin-open-all-btn.active { color: #6aab6e; border-color: #6aab6e; }
+:global([data-theme="dark"]) .admin-tabs-wrap { border-bottom-color: #3a3228; }
+:global([data-theme="dark"]) .admin-card { background: #211d18; border-color: #2e2820; }
 
 .lang-editor-overlay {
   position: fixed;
