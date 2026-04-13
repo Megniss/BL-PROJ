@@ -551,20 +551,6 @@ export default {
   },
 
   watch: {
-    '$route.params.tab'(val) {
-      if (val) this.activeTab = val
-    },
-    '$route.query'(q) {
-      if (q.per_page) this.perPage = q.per_page === 'all' ? 99999 : Number(q.per_page)
-      if (q.page) this.pages[this.activeTab] = Number(q.page)
-    },
-    activeTab(val) { this.syncUrl() },
-    perPage(val)   { this.pages = { users: 1, books: 1, swaps: 1, ratings: 1, logs: 1 }; this.syncUrl() },
-    'pages.users'()   { this.syncUrl() },
-    'pages.books'()   { this.syncUrl() },
-    'pages.swaps'()   { this.syncUrl() },
-    'pages.ratings'() { this.syncUrl() },
-    'pages.logs'()    { this.syncUrl() },
     'filters.users':   { deep: true, handler() { this.pages.users   = 1 } },
     'filters.books':   { deep: true, handler() { this.pages.books   = 1 } },
     'filters.swaps':   { deep: true, handler() { this.pages.swaps   = 1 } },
@@ -573,7 +559,12 @@ export default {
   },
 
   async mounted() {
-    this.syncUrl()
+    // read state from URL if someone lands on a direct link
+    if (this.$route.params.tab) this.activeTab = this.$route.params.tab
+    if (this.$route.query.page) this.pages[this.activeTab] = Number(this.$route.query.page)
+    if (this.$route.query.per_page) {
+      this.perPage = this.$route.query.per_page === 'all' ? 99999 : Number(this.$route.query.per_page)
+    }
     await this.load()
   },
 
