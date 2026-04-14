@@ -173,3 +173,8 @@ nobloketam user ir japazud no kataloga
 vairakas vienadas gramatas pie viena lietotaja
 admin paneli salabot pogas lai nekustaas, pielabot statusu, karoc sataisit tabulas lai labak parskatamas un lai tas var labak filtret pec nosaukumieun autoriem u.t.t
 iechekot kadas 2fa bibliotekas ir un kadas varetr izmantotkaut kad, un admin log vajag to translate
+ brute force attack
+
+ majas pamacities, un pabeigt dokumentaciju
+
+ 
