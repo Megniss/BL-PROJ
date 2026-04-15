@@ -156,6 +156,7 @@ export const translations = {
     'login.back': '← Back to home',
     'login.error': 'Invalid email or password.',
     'login.errorBlocked': 'Your account has been blocked. Contact an administrator.',
+    'login.errorThrottle': 'Too many failed attempts. Login blocked for {m} minutes.',
     'login.forgot': 'Forgot password?',
 
     // Aizmirsta parole
@@ -664,6 +665,7 @@ export const translations = {
     'login.back': '← Atpakaļ uz sākumu',
     'login.error': 'Nepareizs e-pasts vai parole.',
     'login.errorBlocked': 'Tavs konts ir bloķēts. Sazinies ar administratoru.',
+    'login.errorThrottle': 'Pārāk daudz neveiksmīgu mēģinājumu. Mēģini vēlreiz pēc {m} minūtēm.',
     'login.forgot': 'Aizmirsi paroli?',
 
     // Aizmirsta parole
