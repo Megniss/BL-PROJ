@@ -1284,25 +1284,17 @@ body {
 .about-card {
   display: flex;
   gap: 20px;
-  padding: 24px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--surface, #fff);
-  position: relative;
-  overflow: hidden;
-  transition: box-shadow 0.2s, transform 0.18s;
+  padding: 16px 0;
+  align-items: flex-start;
 }
-.about-card:hover { box-shadow: 0 8px 24px rgba(26,22,18,0.1); transform: translateY(-3px); }
 .about-card-accent {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
   width: 4px;
-  border-radius: 12px 0 0 12px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  align-self: stretch;
+  min-height: 40px;
 }
-.about-card--creator { border-color: var(--green-border); background: var(--green-light); }
-.about-card-icon { font-size: 36px; line-height: 1; flex-shrink: 0; padding-left: 8px; }
+.about-card-icon { font-size: 36px; line-height: 1; flex-shrink: 0; }
 .about-card-title { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--ink); }
 .about-card-text { font-size: 15px; color: var(--muted); line-height: 1.7; }
 
@@ -1325,9 +1317,6 @@ body {
 .about-tag--vite { background: #fdf4ff; color: #7c3aed; border: 1px solid #ddb8f8; }
 .about-tag--vite::before { background: #7c3aed; }
 
-[data-theme="dark"] .about-card { background: #211d18; border-color: #2e2820; }
-[data-theme="dark"] .about-card--creator { background: #1e2e1f; border-color: #2d4a30; }
-[data-theme="dark"] .about-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.35); }
 [data-theme="dark"] .about-tag--laravel { background: #2e1a18; border-color: #5a2820; }
 [data-theme="dark"] .about-tag--vue { background: #1a2e24; border-color: #2d4a38; }
 [data-theme="dark"] .about-tag--sqlite { background: #1a2030; border-color: #2a3858; }

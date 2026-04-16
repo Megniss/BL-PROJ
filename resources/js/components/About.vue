@@ -16,7 +16,7 @@
     <div class="container" style="max-width:760px; padding: 48px 24px;">
       <div class="d-flex flex-column gap-4">
 
-        <div class="about-card" tabindex="0">
+        <div class="about-card">
           <div class="about-card-accent" style="background:var(--green)"></div>
           <div class="about-card-icon">📚</div>
           <div>
@@ -25,7 +25,7 @@
           </div>
         </div>
 
-        <div class="about-card" tabindex="0">
+        <div class="about-card">
           <div class="about-card-accent" style="background:var(--amber)"></div>
           <div class="about-card-icon">💡</div>
           <div>
@@ -34,7 +34,7 @@
           </div>
         </div>
 
-        <div class="about-card about-card--creator" tabindex="0">
+        <div class="about-card about-card--creator">
           <div class="about-card-accent" style="background:#4f5d7c"></div>
           <div class="about-card-icon">👨‍💻</div>
           <div>
