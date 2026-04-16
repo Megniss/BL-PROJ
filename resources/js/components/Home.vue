@@ -77,6 +77,7 @@
         <template v-else>
           <div v-for="book in recentBooks" :key="book.id" class="featured-card" @click="openDetail(book)">
             <div v-if="book.status === 'Pending'" class="pending-overlay"></div>
+            <div v-if="isNew(book)" class="new-ribbon">{{ t('books.newRibbon') }}</div>
             <div class="featured-cover" :style="!book.cover_image ? { background: coverColor(book) } : {}">
               <img v-if="book.cover_image" :src="'/storage/' + book.cover_image" :alt="book.title" class="book-card-cover-img" />
               <span class="book-card-genre">{{ t('genre.' + book.genre) }}</span>
@@ -275,6 +276,10 @@ export default {
   },
 
   methods: {
+    isNew(book) {
+      return (Date.now() - new Date(book.created_at)) < 7 * 24 * 60 * 60 * 1000
+    },
+
     async fetchFeaturedSections() {
       this.booksLoading = true
       try {
