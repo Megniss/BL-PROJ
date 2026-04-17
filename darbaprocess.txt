@@ -177,4 +177,18 @@ iechekot kadas 2fa bibliotekas ir un kadas varetr izmantotkaut kad, un admin log
 
  majas pamacities, un pabeigt dokumentaciju
 
- 
+PILNAIS CEĻŠ — no klikšķa līdz datiem
+Iedomājies ka lietotājs pārlūkā noklikšķina "Browse" pogu. Lūk kas notiek:
+
+
+1. Vue           → lietotājs klikšķina
+2. Axios         → sūta HTTP pieprasījumu
+3. api.php       → atrod pareizo maršrutu
+4. Middleware    → pārbauda tokenu
+5. Kontrolieris  → apstrādā loģiku
+6. Modelis       → sarunājas ar datubāzi
+7. Datubāze      → atgriež datus
+8. Kontrolieris  → pārveido uz JSON
+9. Axios         → saņem JSON
+10. Vue          → attēlo lapā
+
