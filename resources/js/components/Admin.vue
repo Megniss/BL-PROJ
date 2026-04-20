@@ -551,6 +551,8 @@ export default {
   },
 
   watch: {
+    perPage()  { this.syncUrl() },
+    pages: { deep: true, handler() { this.syncUrl() } },
     'filters.users':   { deep: true, handler() { this.pages.users   = 1 } },
     'filters.books':   { deep: true, handler() { this.pages.books   = 1 } },
     'filters.swaps':   { deep: true, handler() { this.pages.swaps   = 1 } },
@@ -588,6 +590,8 @@ export default {
 
     setTab(key) {
       this.activeTab = key
+      this.perPage = 10
+      this.syncUrl()
     },
 
     openAll() {
