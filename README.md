@@ -117,15 +117,32 @@ Laravel apstrādā REST API loģiku, Vue veido lietotāja saskarni un komunicē 
 **Vērtējumi:**
 - Redzami visi vērtējumi — zvaigznes, teksts, autors, grāmata
 
+**Valodu pārvaldība:**
+- Pievienot jaunas valodas, aktivizēt/deaktivizēt esošās
+- Rediģēt jebkuru tulkojuma atslēgu no admin paneļa
+
+**Audita žurnāls:**
+- Katrs admin lēmums tiek ierakstīts `admin_logs` tabulā
+- Redzams: darbība, mērķis, iemesls, laiks
+
 Panelis ir sakārtots saliekamās/izlokāmās sadaļās. Pilns LV/EN tulkojums, tumšā režīma atbalsts.
 
 ### 11. E-pasta paziņojumi
 - **Mailtrap sandbox** — e-pasti tiek pārtverti testēšanas vidē, nevis sūtīti īstiem adresātiem
 - **Laravel Queue** — e-pasti tiek nosūtīti asinhroni, lai pieprasījums atgrieztos uzreiz
-- Trīs paziņojumu veidi:
+- Seši paziņojumu veidi:
   - `SwapAccepted` — apmaiņa apstiprināta
   - `SwapDeclined` — apmaiņa noraidīta
   - `NewMessage` — saņemts jauns ziņojums čatā
+  - `BookUnderReview` — admins atzīmēja grāmatu pārskatīšanai
+  - `BookDeletedByAdmin` — admins dzēsa grāmatu (ar iemeslu)
+  - `LoginLocked` — 5 neveiksmīgi pieteikšanās mēģinājumi, konts bloķēts 15 min
+
+### 12. Atbalsta biļešu sistēma
+- Lietotāji var iesniegt atbalsta biļetes ar tēmu un aprakstu
+- Sarunu veidols — lietotājs un admins var atbildēt uz biļeti
+- Admins var slēgt biļetes
+- Slēgtas biļetes var atkal atvērt atbildot uz tām
 
 ---
 
@@ -139,6 +156,11 @@ messages                — ziņojumi starp lietotājiem
 notifications           — sistēmas paziņojumi
 ratings                 — grāmatu vērtējumi pēc apmaiņas
 blocks                  — bloķēto lietotāju saraksts
+complaints              — atbalsta biļetes
+complaint_messages      — ziņas biļešu iekšienē
+admin_logs              — admina darbību audita pieraksts
+languages               — valodu reģistrs (en, lv)
+translation_overrides   — admin rediģējami tulkojumi datubāzē
 jobs                    — Laravel Queue rinda (asinhronie uzdevumi)
 failed_jobs             — neizdevušies rindas uzdevumi
 personal_access_tokens  — Sanctum tokeni
