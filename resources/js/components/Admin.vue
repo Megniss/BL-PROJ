@@ -27,8 +27,12 @@
       </div>
     </div>
 
+    <div v-if="loading[activeTab]" class="admin-card text-center py-5">
+      <span class="spinner-border spinner-border-sm text-success"></span>
+    </div>
+
     <!-- users -->
-    <div v-show="activeTab === 'users'" class="admin-card">
+    <div v-show="activeTab === 'users' && !loading[activeTab]" class="admin-card">
       <div class="mt-1">
         <div class="filter-bar mb-3">
           <input v-model="filters.users.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.search')" />
@@ -96,7 +100,7 @@
     </div>
 
     <!-- books -->
-    <div v-show="activeTab === 'books'" class="admin-card">
+    <div v-show="activeTab === 'books' && !loading[activeTab]" class="admin-card">
       <div class="mt-1">
         <div class="filter-bar mb-3">
           <input v-model="filters.books.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.searchBooks')" />
@@ -155,7 +159,7 @@
     </div>
 
     <!-- swaps -->
-    <div v-show="activeTab === 'swaps'" class="admin-card">
+    <div v-show="activeTab === 'swaps' && !loading[activeTab]" class="admin-card">
       <div class="mt-1">
         <div class="filter-bar mb-3">
           <input v-model="filters.swaps.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.searchSwaps')" />
@@ -210,7 +214,7 @@
     </div>
 
     <!-- ratings -->
-    <div v-show="activeTab === 'ratings'" class="admin-card">
+    <div v-show="activeTab === 'ratings' && !loading[activeTab]" class="admin-card">
       <div class="mt-1">
         <div class="filter-bar mb-3">
           <input v-model="filters.ratings.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.searchBookRater')" />
@@ -254,7 +258,7 @@
     </div>
 
     <!-- languages -->
-    <div v-show="activeTab === 'langs'" class="admin-card">
+    <div v-show="activeTab === 'langs' && !loading[activeTab]" class="admin-card">
       <div class="mt-1">
 
         <!-- lang list -->
@@ -359,7 +363,7 @@
     </div>
 
     <!-- logs -->
-    <div v-show="activeTab === 'logs'" class="admin-card">
+    <div v-show="activeTab === 'logs' && !loading[activeTab]" class="admin-card">
       <div class="mt-1">
         <div class="filter-bar mb-3">
           <input v-model="filters.logs.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.search')" />
@@ -449,6 +453,8 @@ export default {
       editingLangRow: null,
       langRowEdit: { flag: '', name: '' },
       error: '',
+      loaded: {},
+      loading: {},
       activeTab: this.$route?.params?.tab || 'users',
       tabs: [
         { key: 'users',   label: 'admin.users' },
@@ -567,7 +573,7 @@ export default {
     if (this.$route.query.per_page) {
       this.perPage = this.$route.query.per_page === 'all' ? 99999 : Number(this.$route.query.per_page)
     }
-    await this.load()
+    await this.loadTab(this.activeTab)
   },
 
   methods: {
@@ -592,6 +598,7 @@ export default {
       this.activeTab = key
       this.perPage = 10
       this.syncUrl()
+      this.loadTab(key)
     },
 
     openAll() {
@@ -599,24 +606,34 @@ export default {
       this.pages = { users: 1, books: 1, swaps: 1, ratings: 1, logs: 1 }
     },
 
-    async load() {
+    async loadTab(key) {
+      if (this.loaded[key]) return
+      this.loading[key] = true
       try {
-        const [u, b, s, r, l, langs] = await Promise.all([
-          axios.get('/api/admin/users'),
-          axios.get('/api/admin/books'),
-          axios.get('/api/admin/swaps'),
-          axios.get('/api/admin/ratings'),
-          axios.get('/api/admin/logs'),
-          axios.get('/api/admin/languages'),
-        ])
-        this.users = u.data
-        this.books = b.data
-        this.swaps = s.data
-        this.ratings = r.data
-        this.logs = l.data
-        this.allLanguages = langs.data
+        const endpoints = {
+          users:   '/api/admin/users',
+          books:   '/api/admin/books',
+          swaps:   '/api/admin/swaps',
+          ratings: '/api/admin/ratings',
+          logs:    '/api/admin/logs',
+          langs:   '/api/admin/languages',
+        }
+        const targets = {
+          users:   'users',
+          books:   'books',
+          swaps:   'swaps',
+          ratings: 'ratings',
+          logs:    'logs',
+          langs:   'allLanguages',
+        }
+        if (!endpoints[key]) return
+        const { data } = await axios.get(endpoints[key])
+        this[targets[key]] = data
+        this.loaded[key] = true
       } catch {
         this.error = this.t('admin.loadError')
+      } finally {
+        this.loading[key] = false
       }
     },
 
