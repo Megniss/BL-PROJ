@@ -232,6 +232,7 @@ npm install
 
 **Palaist izstrādes vidi:**
 ```bash
+php artisan ser
 composer run dev
 ```
 
