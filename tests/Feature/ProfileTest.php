@@ -67,30 +67,30 @@ class ProfileTest extends TestCase
 
     public function test_can_change_password_with_correct_current_password(): void
     {
-        $user = User::factory()->create(['password' => bcrypt('oldpassword')]);
+        $user = User::factory()->create(['password' => bcrypt('OldPassword1!')]);
 
         $this->actingAs($user)->patchJson('/api/profile', [
             'name'                     => $user->name,
             'email'                    => $user->email,
-            'current_password'         => 'oldpassword',
-            'new_password'             => 'newpassword',
-            'new_password_confirmation' => 'newpassword',
+            'current_password'         => 'OldPassword1!',
+            'new_password'             => 'NewPassword1!',
+            'new_password_confirmation' => 'NewPassword1!',
         ])->assertOk();
 
         // Verify new password works
-        $this->postJson('/api/login', ['email' => $user->email, 'password' => 'newpassword'])->assertOk();
+        $this->postJson('/api/login', ['email' => $user->email, 'password' => 'NewPassword1!'])->assertOk();
     }
 
     public function test_cannot_change_password_with_wrong_current_password(): void
     {
-        $user = User::factory()->create(['password' => bcrypt('realpassword')]);
+        $user = User::factory()->create(['password' => bcrypt('RealPassword1!')]);
 
         $this->actingAs($user)->patchJson('/api/profile', [
             'name'                     => $user->name,
             'email'                    => $user->email,
             'current_password'         => 'wrongpassword',
-            'new_password'             => 'newpassword',
-            'new_password_confirmation' => 'newpassword',
+            'new_password'             => 'NewPassword1!',
+            'new_password_confirmation' => 'NewPassword1!',
         ])->assertStatus(422);
     }
 
