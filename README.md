@@ -144,6 +144,11 @@ Panelis ir sakārtots saliekamās/izlokāmās sadaļās. Pilns LV/EN tulkojums, 
 - Admins var slēgt biļetes
 - Slēgtas biļetes var atkal atvērt atbildot uz tām
 
+### 13. Privātuma politika
+- Atsevišķa lapa pieejama no kājenes
+- Aprakstīta konta dzēšanas un bloķēšanas politika
+- Pilns LV/EN tulkojums
+
 ---
 
 ## Datubāzes struktūra
@@ -173,9 +178,10 @@ personal_access_tokens  — Sanctum tokeni
 - Visi modālie logi ar `role="dialog"` un `aria-modal`
 - Kļūdu paziņojumi ar `role="alert"`
 - Ziņojumu saraksts ar `role="log"` un `aria-live`
-- Ikonas pogas ar `aria-label`
+- Ikonas pogas ar `aria-label` un `aria-pressed` stāvoklis pārslēgšanas pogām
 - Klaviatūras navigācija uz visiem klikšķināmiem elementiem
 - **Visi formu lauki saistīti ar `<label for="">` atribūtiem** — ekrānlasītāji pareizi identificē katru lauku
+- **Skip-to-main navigācija** — redzama ar Tab taustiņu, ļauj ekrānlasītāju lietotājiem apiet navigāciju
 
 ---
 
@@ -199,6 +205,7 @@ Lietotne ir instalējama kā progresīvā tīmekļa lietotne (PWA):
 - Transakcijas apmaiņas operācijām
 - Admin maršruti aizsargāti ar `AdminMiddleware`
 - Bloķēti lietotāji nevar pieteikties sistēmā
+- **HTTP drošības galvenes** — `SecurityHeaders` middleware visās atbildēs: `X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`
 
 ---
 
@@ -206,11 +213,11 @@ Lietotne ir instalējama kā progresīvā tīmekļa lietotne (PWA):
 
 ```
 app/Http/Controllers/   ← 11 API kontrolieri (ieskaitot AdminController)
-app/Http/Middleware/    ← AdminMiddleware
+app/Http/Middleware/    ← AdminMiddleware, SecurityHeaders
 app/Models/             ← User, Book, SwapRequest, Message, Rating, Block
 app/Notifications/      ← SwapAccepted, SwapDeclined, NewMessage, BookUnderReview, BookDeletedByAdmin
 resources/js/
-  components/           ← 18+ Vue komponentes (ieskaitot Admin.vue)
+  components/           ← 18+ Vue komponentes (ieskaitot Admin.vue, PrivacyPolicy.vue)
   router/router.js      ← Vue Router (ar admin maršrutu un sardzi)
   translations.js       ← visi UI teksti LV/EN (~200+ atslēgas)
   authStore.js / langStore.js / themeStore.js

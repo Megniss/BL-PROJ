@@ -1,8 +1,11 @@
 
 <template>
   <div>
+    <a href="#main-content" class="skip-link">{{ t('a11y.skipToMain') }}</a>
     <div class="scroll-progress" :style="{ width: scrollProgress + '%' }"></div>
-    <router-view></router-view>
+    <main id="main-content">
+      <router-view></router-view>
+    </main>
     <button v-if="showBackToTop" class="back-to-top" @click="scrollToTop" aria-label="Atgriezties uz augšu">↑</button>
 
     <div v-if="showCookie" class="cookie-banner" role="alert">

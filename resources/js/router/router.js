@@ -3,6 +3,7 @@ import { isLoggedIn, authStore } from '../authStore.js'
 
 import Home from '../components/Home.vue'
 import About from '../components/About.vue'
+import PrivacyPolicy from '../components/PrivacyPolicy.vue'
 import Login from '../components/Login.vue'
 import Register from '../components/Register.vue'
 import ForgotPassword from '../components/ForgotPassword.vue'
@@ -11,6 +12,7 @@ import ResetPassword from '../components/ResetPassword.vue'
 const routes = [
   { path: '/', name: 'home', component: Home },
   { path: '/about', name: 'about', component: About },
+  { path: '/privacy', name: 'privacy', component: PrivacyPolicy },
   { path: '/login', name: 'login', component: Login, meta: { guestOnly: true } },
   { path: '/register', name: 'register', component: Register, meta: { guestOnly: true } },
   { path: '/forgot-password', name: 'forgotPassword', component: ForgotPassword, meta: { guestOnly: true } },

@@ -33,8 +33,8 @@
           </div>
           <div class="d-flex justify-content-end">
             <div class="view-toggle" :style="{ opacity: tab === 'books' ? 1 : 0, pointerEvents: tab === 'books' ? 'auto' : 'none' }" style="transition: opacity 0.2s">
-              <button :class="['view-toggle-btn', viewMode === 'cards' ? 'active' : '']" @click="viewMode = 'cards'" :title="t('books.viewCards')">⊞</button>
-              <button :class="['view-toggle-btn', viewMode === 'table' ? 'active' : '']" @click="viewMode = 'table'" :title="t('books.viewTable')">☰</button>
+              <button :class="['view-toggle-btn', viewMode === 'cards' ? 'active' : '']" @click="viewMode = 'cards'" :aria-label="t('books.viewCards')" :aria-pressed="viewMode === 'cards'">⊞</button>
+              <button :class="['view-toggle-btn', viewMode === 'table' ? 'active' : '']" @click="viewMode = 'table'" :aria-label="t('books.viewTable')" :aria-pressed="viewMode === 'table'">☰</button>
             </div>
           </div>
         </div>
