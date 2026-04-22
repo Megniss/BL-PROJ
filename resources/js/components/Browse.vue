@@ -24,12 +24,12 @@
               {{ totalBooks }} {{ t('browse.resultsCount') }}
             </p>
             <p v-else-if="tab === 'users'" class="text-muted small mb-0">
-              {{ users.length }} {{ t('browse.usersCount') }}
+              {{ userTotal }} {{ t('browse.usersCount') }}
             </p>
           </div>
           <div class="view-toggle">
             <button :class="['view-toggle-btn', tab === 'books' ? 'active' : '']" @click="tab = 'books'" :aria-pressed="tab === 'books'">{{ t('nav.browse') }}</button>
-            <button :class="['view-toggle-btn', tab === 'users' ? 'active' : '']" @click="tab = 'users'; fetchUsers()" :aria-pressed="tab === 'users'">{{ t('browse.users') }}</button>
+            <button :class="['view-toggle-btn', tab === 'users' ? 'active' : '']" @click="tab = 'users'; userPage = 1; fetchUsers()" :aria-pressed="tab === 'users'">{{ t('browse.users') }}</button>
           </div>
           <div class="d-flex justify-content-end">
             <div class="view-toggle" :style="{ opacity: tab === 'books' ? 1 : 0, pointerEvents: tab === 'books' ? 'auto' : 'none' }" style="transition: opacity 0.2s">
@@ -114,7 +114,7 @@
         </div>
 
         <div v-else key="users-search">
-          <input v-model="userSearch" class="form-control" :placeholder="t('browse.searchUsers')" :aria-label="t('browse.searchUsers')" @input="fetchUsers" style="max-width:420px" />
+          <input v-model="userSearch" class="form-control" :placeholder="t('browse.searchUsers')" :aria-label="t('browse.searchUsers')" @input="onUserSearch" style="max-width:420px" />
         </div>
         </transition>
         </div>
@@ -249,6 +249,8 @@
           </div>
         </div>
       </div>
+
+      <Pagination :current="userPage" :total="userLastPage" @change="goToUserPage" />
     </section>
 
     <AppFooter />
@@ -320,6 +322,9 @@ export default {
       users: [],
       userSearch: '',
       loadingUsers: false,
+      userPage: 1,
+      userLastPage: 1,
+      userTotal: 0,
       detailBook: null,
       detailBookBlocked: false,
       swapModal: {
@@ -438,7 +443,7 @@ export default {
     async fetchBooks() {
       this.loadingBooks = true
       try {
-        const perPage = this.viewMode === 'table' ? 500 : 24
+        const perPage = this.viewMode === 'table' ? 500 : 20
         const { data } = await axios.get('/api/browse', {
           params: {
             search: this.searchQuery.trim() || undefined,
@@ -552,13 +557,30 @@ export default {
       this.$router.push({ name: 'messages', query: { userId: user.id, userName: user.name } })
     },
 
+    onUserSearch() {
+      this.userPage = 1
+      this.fetchUsers()
+    },
+
+    goToUserPage(n) {
+      this.userPage = n
+      this.fetchUsers()
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    },
+
     async fetchUsers() {
       this.loadingUsers = true
       try {
         const { data } = await axios.get('/api/users', {
-          params: { search: this.userSearch.trim() || undefined }
+          params: {
+            search: this.userSearch.trim() || undefined,
+            page: this.userPage,
+          }
         })
-        this.users = data
+        this.users = data.data
+        this.userPage = data.current_page
+        this.userLastPage = data.last_page
+        this.userTotal = data.total
       } catch { /* ignorē */ } finally {
         this.loadingUsers = false
       }

@@ -22,8 +22,7 @@ class UserController extends Controller
             ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
             ->when($blockedIds->isNotEmpty(), fn($q) => $q->whereNotIn('id', $blockedIds))
             ->orderBy('name')
-            ->limit(30)
-            ->get(['id', 'name', 'created_at']);
+            ->paginate(18, ['id', 'name', 'created_at']);
 
         // pieliek grāmatu priekšskatījumu katram
         $users->each(function ($user) {
