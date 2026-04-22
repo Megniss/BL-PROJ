@@ -40,18 +40,18 @@ class LanguageController extends Controller
         ]);
 
         $lang = Language::create([
-            'code'      => strtolower($request->code),
-            'name'      => $request->name,
-            'flag'      => strtolower($request->flag),
+            'code' => strtolower($request->code),
+            'name' => $request->name,
+            'flag' => strtolower($request->flag),
             'is_active' => true,
             'sort_order' => (Language::max('sort_order') ?? 0) + 1,
         ]);
 
         AdminLog::create([
-            'admin_id'    => $request->user()->id,
-            'action'      => 'add_language',
+            'admin_id' => $request->user()->id,
+            'action' => 'add_language',
             'target_type' => 'language',
-            'target_id'   => null,
+            'target_id' => null,
             'target_name' => $lang->name . ' (' . $lang->code . ')',
             'reason' => null,
         ]);
@@ -70,8 +70,8 @@ class LanguageController extends Controller
         $lang->update(['name' => $request->name, 'flag' => strtolower($request->flag)]);
 
         AdminLog::create([
-            'admin_id'    => $request->user()->id,
-            'action'      => 'edit_language',
+            'admin_id' => $request->user()->id,
+            'action' => 'edit_language',
             'target_type' => 'language',
             'target_id' => null,
             'target_name' => $lang->name . ' (' . $lang->code . ')',
@@ -92,10 +92,10 @@ class LanguageController extends Controller
         $lang->update(['is_active' => false]);
 
         AdminLog::create([
-            'admin_id'    => $request->user()->id,
-            'action'      => 'remove_language',
+            'admin_id' => $request->user()->id,
+            'action' => 'remove_language',
             'target_type' => 'language',
-            'target_id'   => null,
+            'target_id' => null,
             'target_name' => $lang->name . ' (' . $lang->code . ')',
             'reason' => null,
         ]);
@@ -109,8 +109,8 @@ class LanguageController extends Controller
         $lang->update(['is_active' => true]);
 
         AdminLog::create([
-            'admin_id'    => $request->user()->id,
-            'action'      => 'restore_language',
+            'admin_id' => $request->user()->id,
+            'action' => 'restore_language',
             'target_type' => 'language',
             'target_id' => null,
             'target_name' => $lang->name . ' (' . $lang->code . ')',
@@ -130,7 +130,7 @@ class LanguageController extends Controller
     public function saveTranslations(Request $request, string $code)
     {
         $request->validate([
-            'overrides'   => ['required', 'array'],
+            'overrides' => ['required', 'array'],
             'overrides.*' => ['nullable', 'string', 'max:2000'],
         ]);
 
@@ -148,8 +148,8 @@ class LanguageController extends Controller
 
         $lang = Language::find($code);
         AdminLog::create([
-            'admin_id'    => $request->user()->id,
-            'action'      => 'edit_translations',
+            'admin_id' => $request->user()->id,
+            'action' => 'edit_translations',
             'target_type' => 'language',
             'target_id' => null,
             'target_name' => $lang ? $lang->name . ' (' . $code . ')' : $code,

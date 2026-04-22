@@ -21,7 +21,7 @@ class SwapRequestController extends Controller
 
         $user = $request->user();
         $offeredBook = Book::findOrFail($data['offered_book_id']);
-        $wantedBook  = Book::findOrFail($data['wanted_book_id']);
+        $wantedBook = Book::findOrFail($data['wanted_book_id']);
 
         if ($offeredBook->user_id !== $user->id) {
             return response()->json(['message' => 'You do not own the offered book.'], 403);
@@ -54,8 +54,8 @@ class SwapRequestController extends Controller
             $wantedBook->update(['status' => 'Pending']);
 
             return SwapRequest::create([
-                'requester_id'   => $user->id,
-                'owner_id'       => $wantedBook->user_id,
+                'requester_id' => $user->id,
+                'owner_id' => $wantedBook->user_id,
                 'offered_book_id' => $offeredBook->id,
                 'wanted_book_id' => $wantedBook->id,
                 'status' => 'pending',
@@ -132,7 +132,7 @@ class SwapRequestController extends Controller
         }
 
         $requesterId = $swap->requester_id;
-        $ownerId     = $swap->wantedBook->user_id;
+        $ownerId = $swap->wantedBook->user_id;
 
         DB::transaction(function () use ($swap, $requesterId, $ownerId) {
             // apmainām grāmatas

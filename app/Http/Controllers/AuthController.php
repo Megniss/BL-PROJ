@@ -50,8 +50,8 @@ class AuthController extends Controller
             $minutes = (int) ceil($seconds / 60);
             return response()->json([
                 'throttled' => true,
-                'seconds'   => $seconds,
-                'minutes'   => $minutes,
+                'seconds' => $seconds,
+                'minutes' => $minutes,
             ], 429);
         }
 

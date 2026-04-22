@@ -22,11 +22,11 @@ class ComplaintController extends Controller
         }
 
         return response()->json($query->get()->map(fn($c) => [
-            'id'         => $c->id,
-            'subject'    => $c->subject,
-            'status'     => $c->status,
-            'user'       => $c->user,
-            'last_msg'   => $c->latestMessage->first()?->body,
+            'id' => $c->id,
+            'subject' => $c->subject,
+            'status' => $c->status,
+            'user' => $c->user,
+            'last_msg' => $c->latestMessage->first()?->body,
             'updated_at' => $c->updated_at,
         ]));
     }
@@ -35,19 +35,19 @@ class ComplaintController extends Controller
     {
         $request->validate([
             'subject' => ['required', 'string', 'max:200'],
-            'body'    => ['required', 'string', 'max:2000'],
+            'body' => ['required', 'string', 'max:2000'],
         ]);
 
         $complaint = Complaint::create([
             'user_id' => $request->user()->id,
             'subject' => $request->subject,
-            'status'  => 'open',
+            'status' => 'open',
         ]);
 
         ComplaintMessage::create([
             'complaint_id' => $complaint->id,
-            'sender_id'    => $request->user()->id,
-            'body'         => $request->body,
+            'sender_id' => $request->user()->id,
+            'body' => $request->body,
         ]);
 
         return response()->json($this->formatComplaint($complaint), 201);
@@ -83,8 +83,8 @@ class ComplaintController extends Controller
 
         $msg = ComplaintMessage::create([
             'complaint_id' => $complaint->id,
-            'sender_id'    => $user->id,
-            'body'         => $request->body,
+            'sender_id' => $user->id,
+            'body' => $request->body,
         ]);
 
         // ja admin raksta uz slēgtu — atver atpakaļ
@@ -97,10 +97,10 @@ class ComplaintController extends Controller
         if ($user->is_admin) {
             $complaint->loadMissing('user:id,name');
             AdminLog::create([
-                'admin_id'    => $user->id,
-                'action'      => 'support_reply',
+                'admin_id' => $user->id,
+                'action' => 'support_reply',
                 'target_type' => 'complaint',
-                'target_id'   => $complaint->id,
+                'target_id' => $complaint->id,
                 'target_name' => $complaint->user->name . ' — ' . $complaint->subject,
                 'reason' => $request->body,
             ]);
@@ -109,10 +109,10 @@ class ComplaintController extends Controller
         $msg->load('sender:id,name,is_admin');
 
         return response()->json([
-            'id'         => $msg->id,
-            'sender_id'  => $msg->sender_id,
-            'sender'     => $msg->sender,
-            'body'       => $msg->body,
+            'id' => $msg->id,
+            'sender_id' => $msg->sender_id,
+            'sender' => $msg->sender,
+            'body' => $msg->body,
             'created_at' => $msg->created_at,
         ], 201);
     }
@@ -127,10 +127,10 @@ class ComplaintController extends Controller
 
         $complaint->loadMissing('user:id,name');
         AdminLog::create([
-            'admin_id'    => $request->user()->id,
-            'action'      => 'close_complaint',
+            'admin_id' => $request->user()->id,
+            'action' => 'close_complaint',
             'target_type' => 'complaint',
-            'target_id'   => $complaint->id,
+            'target_id' => $complaint->id,
             'target_name' => $complaint->user->name . ' — ' . $complaint->subject,
             'reason' => null,
         ]);
@@ -141,15 +141,15 @@ class ComplaintController extends Controller
     private function formatComplaint(Complaint $complaint): array
     {
         return [
-            'id'      => $complaint->id,
+            'id' => $complaint->id,
             'subject' => $complaint->subject,
-            'status'  => $complaint->status,
-            'user'    => $complaint->user,
+            'status' => $complaint->status,
+            'user' => $complaint->user,
             'messages' => $complaint->messages?->map(fn($m) => [
-                'id'         => $m->id,
-                'sender_id'  => $m->sender_id,
-                'sender'     => $m->sender,
-                'body'       => $m->body,
+                'id' => $m->id,
+                'sender_id' => $m->sender_id,
+                'sender' => $m->sender,
+                'body' => $m->body,
                 'created_at' => $m->created_at,
             ]),
             'updated_at' => $complaint->updated_at,

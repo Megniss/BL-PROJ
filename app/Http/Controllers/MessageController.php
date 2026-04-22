@@ -93,7 +93,7 @@ class MessageController extends Controller
             return response()->json(['message' => 'You cannot message this user.'], 422);
         }
 
-        $sender    = $request->user();
+        $sender = $request->user();
         $recipient = User::find($data['to_user_id']);
 
         // nesūta notifikāciju ja jau ir nelasīta
@@ -131,7 +131,7 @@ class MessageController extends Controller
         $data = $request->validate(['body' => ['required', 'string', 'max:2000']]);
 
         $message->update([
-            'body'      => $data['body'],
+            'body' => $data['body'],
             'edited_at' => now(),
         ]);
 
@@ -149,7 +149,7 @@ class MessageController extends Controller
             return response()->json(['message' => 'Cannot unsend a read message.'], 422);
         }
 
-        $senderId    = $message->from_user_id;
+        $senderId = $message->from_user_id;
         $recipientId = $message->to_user_id;
 
         $message->delete();
