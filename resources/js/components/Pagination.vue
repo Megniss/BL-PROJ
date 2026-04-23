@@ -35,7 +35,7 @@ export default {
 
       // window around current
       const from = Math.max(2, c - 1)
-      const to   = Math.min(t - 1, c + 1)
+      const to = Math.min(t - 1, c + 1)
       for (let i = from; i <= to; i++) items.push(i)
 
       if (c < t - 2) items.push('...')

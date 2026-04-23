@@ -327,11 +327,11 @@ export default {
 
     async requestSwap(book) {
       this.detailBook = null
-      this.swapModal.wantedBook    = book
+      this.swapModal.wantedBook = book
       this.swapModal.selectedBookId = null
-      this.swapModal.error         = ''
-      this.swapModal.myBooks       = []
-      this.swapModal.open          = true
+      this.swapModal.error = ''
+      this.swapModal.myBooks = []
+      this.swapModal.open = true
       if (authStore.user) {
         try {
           const { data } = await axios.get('/api/books')
@@ -344,17 +344,17 @@ export default {
     closeSwapModal() { this.swapModal.open = false },
 
     async sendSwapRequest() {
-      this.swapModal.error   = ''
+      this.swapModal.error = ''
       this.swapModal.sending = true
       try {
         await axios.post('/api/swap-requests', {
           offered_book_id: this.swapModal.selectedBookId,
-          wanted_book_id:  this.swapModal.wantedBook.id,
+          wanted_book_id: this.swapModal.wantedBook.id,
         })
         // noņem no visiem trim sarakstiem uzreiz
         const id = this.swapModal.wantedBook.id
-        this.recentBooks   = this.recentBooks.filter(b => b.id !== id)
-        this.popularBooks  = this.popularBooks.filter(b => b.id !== id)
+        this.recentBooks = this.recentBooks.filter(b => b.id !== id)
+        this.popularBooks = this.popularBooks.filter(b => b.id !== id)
         this.topRatedBooks = this.topRatedBooks.filter(b => b.id !== id)
         this.closeSwapModal()
       } catch (err) {

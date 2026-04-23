@@ -134,10 +134,10 @@
               <td>{{ b.owner }}</td>
               <td>
                 <span class="stag" :class="{
-                  'stag-green':  b.status === 'Available',
+                  'stag-green': b.status === 'Available',
                   'stag-yellow': b.status === 'Pending',
-                  'stag-gray':   b.status === 'Exchanged',
-                  'stag-blue':   b.status === 'UnderReview',
+                  'stag-gray': b.status === 'Exchanged',
+                  'stag-blue': b.status === 'UnderReview',
                 }" :title="t('books.status.' + b.status) || b.status">
                   {{ { Available: '✓', Pending: '~', Exchanged: '⇄', UnderReview: '!' }[b.status] ?? '?' }}
                 </span>
@@ -191,8 +191,8 @@
               <td>
                 <span class="stag" :class="{
                   'stag-yellow': s.status === 'pending',
-                  'stag-green':  s.status === 'accepted',
-                  'stag-gray':   s.status === 'declined',
+                  'stag-green': s.status === 'accepted',
+                  'stag-gray': s.status === 'declined',
                 }" :title="t('admin.status.' + s.status)">
                   {{ { pending: '~', accepted: '✓', declined: '✕' }[s.status] ?? '?' }}
                 </span>
@@ -457,19 +457,19 @@ export default {
       loading: {},
       activeTab: this.$route?.params?.tab || 'users',
       tabs: [
-        { key: 'users',   label: 'admin.users' },
-        { key: 'books',   label: 'admin.books' },
-        { key: 'swaps',   label: 'admin.swaps' },
+        { key: 'users', label: 'admin.users' },
+        { key: 'books', label: 'admin.books' },
+        { key: 'swaps', label: 'admin.swaps' },
         { key: 'ratings', label: 'admin.ratings' },
-        { key: 'langs',   label: 'admin.languages' },
-        { key: 'logs',    label: 'admin.logs' },
+        { key: 'langs', label: 'admin.languages' },
+        { key: 'logs', label: 'admin.logs' },
       ],
       filters: {
-        users:   { search: '', role: '', status: '' },
-        books:   { search: '', status: '' },
-        swaps:   { search: '', status: '' },
+        users: { search: '', role: '', status: '' },
+        books: { search: '', status: '' },
+        swaps: { search: '', status: '' },
         ratings: { search: '', stars: '' },
-        logs:    { search: '', action: '' },
+        logs: { search: '', action: '' },
       },
       pages: (() => {
         const tab = window.location.pathname.split('/admin/')[1] || 'users'
@@ -491,8 +491,8 @@ export default {
       const s = this.filters.users.search.toLowerCase()
       if (s) list = list.filter(u => u.name.toLowerCase().includes(s) || u.email.toLowerCase().includes(s))
       if (this.filters.users.role === 'admin') list = list.filter(u => u.is_admin)
-      if (this.filters.users.role === 'user')  list = list.filter(u => !u.is_admin)
-      if (this.filters.users.status === 'active')  list = list.filter(u => !u.is_blocked)
+      if (this.filters.users.role === 'user') list = list.filter(u => !u.is_admin)
+      if (this.filters.users.status === 'active') list = list.filter(u => !u.is_blocked)
       if (this.filters.users.status === 'blocked') list = list.filter(u => u.is_blocked)
       return list
     },
@@ -543,27 +543,27 @@ export default {
       return list
     },
 
-    pagedUsers()   { return this.paginate(this.filteredUsers,   this.pages.users)   },
-    pagedBooks()   { return this.paginate(this.filteredBooks,   this.pages.books)   },
-    pagedSwaps()   { return this.paginate(this.filteredSwaps,   this.pages.swaps)   },
+    pagedUsers() { return this.paginate(this.filteredUsers, this.pages.users) },
+    pagedBooks() { return this.paginate(this.filteredBooks, this.pages.books) },
+    pagedSwaps() { return this.paginate(this.filteredSwaps, this.pages.swaps) },
     pagedRatings() { return this.paginate(this.filteredRatings, this.pages.ratings) },
-    pagedLogs()    { return this.paginate(this.filteredLogs,    this.pages.logs)    },
+    pagedLogs() { return this.paginate(this.filteredLogs, this.pages.logs) },
 
-    totalPagesUsers()   { return Math.ceil(this.filteredUsers.length   / this.perPage) || 1 },
-    totalPagesBooks()   { return Math.ceil(this.filteredBooks.length   / this.perPage) || 1 },
-    totalPagesSwaps()   { return Math.ceil(this.filteredSwaps.length   / this.perPage) || 1 },
+    totalPagesUsers() { return Math.ceil(this.filteredUsers.length / this.perPage) || 1 },
+    totalPagesBooks() { return Math.ceil(this.filteredBooks.length / this.perPage) || 1 },
+    totalPagesSwaps() { return Math.ceil(this.filteredSwaps.length / this.perPage) || 1 },
     totalPagesRatings() { return Math.ceil(this.filteredRatings.length / this.perPage) || 1 },
-    totalPagesLogs()    { return Math.ceil(this.filteredLogs.length    / this.perPage) || 1 },
+    totalPagesLogs() { return Math.ceil(this.filteredLogs.length / this.perPage) || 1 },
   },
 
   watch: {
-    perPage()  { this.syncUrl() },
+    perPage() { this.syncUrl() },
     pages: { deep: true, handler() { this.syncUrl() } },
-    'filters.users':   { deep: true, handler() { this.pages.users   = 1 } },
-    'filters.books':   { deep: true, handler() { this.pages.books   = 1 } },
-    'filters.swaps':   { deep: true, handler() { this.pages.swaps   = 1 } },
+    'filters.users': { deep: true, handler() { this.pages.users = 1 } },
+    'filters.books': { deep: true, handler() { this.pages.books = 1 } },
+    'filters.swaps': { deep: true, handler() { this.pages.swaps = 1 } },
     'filters.ratings': { deep: true, handler() { this.pages.ratings = 1 } },
-    'filters.logs':    { deep: true, handler() { this.pages.logs    = 1 } },
+    'filters.logs': { deep: true, handler() { this.pages.logs = 1 } },
   },
 
   async mounted() {
@@ -611,20 +611,20 @@ export default {
       this.loading[key] = true
       try {
         const endpoints = {
-          users:   '/api/admin/users',
-          books:   '/api/admin/books',
-          swaps:   '/api/admin/swaps',
+          users: '/api/admin/users',
+          books: '/api/admin/books',
+          swaps: '/api/admin/swaps',
           ratings: '/api/admin/ratings',
-          logs:    '/api/admin/logs',
-          langs:   '/api/admin/languages',
+          logs: '/api/admin/logs',
+          langs: '/api/admin/languages',
         }
         const targets = {
-          users:   'users',
-          books:   'books',
-          swaps:   'swaps',
+          users: 'users',
+          books: 'books',
+          swaps: 'swaps',
           ratings: 'ratings',
-          logs:    'logs',
-          langs:   'allLanguages',
+          logs: 'logs',
+          langs: 'allLanguages',
         }
         if (!endpoints[key]) return
         const { data } = await axios.get(endpoints[key])

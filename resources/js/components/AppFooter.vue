@@ -8,7 +8,7 @@
       </div>
       <div class="footer-links d-flex gap-4">
         <button class="footer-link-btn" @click="$router.push({ name: 'about' })">{{ t('footer.about') }}</button>
-        <button class="footer-link-btn" @click="$router.push({ name: 'privacy' })">Privacy Policy</button>
+        <button class="footer-link-btn" @click="$router.push({ name: 'privacy' })">{{ t('footer.privacy') }}</button>
         <button class="footer-link-btn" @click="goHowItWorks">{{ t('footer.howItWorks') }}</button>
         <button class="footer-link-btn" @click="$router.push({ name: 'browse' })">{{ t('footer.browse') }}</button>
       </div>

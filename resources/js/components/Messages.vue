@@ -202,7 +202,7 @@ export default {
 
     // ja atnācām no grāmatas kartītes vai profila, uzreiz atver sarunu
     if (this.$route.query.userId) {
-      const userId   = Number(this.$route.query.userId)
+      const userId = Number(this.$route.query.userId)
       const userName = this.$route.query.userName || 'User'
       await this.openConversation({ id: userId, name: userName })
     }
@@ -228,9 +228,9 @@ export default {
     },
 
     async openConversation(user) {
-      this.activeUser        = user
+      this.activeUser = user
       this.activeUserBlocked = false
-      this.showThread        = true
+      this.showThread = true
       clearInterval(this.pollTimer)
 
       // pārbauda bloķēšanu pirms rāda sarunu
@@ -397,12 +397,12 @@ export default {
 
     startEdit(msg) {
       this.editingId = msg.id
-      this.editBody  = msg.body
+      this.editBody = msg.body
     },
 
     cancelEdit() {
       this.editingId = null
-      this.editBody  = ''
+      this.editBody = ''
     },
 
     async saveEdit(msg) {

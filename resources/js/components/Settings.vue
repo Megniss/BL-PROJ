@@ -29,7 +29,7 @@
             <div class="col-12 col-sm-6">
               <label for="settings-new-pwd" class="form-label fw-semibold">{{ t('profile.newPwd') }}</label>
               <input id="settings-new-pwd" v-model="profileForm.new_password" class="form-control" type="password" autocomplete="new-password" />
-              <small class="text-muted">Min 8 chars, uppercase, number & symbol (e.g. Hello1!)</small>
+              <small class="text-muted">{{ t('profile.pwdHint') }}</small>
             </div>
             <div class="col-12 col-sm-6">
               <label for="settings-confirm-pwd" class="form-label fw-semibold">{{ t('profile.confirmPwd') }}</label>
@@ -130,8 +130,8 @@ export default {
     ])
     this.profileForm.name = profile.data.name
     this.profileForm.email = profile.data.email
-    this.privacyForm.show_joined       = profile.data.show_joined
-    this.privacyForm.show_swaps        = profile.data.show_swaps
+    this.privacyForm.show_joined = profile.data.show_joined
+    this.privacyForm.show_swaps = profile.data.show_swaps
     this.privacyForm.show_swap_history = profile.data.show_swap_history
   },
 
