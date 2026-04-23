@@ -1688,7 +1688,7 @@ body {
 }
 @keyframes slideUpIn {
   from { transform: translateY(100%); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
+  to { transform: translateY(0); opacity: 1; }
 }
 .cookie-text {
   margin: 0;
@@ -2073,17 +2073,17 @@ body {
   max-width: 320px;
 }
 .toast-success { background: #2d7a3a; color: #fff; }
-.toast-error   { background: #c0392b; color: #fff; }
-.toast-info    { background: #1d4ed8; color: #fff; }
+.toast-error { background: #c0392b; color: #fff; }
+.toast-info { background: #1d4ed8; color: #fff; }
 
 .toast-slide-enter-active { transition: all 0.25s ease; }
 .toast-slide-leave-active { transition: all 0.2s ease; }
-.toast-slide-enter-from   { opacity: 0; transform: translateY(12px); }
-.toast-slide-leave-to     { opacity: 0; transform: translateY(12px); }
+.toast-slide-enter-from { opacity: 0; transform: translateY(12px); }
+.toast-slide-leave-to { opacity: 0; transform: translateY(12px); }
 
 /* ---- skeleton loader ---- */
 @keyframes shimmer {
-  0%   { background-position: -400px 0; }
+  0% { background-position: -400px 0; }
   100% { background-position: 400px 0; }
 }
 .skeleton-cover {
