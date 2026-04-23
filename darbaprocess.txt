@@ -192,3 +192,13 @@ Iedomājies ka lietotājs pārlūkā noklikšķina "Browse" pogu. Lūk kas notie
 9. Axios         → saņem JSON
 10. Vue          → attēlo lapā
 
+
+
+profile deletion
+admin edit book
+drop down menu translations, not hardcoded values
+wish list
+viena gramatas karte ar vairakiem lietotajiem
+geolocation, filtret pec tuvakaa man
+2fa TOTP vai email OTP
+
