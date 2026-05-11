@@ -18,11 +18,11 @@ class UserController extends Controller
 
         $users = User::withCount(['books' => fn($q) => $q->where('status', 'Available')])
             ->where('is_blocked', false)
+            ->when($authUser, fn($q) => $q->where('id', '!=', $authUser->id))
             ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
             ->when($blockedIds->isNotEmpty(), fn($q) => $q->whereNotIn('id', $blockedIds))
             ->orderBy('name')
-            ->limit(30)
-            ->get(['id', 'name', 'created_at']);
+            ->paginate(18, ['id', 'name', 'created_at']);
 
         // pieliek grāmatu priekšskatījumu katram
         $users->each(function ($user) {
@@ -66,7 +66,7 @@ class UserController extends Controller
                 ->limit(20)
                 ->get()
                 ->map(fn($s) => [
-                    'gave'     => $s->requester_id === $user->id ? $s->offeredBook?->title : $s->wantedBook?->title,
+                    'gave' => $s->requester_id === $user->id ? $s->offeredBook?->title : $s->wantedBook?->title,
                     'received' => $s->requester_id === $user->id ? $s->wantedBook?->title : $s->offeredBook?->title,
                     'date' => $s->updated_at->toDateString(),
                 ]);
@@ -81,14 +81,14 @@ class UserController extends Controller
             : false;
 
         return response()->json([
-            'id'   => $user->id,
+            'id' => $user->id,
             'name' => $user->name,
-            'joined'       => $user->show_joined ? $user->created_at->toDateString() : null,
-            'books'        => $books->count(),
-            'swaps'        => $user->show_swaps ? $swapsCount : null,
+            'joined' => $user->show_joined ? $user->created_at->toDateString() : null,
+            'books' => $books->count(),
+            'swaps' => $user->show_swaps ? $swapsCount : null,
             'swap_history' => $swapHistory,
-            'library'      => $books,
-            'is_blocked'   => $iBlockedThem,
+            'library' => $books,
+            'is_blocked' => $iBlockedThem,
             'they_blocked_me' => $theyBlockedMe,
         ]);
     }

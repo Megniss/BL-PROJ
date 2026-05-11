@@ -46,7 +46,7 @@
           <div class="mb-3">
             <label for="reg-password" class="form-label fw-semibold">{{ t('register.password') }}</label>
             <input id="reg-password" v-model="form.password" type="password" class="form-control" :placeholder="t('register.passwordPlaceholder')" minlength="8" required />
-            <small class="text-muted">Min 8 chars, uppercase, number & symbol (e.g. Hello1!)</small>
+            <small class="text-muted">{{ t('profile.pwdHint') }}</small>
           </div>
           <div class="mb-3">
             <label for="reg-confirm" class="form-label fw-semibold">{{ t('register.confirm') }}</label>

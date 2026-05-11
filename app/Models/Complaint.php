@@ -20,7 +20,7 @@ class Complaint extends Model
         return $this->hasMany(ComplaintMessage::class)->orderBy('created_at');
     }
 
-    // just the last one, for the list view preview
+    // pēdējā ziņa priekšskatījumam sarakstā
     public function latestMessage(): HasMany
     {
         return $this->hasMany(ComplaintMessage::class)->latest('created_at')->limit(1);

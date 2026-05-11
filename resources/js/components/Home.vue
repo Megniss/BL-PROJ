@@ -77,6 +77,7 @@
         <template v-else>
           <div v-for="book in recentBooks" :key="book.id" class="featured-card" @click="openDetail(book)">
             <div v-if="book.status === 'Pending'" class="pending-overlay"></div>
+            <div v-if="isNew(book)" class="new-ribbon">{{ t('books.newRibbon') }}</div>
             <div class="featured-cover" :style="!book.cover_image ? { background: coverColor(book) } : {}">
               <img v-if="book.cover_image" :src="'/storage/' + book.cover_image" :alt="book.title" class="book-card-cover-img" />
               <span class="book-card-genre">{{ t('genre.' + book.genre) }}</span>
@@ -275,6 +276,10 @@ export default {
   },
 
   methods: {
+    isNew(book) {
+      return (Date.now() - new Date(book.created_at)) < 7 * 24 * 60 * 60 * 1000
+    },
+
     async fetchFeaturedSections() {
       this.booksLoading = true
       try {
@@ -322,11 +327,11 @@ export default {
 
     async requestSwap(book) {
       this.detailBook = null
-      this.swapModal.wantedBook    = book
+      this.swapModal.wantedBook = book
       this.swapModal.selectedBookId = null
-      this.swapModal.error         = ''
-      this.swapModal.myBooks       = []
-      this.swapModal.open          = true
+      this.swapModal.error = ''
+      this.swapModal.myBooks = []
+      this.swapModal.open = true
       if (authStore.user) {
         try {
           const { data } = await axios.get('/api/books')
@@ -339,17 +344,17 @@ export default {
     closeSwapModal() { this.swapModal.open = false },
 
     async sendSwapRequest() {
-      this.swapModal.error   = ''
+      this.swapModal.error = ''
       this.swapModal.sending = true
       try {
         await axios.post('/api/swap-requests', {
           offered_book_id: this.swapModal.selectedBookId,
-          wanted_book_id:  this.swapModal.wantedBook.id,
+          wanted_book_id: this.swapModal.wantedBook.id,
         })
         // noņem no visiem trim sarakstiem uzreiz
         const id = this.swapModal.wantedBook.id
-        this.recentBooks   = this.recentBooks.filter(b => b.id !== id)
-        this.popularBooks  = this.popularBooks.filter(b => b.id !== id)
+        this.recentBooks = this.recentBooks.filter(b => b.id !== id)
+        this.popularBooks = this.popularBooks.filter(b => b.id !== id)
         this.topRatedBooks = this.topRatedBooks.filter(b => b.id !== id)
         this.closeSwapModal()
       } catch (err) {

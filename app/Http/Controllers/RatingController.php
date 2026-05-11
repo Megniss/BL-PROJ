@@ -12,7 +12,7 @@ class RatingController extends Controller
     {
         $validated = $request->validate([
             'swap_request_id' => ['required', 'integer', 'exists:swap_requests,id'],
-            'stars'  => ['required', 'integer', 'min:1', 'max:5'],
+            'stars' => ['required', 'integer', 'min:1', 'max:5'],
             'review' => ['nullable', 'string', 'max:1000'],
         ]);
 
@@ -45,7 +45,7 @@ class RatingController extends Controller
             'swap_request_id' => $swap->id,
             'book_id' => $bookId,
             'rater_id' => $userId,
-            'stars'  => $validated['stars'],
+            'stars' => $validated['stars'],
             'review' => $validated['review'] ?? null,
         ]);
 

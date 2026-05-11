@@ -1,5 +1,7 @@
 export const translations = {
   en: {
+    'a11y.skipToMain': 'Skip to main content',
+
     // Navigācija
     'nav.home': 'Home',
     'nav.browse': 'Browse',
@@ -133,6 +135,7 @@ export const translations = {
     // Kājene
     'footer.tagline': "Latvia's book exchange community.",
     'footer.about': 'About',
+    'footer.privacy': 'Privacy Policy',
     'footer.howItWorks': 'How It Works',
     'footer.browse': 'Browse Books',
     'footer.copy': '© 2025 BookLoop · Eduards Megnis',
@@ -156,6 +159,7 @@ export const translations = {
     'login.back': '← Back to home',
     'login.error': 'Invalid email or password.',
     'login.errorBlocked': 'Your account has been blocked. Contact an administrator.',
+    'login.errorThrottle': 'Too many failed attempts. Login blocked for {m} minutes.',
     'login.forgot': 'Forgot password?',
 
     // Aizmirsta parole
@@ -313,6 +317,7 @@ export const translations = {
     'profile.changePwdHint': '(leave blank to keep current)',
     'profile.currentPwd': 'Current Password',
     'profile.newPwd': 'New Password',
+    'profile.pwdHint': 'Min 8 chars, uppercase, number & symbol (e.g. Hello1!)',
     'profile.confirmPwd': 'Confirm New Password',
     'profile.save': 'Save Changes',
     'profile.saving': 'Saving…',
@@ -375,6 +380,16 @@ export const translations = {
     'about.creator.body': 'BookLoop was built by Eduards Megnis, a 3rd year student at Riga State Technical school. It was created as a school project to practice full stack web development using Laravel and Vue.js.',
     'about.back': 'Home',
     'about.backFull': '← Back to home',
+    'notFound.text': "This page doesn't exist.",
+    'notFound.btn': 'Back to Home',
+    'privacy.title': 'Privacy Policy',
+    'privacy.subtitle': 'How we handle your account and data on BookLoop',
+    'privacy.deletion.title': 'Account Deletion',
+    'privacy.deletion.body': 'Accounts on BookLoop cannot be deleted by users directly. If you wish to have your account removed, you must contact an administrator and arrange it with them. Account removal is handled on a case-by-case basis.',
+    'privacy.blocking.title': 'Account Blocking',
+    'privacy.blocking.body': 'An administrator may block your account at any point if your activity violates the platform rules. When blocked, you will receive an email explaining the reason. Blocked accounts cannot log in or interact with the platform until the block is lifted.',
+    'privacy.contact.title': 'Questions?',
+    'privacy.contact.body': 'If you have any questions about your account or this policy, you can reach out through the support system available after logging in.',
 
     // Support
     'nav.support': 'Support',
@@ -508,6 +523,8 @@ export const translations = {
   },
 
   lv: {
+    'a11y.skipToMain': 'Pāriet uz galveno saturu',
+
     // Navigācija
     'nav.home': 'Sākums',
     'nav.browse': 'Pārlūkot',
@@ -641,6 +658,7 @@ export const translations = {
     // Kājene
     'footer.tagline': 'Latvijas grāmatu apmaiņas kopiena.',
     'footer.about': 'Par mums',
+    'footer.privacy': 'Privātuma politika',
     'footer.howItWorks': 'Kā tas Strādā',
     'footer.browse': 'Pārlūkot Grāmatas',
     'footer.copy': '© 2025 BookLoop · Eduards Megnis',
@@ -664,6 +682,7 @@ export const translations = {
     'login.back': '← Atpakaļ uz sākumu',
     'login.error': 'Nepareizs e-pasts vai parole.',
     'login.errorBlocked': 'Tavs konts ir bloķēts. Sazinies ar administratoru.',
+    'login.errorThrottle': 'Pārāk daudz neveiksmīgu mēģinājumu. Mēģini vēlreiz pēc {m} minūtēm.',
     'login.forgot': 'Aizmirsi paroli?',
 
     // Aizmirsta parole
@@ -821,6 +840,7 @@ export const translations = {
     'profile.changePwdHint': '(atstāj tukšu lai saglabātu esošo)',
     'profile.currentPwd': 'Pašreizējā Parole',
     'profile.newPwd': 'Jaunā Parole',
+    'profile.pwdHint': 'Min 8 simboli, lielie burti, cipars un simbols (piem. Hello1!)',
     'profile.confirmPwd': 'Apstiprini Jauno Paroli',
     'profile.save': 'Saglabāt',
     'profile.saving': 'Saglabā…',
@@ -883,6 +903,16 @@ export const translations = {
     'about.creator.body': 'BookLoop izstrādāja Eduards Megnis, 3. kursa Rīgas Valsts tehnikuma students. Tas tika izveidots kā skolas projekts, lai praktizētu tīmekļa izstrādi, izmantojot Laravel un Vue.js.',
     'about.back': 'Sākums',
     'about.backFull': '← Atpakaļ uz sākumu',
+    'notFound.text': 'Šāda lapa neeksistē.',
+    'notFound.btn': 'Uz sākumu',
+    'privacy.title': 'Privātuma politika',
+    'privacy.subtitle': 'Kā mēs apstrādājam tavu kontu un datus BookLoop',
+    'privacy.deletion.title': 'Konta dzēšana',
+    'privacy.deletion.body': 'BookLoop lietotāji nevar dzēst savus kontus patstāvīgi. Ja vēlies dzēst kontu, jāsazinās ar administratoru un jāvienojas par to. Konta dzēšana tiek izskatīta individuāli.',
+    'privacy.blocking.title': 'Konta bloķēšana',
+    'privacy.blocking.body': 'Administrators var bloķēt tavu kontu jebkurā brīdī, ja tava darbība pārkāpj platformas noteikumus. Bloķēšanas gadījumā saņemsi e-pastu ar iemesla skaidrojumu. Bloķēts konts nevar ielogoties vai izmantot platformu līdz bloķēšana tiek atcelta.',
+    'privacy.contact.title': 'Jautājumi?',
+    'privacy.contact.body': 'Ja ir jautājumi par kontu vai šo politiku, sazinies ar atbalsta dienestu, kas pieejams pēc ielogošanās.',
 
     // Atbalsts
     'nav.support': 'Atbalsts',

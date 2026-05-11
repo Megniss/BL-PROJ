@@ -117,15 +117,37 @@ Laravel apstrādā REST API loģiku, Vue veido lietotāja saskarni un komunicē 
 **Vērtējumi:**
 - Redzami visi vērtējumi — zvaigznes, teksts, autors, grāmata
 
+**Valodu pārvaldība:**
+- Pievienot jaunas valodas, aktivizēt/deaktivizēt esošās
+- Rediģēt jebkuru tulkojuma atslēgu no admin paneļa
+
+**Audita žurnāls:**
+- Katrs admin lēmums tiek ierakstīts `admin_logs` tabulā
+- Redzams: darbība, mērķis, iemesls, laiks
+
 Panelis ir sakārtots saliekamās/izlokāmās sadaļās. Pilns LV/EN tulkojums, tumšā režīma atbalsts.
 
 ### 11. E-pasta paziņojumi
 - **Mailtrap sandbox** — e-pasti tiek pārtverti testēšanas vidē, nevis sūtīti īstiem adresātiem
 - **Laravel Queue** — e-pasti tiek nosūtīti asinhroni, lai pieprasījums atgrieztos uzreiz
-- Trīs paziņojumu veidi:
+- Seši paziņojumu veidi:
   - `SwapAccepted` — apmaiņa apstiprināta
   - `SwapDeclined` — apmaiņa noraidīta
   - `NewMessage` — saņemts jauns ziņojums čatā
+  - `BookUnderReview` — admins atzīmēja grāmatu pārskatīšanai
+  - `BookDeletedByAdmin` — admins dzēsa grāmatu (ar iemeslu)
+  - `LoginLocked` — 5 neveiksmīgi pieteikšanās mēģinājumi, konts bloķēts 15 min
+
+### 12. Atbalsta biļešu sistēma
+- Lietotāji var iesniegt atbalsta biļetes ar tēmu un aprakstu
+- Sarunu veidols — lietotājs un admins var atbildēt uz biļeti
+- Admins var slēgt biļetes
+- Slēgtas biļetes var atkal atvērt atbildot uz tām
+
+### 13. Privātuma politika
+- Atsevišķa lapa pieejama no kājenes
+- Aprakstīta konta dzēšanas un bloķēšanas politika
+- Pilns LV/EN tulkojums
 
 ---
 
@@ -139,6 +161,11 @@ messages                — ziņojumi starp lietotājiem
 notifications           — sistēmas paziņojumi
 ratings                 — grāmatu vērtējumi pēc apmaiņas
 blocks                  — bloķēto lietotāju saraksts
+complaints              — atbalsta biļetes
+complaint_messages      — ziņas biļešu iekšienē
+admin_logs              — admina darbību audita pieraksts
+languages               — valodu reģistrs (en, lv)
+translation_overrides   — admin rediģējami tulkojumi datubāzē
 jobs                    — Laravel Queue rinda (asinhronie uzdevumi)
 failed_jobs             — neizdevušies rindas uzdevumi
 personal_access_tokens  — Sanctum tokeni
@@ -151,9 +178,10 @@ personal_access_tokens  — Sanctum tokeni
 - Visi modālie logi ar `role="dialog"` un `aria-modal`
 - Kļūdu paziņojumi ar `role="alert"`
 - Ziņojumu saraksts ar `role="log"` un `aria-live`
-- Ikonas pogas ar `aria-label`
+- Ikonas pogas ar `aria-label` un `aria-pressed` stāvoklis pārslēgšanas pogām
 - Klaviatūras navigācija uz visiem klikšķināmiem elementiem
 - **Visi formu lauki saistīti ar `<label for="">` atribūtiem** — ekrānlasītāji pareizi identificē katru lauku
+- **Skip-to-main navigācija** — redzama ar Tab taustiņu, ļauj ekrānlasītāju lietotājiem apiet navigāciju
 
 ---
 
@@ -177,6 +205,7 @@ Lietotne ir instalējama kā progresīvā tīmekļa lietotne (PWA):
 - Transakcijas apmaiņas operācijām
 - Admin maršruti aizsargāti ar `AdminMiddleware`
 - Bloķēti lietotāji nevar pieteikties sistēmā
+- **HTTP drošības galvenes** — `SecurityHeaders` middleware visās atbildēs: `X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`
 
 ---
 
@@ -184,11 +213,11 @@ Lietotne ir instalējama kā progresīvā tīmekļa lietotne (PWA):
 
 ```
 app/Http/Controllers/   ← 11 API kontrolieri (ieskaitot AdminController)
-app/Http/Middleware/    ← AdminMiddleware
+app/Http/Middleware/    ← AdminMiddleware, SecurityHeaders
 app/Models/             ← User, Book, SwapRequest, Message, Rating, Block
 app/Notifications/      ← SwapAccepted, SwapDeclined, NewMessage, BookUnderReview, BookDeletedByAdmin
 resources/js/
-  components/           ← 18+ Vue komponentes (ieskaitot Admin.vue)
+  components/           ← 18+ Vue komponentes (ieskaitot Admin.vue, PrivacyPolicy.vue)
   router/router.js      ← Vue Router (ar admin maršrutu un sardzi)
   translations.js       ← visi UI teksti LV/EN (~200+ atslēgas)
   authStore.js / langStore.js / themeStore.js
@@ -210,6 +239,7 @@ npm install
 
 **Palaist izstrādes vidi:**
 ```bash
+php artisan ser
 composer run dev
 ```
 

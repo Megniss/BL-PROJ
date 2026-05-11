@@ -20,10 +20,10 @@ class AdminController extends Controller
     private function log(Request $request, string $action, string $type, int|null $id, string $name, string $reason = null): void
     {
         AdminLog::create([
-            'admin_id'    => $request->user()->id,
-            'action'      => $action,
+            'admin_id' => $request->user()->id,
+            'action' => $action,
             'target_type' => $type,
-            'target_id'   => $id,
+            'target_id' => $id,
             'target_name' => $name,
             'reason' => $reason,
         ]);
@@ -37,8 +37,8 @@ class AdminController extends Controller
             ->map(fn($u) => [
                 'id' => $u->id,
                 'name' => $u->name,
-                'email'      => $u->email,
-                'is_admin'   => $u->is_admin,
+                'email' => $u->email,
+                'is_admin' => $u->is_admin,
                 'is_blocked' => $u->is_blocked,
                 'books_count' => $u->books_count,
                 'joined' => $u->created_at->toDateString(),
@@ -53,8 +53,8 @@ class AdminController extends Controller
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(fn($b) => [
-                'id'     => $b->id,
-                'title'  => $b->title,
+                'id' => $b->id,
+                'title' => $b->title,
                 'author' => $b->author,
                 'genre' => $b->genre,
                 'status' => $b->status,
@@ -112,8 +112,8 @@ class AdminController extends Controller
     {
         $request->validate(['reason' => ['required', 'string', 'max:500']]);
 
-        $owner  = $book->user;
-        $title  = $book->title;
+        $owner = $book->user;
+        $title = $book->title;
         $author = $book->author;
 
         $book->delete();
@@ -244,13 +244,13 @@ class AdminController extends Controller
             ->limit(500)
             ->get()
             ->map(fn($l) => [
-                'id'          => $l->id,
-                'admin'       => $l->admin?->name,
-                'action'      => $l->action,
+                'id' => $l->id,
+                'admin' => $l->admin?->name,
+                'action' => $l->action,
                 'target_type' => $l->target_type,
                 'target_name' => $l->target_name,
                 'reason' => $l->reason,
-                'date'   => $l->created_at->format('Y-m-d H:i'),
+                'date' => $l->created_at->format('Y-m-d H:i'),
             ]);
 
         return response()->json($logs);
@@ -262,10 +262,10 @@ class AdminController extends Controller
             'book:id,title,author',
             'rater:id,name',
         ])->latest()->get()->map(fn($r) => [
-            'id'     => $r->id,
-            'book'   => $r->book?->title,
+            'id' => $r->id,
+            'book' => $r->book?->title,
             'author' => $r->book?->author,
-            'rater'  => $r->rater?->name,
+            'rater' => $r->rater?->name,
             'stars' => $r->stars,
             'review' => $r->review,
             'date' => $r->created_at->toDateString(),

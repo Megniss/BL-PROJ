@@ -164,7 +164,7 @@ export default {
   methods: {
     async fetchProfile() {
       this.loading = true
-      this.error   = ''
+      this.error = ''
       try {
         const { data } = await axios.get(`/api/users/${this.$route.params.id}`)
         this.profile = data

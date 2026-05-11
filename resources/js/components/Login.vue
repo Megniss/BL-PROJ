@@ -94,9 +94,14 @@ export default {
         setAuth(data.user, data.token)
         this.$router.push({ name: 'dashboard' })
       } catch (e) {
-        this.errorMsg = e.response?.data?.blocked
-          ? this.t('login.errorBlocked')
-          : this.t('login.error')
+        const data = e.response?.data
+        if (data?.throttled) {
+          this.errorMsg = this.t('login.errorThrottle').replace('{m}', data.minutes)
+        } else if (data?.blocked) {
+          this.errorMsg = this.t('login.errorBlocked')
+        } else {
+          this.errorMsg = this.t('login.error')
+        }
       } finally {
         this.loading = false
       }
