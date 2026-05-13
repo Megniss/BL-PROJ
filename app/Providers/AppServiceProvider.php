@@ -15,6 +15,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        if (config('app.env') === 'production') {
+            \URL::forceScheme('https');
+        }
+        
         // SQLite FK validācija pēc noklusējuma ir izslēgta
         if (DB::connection()->getDriverName() === 'sqlite') {
             DB::statement('PRAGMA foreign_keys = ON;');
