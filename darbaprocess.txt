@@ -202,3 +202,7 @@ viena gramatas karte ar vairakiem lietotajiem
 geolocation, filtret pec tuvakaa man
 2fa TOTP vai email OTP
 
+palaist majaslapu:
+
+php artisan serve --host=0.0.0.0
+npm run dev -- --host 0.0.0.0
