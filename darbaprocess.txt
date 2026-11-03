@@ -122,14 +122,6 @@ npm install
 npm run build
 php artisan serve
 
-e-mail validacija, jabut uniqe
-nevar lietotajam but 2 vai vairak same book
-lietotajs nevar nomainit statusu gamatai kad ta ir pieprasita apmainai
-message span limiting
-rezerveta gramata
-setting poga dropdown menu profilam
-user blocking
-
 
 mazak runa
 citu modeli
@@ -194,15 +186,22 @@ Iedomājies ka lietotājs pārlūkā noklikšķina "Browse" pogu. Lūk kas notie
 
 
 
-profile deletion
-admin edit book
-drop down menu translations, not hardcoded values
+
+
+jaunas lietas ko vajag:
+profile deletion (ar visiem datiem visur kur tie ir, nepazaudejot gramatas kuras ir apmainitas)
 wish list
 viena gramatas karte ar vairakiem lietotajiem
 geolocation, filtret pec tuvakaa man
 2fa TOTP vai email OTP
+chatam bildes var ielikt
+ui update
+izveidot user manual
+atsevisku admin login, adminam nav profile, tikai admin panelis arsadalitu login ar uniqe admin paroli un jauni kolonnu db users tabula
+papildinat privacy policy
+
+
 
 palaist majaslapu:
-
 php artisan serve --host=0.0.0.0
 npm run dev -- --host 0.0.0.0
