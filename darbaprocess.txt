@@ -190,13 +190,10 @@ Iedomājies ka lietotājs pārlūkā noklikšķina "Browse" pogu. Lūk kas notie
 
 jaunas lietas ko vajag:
 profile deletion (ar visiem datiem visur kur tie ir, nepazaudejot gramatas kuras ir apmainitas)
-wish list
 viena gramatas karte ar vairakiem lietotajiem
 geolocation, filtret pec tuvakaa man
 2fa TOTP vai email OTP
 chatam bildes var ielikt
-ui update
-izveidot user manual
 atsevisku admin login, adminam nav profile, tikai admin panelis arsadalitu login ar uniqe admin paroli un jauni kolonnu db users tabula
 papildinat privacy policy
 
