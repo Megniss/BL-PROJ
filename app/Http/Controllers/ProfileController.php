@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AdminLog;
 use App\Models\Block;
 use App\Models\Book;
 use App\Models\SwapRequest;
@@ -37,6 +38,8 @@ class ProfileController extends Controller
             'show_joined' => $user->show_joined,
             'show_swaps' => $user->show_swaps,
             'show_swap_history' => $user->show_swap_history,
+            'is_admin' => $user->is_admin,
+            'is_only_admin' => $user->is_admin && !$this->hasOtherAdmins($user),
         ]);
     }
 
@@ -98,11 +101,14 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        if ($user->is_admin) {
-            return response()->json(['message' => 'Admin accounts cannot be deleted.'], 403);
+        if ($user->is_admin && !$this->hasOtherAdmins($user)) {
+            return response()->json(['message' => 'The only admin cannot delete their account.'], 403);
         }
 
-        $request->validate(['password' => ['required', 'string']]);
+        $request->validate([
+            'password' => ['required', 'string'],
+            'reason' => [$user->is_admin ? 'required' : 'nullable', 'string', 'max:500'],
+        ]);
 
         if (!Hash::check($request->password, $user->password)) {
             return response()->json([
@@ -118,7 +124,19 @@ class ProfileController extends Controller
         $books = $user->books()->get();
         $oldEmail = $user->email;
 
-        DB::transaction(function () use ($user, $pending, $books, $oldEmail) {
+        DB::transaction(function () use ($user, $pending, $books, $oldEmail, $request) {
+            // admina dzēšanu ieraksta žurnālā
+            if ($user->is_admin) {
+                AdminLog::create([
+                    'admin_id' => $user->id,
+                    'action' => 'delete_account',
+                    'target_type' => 'user',
+                    'target_id' => $user->id,
+                    'target_name' => $user->name,
+                    'reason' => $request->reason,
+                ]);
+            }
+
             // noraida gaidošās apmaiņas, otra grāmata atkal brīva
             foreach ($pending as $swap) {
                 $otherBook = $swap->requester_id === $user->id ? $swap->wanted_book_id : $swap->offered_book_id;
@@ -140,6 +158,9 @@ class ProfileController extends Controller
                 'email' => "deleted-{$user->id}@deleted.invalid",
                 'password' => Hash::make(Str::random(40)),
                 'remember_token' => null,
+                'is_admin' => false,
+                'admin_password' => null,
+                'admin_password_change' => false,
                 'show_joined' => false,
                 'show_swaps' => false,
                 'show_swap_history' => false,
@@ -165,6 +186,14 @@ class ProfileController extends Controller
         }
 
         return response()->json(null, 204);
+    }
+
+    private function hasOtherAdmins(User $user): bool
+    {
+        return User::where('is_admin', true)
+            ->whereNull('deleted_at')
+            ->where('id', '!=', $user->id)
+            ->exists();
     }
 
     public function history(Request $request)

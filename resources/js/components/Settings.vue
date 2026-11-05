@@ -84,10 +84,11 @@
       </div>
 
       <!-- konta dzēšana -->
-      <div v-if="!authStore.user?.is_admin" class="settings-card settings-card--danger">
+      <div class="settings-card settings-card--danger">
         <h2 class="settings-section-title text-danger">{{ t('settings.deleteTitle') }}</h2>
         <p class="text-muted small mb-3">{{ t('settings.deleteText') }}</p>
-        <button class="btn btn-outline-danger" @click="openDelete">{{ t('settings.deleteBtn') }}</button>
+        <p v-if="isOnlyAdmin" class="small mb-0">{{ t('settings.onlyAdmin') }}</p>
+        <button v-else class="btn btn-outline-danger" @click="openDelete">{{ t('settings.deleteBtn') }}</button>
       </div>
 
     </div>
@@ -112,9 +113,14 @@
           />
           <div v-if="deleteError" class="invalid-feedback">{{ deleteError }}</div>
 
+          <template v-if="isAdmin">
+            <label for="delete-reason" class="form-label fw-semibold mt-3">{{ t('settings.deleteReason') }}</label>
+            <textarea id="delete-reason" v-model="deleteReason" class="form-control" rows="2" maxlength="500" required></textarea>
+          </template>
+
           <div class="d-flex justify-content-end gap-2 mt-4">
             <button type="button" class="btn btn-outline-secondary" @click="closeDelete">{{ t('settings.deleteCancel') }}</button>
-            <button type="submit" class="btn btn-danger" :disabled="!deletePassword || deleting">
+            <button type="submit" class="btn btn-danger" :disabled="!deletePassword || (isAdmin && !deleteReason.trim()) || deleting">
               {{ deleting ? t('settings.deleting') : t('settings.deleteBtn') }}
             </button>
           </div>
@@ -157,8 +163,11 @@ export default {
       blockedUsers: [],
       blockedLoading: true,
 
+      isAdmin: false,
+      isOnlyAdmin: false,
       deleteOpen: false,
       deletePassword: '',
+      deleteReason: '',
       deleteError: '',
       deleting: false,
     }
@@ -174,6 +183,8 @@ export default {
     this.privacyForm.show_joined = profile.data.show_joined
     this.privacyForm.show_swaps = profile.data.show_swaps
     this.privacyForm.show_swap_history = profile.data.show_swap_history
+    this.isAdmin = profile.data.is_admin
+    this.isOnlyAdmin = profile.data.is_only_admin
   },
 
   methods: {
@@ -225,6 +236,7 @@ export default {
     openDelete() {
       this.deleteOpen = true
       this.deletePassword = ''
+      this.deleteReason = ''
       this.deleteError = ''
       this.$nextTick(() => this.$refs.deletePwd?.focus())
     },
@@ -239,7 +251,7 @@ export default {
       this.deleting = true
       this.deleteError = ''
       try {
-        await axios.delete('/api/profile', { data: { password: this.deletePassword } })
+        await axios.delete('/api/profile', { data: { password: this.deletePassword, reason: this.deleteReason.trim() } })
         clearAuth()
         showToast(this.t('settings.deleted'))
         this.$router.push({ name: 'home' })

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -66,6 +67,9 @@ class DatabaseSeeder extends Seeder
         ];
 
         DB::table('users')->insert($users);
+
+        // testa admin parole
+        DB::table('users')->where('id', 1)->update(['admin_password' => Hash::make('admin12345678')]);
 
         // --- BOOKS ---
         $books = [

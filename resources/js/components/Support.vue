@@ -1,13 +1,13 @@
 <template>
-  <div class="messages-page">
-    <AppNavbar />
+  <div class="messages-page" :class="{ 'support-embedded': admin }">
+    <AppNavbar v-if="!admin" />
 
     <div class="messages-body">
 
       <aside class="convo-panel" :class="{ 'hidden-mobile': showThread }">
         <div class="convo-header">
           <h2 class="convo-title">{{ t('support.title') }}</h2>
-          <button v-if="!authStore.user?.is_admin" class="btn btn-sm btn-primary" @click="showNew = !showNew">
+          <button v-if="!admin" class="btn btn-sm btn-primary" @click="showNew = !showNew">
             {{ showNew ? t('support.cancel') : t('support.newBtn') }}
           </button>
         </div>
@@ -38,7 +38,7 @@
           <div class="convo-info">
             <div class="convo-name">
               {{ c.subject }}
-              <span v-if="authStore.user?.is_admin" class="text-muted small ms-1">({{ c.user?.name }})</span>
+              <span v-if="admin" class="text-muted small ms-1">({{ c.user?.name }})</span>
             </div>
             <div class="convo-last">{{ c.last_msg || '—' }}</div>
           </div>
@@ -62,12 +62,12 @@
             <span class="support-status-badge ms-2" :class="active.status === 'closed' ? 'badge-closed' : 'badge-open'">
               {{ active.status === 'closed' ? t('support.closed') : t('support.open') }}
             </span>
-            <router-link v-if="authStore.user?.is_admin && active.user"
+            <router-link v-if="admin && active.user"
               :to="{ name: 'userProfile', params: { id: active.user.id } }"
               class="support-user-link ms-2">
               {{ active.user.name }}
             </router-link>
-            <button v-if="authStore.user?.is_admin && active.status === 'open'"
+            <button v-if="admin && active.status === 'open'"
               class="btn btn-sm btn-outline-secondary ms-auto"
               @click="closeComplaint">{{ t('support.closeBtn') }}</button>
           </div>
@@ -80,14 +80,14 @@
               v-for="msg in active.messages"
               :key="msg.id"
               class="msg-row"
-              :class="{ 'msg-mine': authStore.user?.is_admin ? msg.sender?.is_admin : msg.sender_id === authStore.user.id }"
+              :class="{ 'msg-mine': admin === msg.from_admin }"
             >
-              <div class="msg-bubble" :class="(authStore.user?.is_admin ? msg.sender?.is_admin : msg.sender_id === authStore.user.id) ? 'msg-bubble-sent' : ''">
+              <div class="msg-bubble" :class="{ 'msg-bubble-sent': admin === msg.from_admin }">
                 <p class="msg-body">{{ msg.body }}</p>
                 <div class="msg-meta">
-                  <template v-if="msg.sender?.is_admin">
+                  <template v-if="msg.from_admin">
                     <span class="support-admin-tag" :data-name="msg.sender.name">{{ t('support.adminTag') }}</span>
-                    <span v-if="authStore.user?.is_admin" class="support-admin-name">{{ msg.sender.name }}</span>
+                    <span v-if="admin" class="support-admin-name">{{ msg.sender.name }}</span>
                   </template>
                   <span class="msg-time">{{ formatTime(msg.created_at) }}</span>
                 </div>
@@ -131,6 +131,7 @@ export default {
   name: 'Support',
   components: { AppNavbar },
   mixins: [langMixin],
+  props: { admin: Boolean },
 
   data() {
     return {
@@ -160,6 +161,12 @@ export default {
     }
   },
 
+  computed: {
+    api() {
+      return this.admin ? '/api/admin/complaints' : '/api/complaints'
+    },
+  },
+
   beforeUnmount() {
     clearInterval(this.pollTimer)
   },
@@ -168,7 +175,7 @@ export default {
     async loadList() {
       this.loading = true
       try {
-        const { data } = await axios.get('/api/complaints')
+        const { data } = await axios.get(this.api)
         this.complaints = data
       } finally {
         this.loading = false
@@ -181,7 +188,7 @@ export default {
       this.loadingThread = true
       this.active = { ...c, messages: [] }
       try {
-        const { data } = await axios.get(`/api/complaints/${c.id}`)
+        const { data } = await axios.get(`${this.api}/${c.id}`)
         this.active = data
         // atsvaidzina priekšskatījuma tekstu sānbārā
         const idx = this.complaints.findIndex(x => x.id === c.id)
@@ -200,7 +207,7 @@ export default {
     async pollMessages() {
       const lastId = this.active.messages?.at(-1)?.id ?? 0
       try {
-        const { data } = await axios.get(`/api/complaints/${this.active.id}`)
+        const { data } = await axios.get(`${this.api}/${this.active.id}`)
         const fresh = (data.messages ?? []).filter(m => m.id > lastId)
         if (fresh.length) {
           this.active.messages.push(...fresh)
@@ -243,7 +250,7 @@ export default {
       const body = this.compose.trim()
       this.compose = ''
       try {
-        const { data } = await axios.post(`/api/complaints/${this.active.id}/messages`, { body })
+        const { data } = await axios.post(`${this.api}/${this.active.id}/messages`, { body })
         this.active.messages.push(data)
         // sānbāra priekšskatījums sinhronā
         const idx = this.complaints.findIndex(x => x.id === this.active.id)
@@ -257,7 +264,7 @@ export default {
     },
 
     async closeComplaint() {
-      await axios.patch(`/api/complaints/${this.active.id}/close`)
+      await axios.patch(`${this.api}/${this.active.id}/close`)
       this.active.status = 'closed'
       const idx = this.complaints.findIndex(x => x.id === this.active.id)
       if (idx !== -1) this.complaints[idx].status = 'closed'

@@ -2122,3 +2122,18 @@ body {
   z-index: 2;
   box-shadow: -1px 1px 4px rgba(0,0,0,0.2);
 }
+
+/* admin panelis */
+.nav-admin-tag {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--cream);
+}
+.admin-gate { max-width: 420px; }
+.messages-page.support-embedded { height: 75vh; min-height: 480px; background: transparent; }
+.support-embedded .messages-body { padding: 0; max-width: none; }

@@ -64,6 +64,27 @@
       </div>
     </div>
 
+    <!-- adminam jāizvēlas, kur doties -->
+    <Teleport to="body">
+      <div v-if="adminChoice" class="modal-overlay">
+        <div class="modal-card modal-card--sm">
+          <template v-if="!adminUnlock">
+            <h2 class="modal-title mb-2">{{ t('adminAuth.chooseTitle') }}</h2>
+            <p class="modal-desc mb-4">{{ t('adminAuth.chooseText') }}</p>
+            <div class="d-flex flex-column gap-2">
+              <button class="btn btn-primary" @click="adminUnlock = true">{{ t('adminAuth.panel') }}</button>
+              <button class="btn btn-outline-secondary" @click="$router.push({ name: 'dashboard' })">{{ t('adminAuth.profile') }}</button>
+            </div>
+          </template>
+
+          <template v-else>
+            <h2 class="modal-title mb-2">{{ t('adminAuth.panel') }}</h2>
+            <p class="modal-desc mb-3">{{ t('adminAuth.enterText') }}</p>
+            <AdminUnlock cancelable @unlocked="$router.push({ name: 'admin' })" @cancel="adminUnlock = false" />
+          </template>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -71,9 +92,12 @@
 import axios from 'axios'
 import langMixin from '../langMixin.js'
 import { setAuth } from '../authStore.js'
+import AdminUnlock from './AdminUnlock.vue'
 
 export default {
   name: 'Login',
+
+  components: { AdminUnlock },
 
   mixins: [langMixin],
 
@@ -81,7 +105,9 @@ export default {
     return {
       form: { email: '', password: '' },
       loading: false,
-      errorMsg: ''
+      errorMsg: '',
+      adminChoice: false,
+      adminUnlock: false,
     }
   },
 
@@ -92,7 +118,12 @@ export default {
       try {
         const { data } = await axios.post('/api/login', this.form)
         setAuth(data.user, data.token)
-        this.$router.push({ name: 'dashboard' })
+
+        if (data.user.is_admin) {
+          this.adminChoice = true
+        } else {
+          this.$router.push({ name: 'dashboard' })
+        }
       } catch (e) {
         const data = e.response?.data
         if (data?.throttled) {

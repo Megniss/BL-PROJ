@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\LanguageController;
@@ -74,9 +75,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/complaints', [ComplaintController::class, 'store']);
     Route::get('/complaints/{complaint}', [ComplaintController::class, 'show']);
     Route::post('/complaints/{complaint}/messages', [ComplaintController::class, 'addMessage']);
-    Route::patch('/complaints/{complaint}/close', [ComplaintController::class, 'close']);
+
+    // admin paroles ievade
+    Route::get('/admin/status', [AdminAuthController::class, 'status']);
+    Route::post('/admin/unlock', [AdminAuthController::class, 'unlock']);
+    Route::post('/admin/lock', [AdminAuthController::class, 'lock']);
+    Route::patch('/admin/password', [AdminAuthController::class, 'changePassword'])->middleware('admin:setup');
 
     Route::middleware('admin')->group(function () {
+        Route::get('/admin/complaints', [ComplaintController::class, 'adminIndex']);
+        Route::get('/admin/complaints/{complaint}', [ComplaintController::class, 'adminShow']);
+        Route::post('/admin/complaints/{complaint}/messages', [ComplaintController::class, 'adminReply']);
+        Route::patch('/admin/complaints/{complaint}/close', [ComplaintController::class, 'close']);
         Route::get('/admin/logs', [AdminController::class, 'logs']);
         Route::get('/admin/languages', [LanguageController::class, 'all']);
         Route::post('/admin/languages', [LanguageController::class, 'store']);

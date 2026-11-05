@@ -193,8 +193,6 @@ viena gramatas karte ar vairakiem lietotajiem
 geolocation, filtret pec tuvakaa man
 2fa TOTP vai email OTP
 chatam bildes var ielikt
-atsevisku admin login, adminam nav profile, tikai admin panelis arsadalitu login ar uniqe admin paroli un jauni kolonnu db users tabula
-papildinat privacy policy
 
 
 

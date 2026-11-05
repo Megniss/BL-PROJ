@@ -33,15 +33,48 @@ class AccountDeletionTest extends TestCase
         $this->assertDatabaseHas('users', ['id' => $user->id, 'name' => 'Anna', 'deleted_at' => null]);
     }
 
-    public function test_admin_cannot_delete_account(): void
+    public function test_only_admin_cannot_delete_account(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);
 
         $this->actingAs($admin)
-             ->deleteJson('/api/profile', ['password' => 'password'])
+             ->deleteJson('/api/profile', ['password' => 'password', 'reason' => 'Aizeju'])
              ->assertForbidden();
 
         $this->assertNull($admin->fresh()->deleted_at);
+    }
+
+    public function test_admin_must_give_reason(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        User::factory()->create(['is_admin' => true]);
+
+        $this->actingAs($admin)
+             ->deleteJson('/api/profile', ['password' => 'password'])
+             ->assertStatus(422)
+             ->assertJsonValidationErrors('reason');
+
+        $this->assertNull($admin->fresh()->deleted_at);
+    }
+
+    public function test_admin_deletion_is_logged(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'name' => 'Anna']);
+        User::factory()->create(['is_admin' => true]);
+
+        $this->actingAs($admin)
+             ->deleteJson('/api/profile', ['password' => 'password', 'reason' => 'Aizeju'])
+             ->assertNoContent();
+
+        $admin->refresh();
+        $this->assertFalse($admin->is_admin);
+        $this->assertNull($admin->admin_password);
+        $this->assertDatabaseHas('admin_logs', [
+            'admin_id' => $admin->id,
+            'action' => 'delete_account',
+            'target_name' => 'Anna',
+            'reason' => 'Aizeju',
+        ]);
     }
 
     public function test_user_is_anonymized(): void

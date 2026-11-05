@@ -11,9 +11,10 @@ use Illuminate\Support\Collection;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Laravel\Sanctum\PersonalAccessToken;
 
 #[Fillable(['name', 'email', 'password', 'show_joined', 'show_swaps', 'show_swap_history', 'is_admin', 'is_blocked'])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden(['password', 'remember_token', 'admin_password'])]
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -41,6 +42,17 @@ class User extends Authenticatable
         return $out->merge($in)->unique()->values();
     }
 
+    // vai ar pašreizējo tokenu ir ievadīta admin parole
+    public function adminUnlocked(): bool
+    {
+        $token = $this->currentAccessToken();
+
+        return $this->is_admin
+            && $token instanceof PersonalAccessToken
+            && $token->admin_until
+            && now()->lt($token->admin_until);
+    }
+
     protected function casts(): array
     {
         return [
@@ -50,6 +62,8 @@ class User extends Authenticatable
             'show_swaps' => 'boolean',
             'show_swap_history' => 'boolean',
             'is_admin' => 'boolean',
+            'admin_password' => 'hashed',
+            'admin_password_change' => 'boolean',
             'is_blocked' => 'boolean',
             'deleted_at' => 'datetime',
         ];

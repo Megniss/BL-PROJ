@@ -1,7 +1,27 @@
 <template>
   <div class="page-layout">
-  <AppNavbar />
-  <div class="admin-page container-xl py-4">
+  <AppNavbar admin @admin-password="pwdModal = true" />
+
+  <!-- admin parole vēl nav ievadīta vai jānomaina -->
+  <div v-if="gate !== 'ready'" class="admin-page container-xl py-5">
+    <div class="admin-card admin-gate mx-auto">
+      <div v-if="gate === 'checking'" class="text-center py-4">
+        <span class="spinner-border spinner-border-sm text-success"></span>
+      </div>
+      <template v-else-if="gate === 'locked'">
+        <h1 class="modal-title mb-2">{{ t('adminAuth.panel') }}</h1>
+        <p class="modal-desc mb-3">{{ t('adminAuth.enterText') }}</p>
+        <AdminUnlock @unlocked="onUnlocked" />
+      </template>
+      <template v-else-if="gate === 'must_change'">
+        <h1 class="modal-title mb-2">{{ t('adminAuth.mustChangeTitle') }}</h1>
+        <p class="modal-desc mb-3">{{ t('adminAuth.mustChangeText') }}</p>
+        <AdminPasswordForm must-change @changed="onUnlocked({ must_change: false })" />
+      </template>
+    </div>
+  </div>
+
+  <div v-else class="admin-page container-xl py-4">
     <h1 class="admin-title mb-4">{{ t('admin.title') }}</h1>
 
     <div v-if="error" class="alert alert-danger">{{ error }}</div>
@@ -26,6 +46,8 @@
         </select>
       </div>
     </div>
+
+    <Support v-if="activeTab === 'support'" admin />
 
     <div v-if="loading[activeTab]" class="admin-card text-center py-5">
       <span class="spinner-border spinner-border-sm text-success"></span>
@@ -386,6 +408,9 @@
             <option value="remove_language">{{ t('admin.log.remove_language') }}</option>
             <option value="restore_language">{{ t('admin.log.restore_language') }}</option>
             <option value="edit_translations">{{ t('admin.log.edit_translations') }}</option>
+            <option value="admin_unlock_failed">{{ t('admin.log.admin_unlock_failed') }}</option>
+            <option value="change_admin_password">{{ t('admin.log.change_admin_password') }}</option>
+            <option value="delete_account">{{ t('admin.log.delete_account') }}</option>
           </select>
         </div>
         <div class="table-responsive">
@@ -419,6 +444,32 @@
 
   </div>
   <AppFooter />
+
+  <Teleport to="body">
+    <!-- jauna admina pagaidu parole -->
+    <div v-if="makeAdminUser" class="modal-overlay" @click.self="makeAdminUser = null">
+      <form class="modal-card modal-card--sm" @submit.prevent="confirmMakeAdmin">
+        <h2 class="modal-title mb-2">{{ t('admin.btn.makeAdmin') }}: {{ makeAdminUser.name }}</h2>
+        <p class="modal-desc mb-3">{{ t('adminAuth.tempText') }}</p>
+        <label for="temp-admin-pwd" class="form-label fw-semibold">{{ t('adminAuth.temp') }}</label>
+        <input id="temp-admin-pwd" v-model="tempPassword" class="form-control" type="password" autocomplete="new-password" minlength="12" required />
+        <small class="text-muted">{{ t('adminAuth.hint') }}</small>
+        <div v-if="makeAdminError" class="alert alert-danger py-2 px-3 mt-3">{{ makeAdminError }}</div>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" @click="makeAdminUser = null">{{ t('settings.deleteCancel') }}</button>
+          <button type="submit" class="btn btn-primary" :disabled="tempPassword.length < 12">{{ t('admin.btn.makeAdmin') }}</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- savas admin paroles maiņa -->
+    <div v-if="pwdModal" class="modal-overlay" @click.self="pwdModal = false">
+      <div class="modal-card modal-card--sm">
+        <h2 class="modal-title mb-3">{{ t('adminAuth.changeBtn') }}</h2>
+        <AdminPasswordForm @changed="pwdModal = false; showToast(t('adminAuth.changed'))" @cancel="pwdModal = false" />
+      </div>
+    </div>
+  </Teleport>
   </div>
 </template>
 
@@ -427,18 +478,27 @@ import axios from 'axios'
 import { authStore } from '../authStore.js'
 import { invalidateOverrides, setLocale } from '../langStore.js'
 import { translations } from '../translations.js'
+import { showToast } from '../toast.js'
 import AppNavbar from './AppNavbar.vue'
 import AppFooter from './AppFooter.vue'
 import Pagination from './Pagination.vue'
+import Support from './Support.vue'
+import AdminUnlock from './AdminUnlock.vue'
+import AdminPasswordForm from './AdminPasswordForm.vue'
 import langMixin from '../langMixin.js'
 
 export default {
   name: 'AdminPanel',
-  components: { AppNavbar, AppFooter, Pagination },
+  components: { AppNavbar, AppFooter, Pagination, Support, AdminUnlock, AdminPasswordForm },
   mixins: [langMixin],
 
   data() {
     return {
+      gate: 'checking',
+      pwdModal: false,
+      makeAdminUser: null,
+      tempPassword: '',
+      makeAdminError: '',
       users: [],
       books: [],
       swaps: [],
@@ -462,6 +522,7 @@ export default {
         { key: 'swaps', label: 'admin.swaps' },
         { key: 'ratings', label: 'admin.ratings' },
         { key: 'langs', label: 'admin.languages' },
+        { key: 'support', label: 'admin.support' },
         { key: 'logs', label: 'admin.logs' },
       ],
       filters: {
@@ -573,10 +634,32 @@ export default {
     if (this.$route.query.per_page) {
       this.perPage = this.$route.query.per_page === 'all' ? 99999 : Number(this.$route.query.per_page)
     }
-    await this.loadTab(this.activeTab)
+
+    try {
+      const { data } = await axios.get('/api/admin/status')
+      await this.onUnlocked(data)
+    } catch {
+      this.$router.push({ name: 'dashboard' })
+    }
   },
 
   methods: {
+    showToast,
+
+    async onUnlocked(status) {
+      if (status.unlocked === false) {
+        this.gate = 'locked'
+        return
+      }
+      if (status.must_change) {
+        this.gate = 'must_change'
+        return
+      }
+      this.gate = 'ready'
+      this.loaded = {}
+      await this.loadTab(this.activeTab)
+    },
+
     paginate(list, page) {
       const start = (page - 1) * this.perPage
       return list.slice(start, start + this.perPage)
@@ -630,8 +713,10 @@ export default {
         const { data } = await axios.get(endpoints[key])
         this[targets[key]] = data
         this.loaded[key] = true
-      } catch {
-        this.error = this.t('admin.loadError')
+      } catch (err) {
+        // 8h beigušās — atkal prasa paroli
+        if (err.response?.data?.admin_locked) this.gate = 'locked'
+        else this.error = this.t('admin.loadError')
       } finally {
         this.loading[key] = false
       }
@@ -648,11 +733,22 @@ export default {
       u.is_blocked = false
     },
 
-    async makeAdmin(u) {
-      if (!confirm(this.t('admin.confirm.makeAdmin').replace('{name}', u.name))) return
-      await axios.patch(`/api/admin/users/${u.id}/make-admin`)
-      u.is_admin = true
-      u.is_blocked = false
+    makeAdmin(u) {
+      this.makeAdminUser = u
+      this.tempPassword = ''
+      this.makeAdminError = ''
+    },
+
+    async confirmMakeAdmin() {
+      const u = this.makeAdminUser
+      try {
+        await axios.patch(`/api/admin/users/${u.id}/make-admin`, { admin_password: this.tempPassword })
+        u.is_admin = true
+        u.is_blocked = false
+        this.makeAdminUser = null
+      } catch {
+        this.makeAdminError = this.t('dash.genericError')
+      }
     },
 
     async removeAdmin(u) {

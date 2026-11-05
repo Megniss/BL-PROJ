@@ -3,11 +3,12 @@
     <div class="container-xl d-flex align-items-center py-2 gap-3">
 
       <div class="d-flex align-items-center gap-2 me-auto" role="button" tabindex="0"
-        @click="$router.push({ name: 'home' })"
-        @keyup.enter="$router.push({ name: 'home' })"
+        @click="$router.push({ name: admin ? 'admin' : 'home' })"
+        @keyup.enter="$router.push({ name: admin ? 'admin' : 'home' })"
         style="cursor:pointer" aria-label="BookLoop — doties uz sākumlapu">
         <span class="brand-icon" aria-hidden="true">⇄</span>
         <span class="brand-name">BookLoop</span>
+        <span v-if="admin" class="nav-admin-tag">Admin</span>
       </div>
 
       <div class="d-flex align-items-center gap-2">
@@ -61,15 +62,17 @@
           <div v-if="dropdownOpen" class="nav-dropdown">
             <div class="nav-dropdown-name">{{ authStore.user.name }}</div>
             <div class="nav-dropdown-divider"></div>
-            <button class="nav-dropdown-item" @click="go('profile')">{{ t('nav.profile') }}</button>
-            <button class="nav-dropdown-item" @click="go('dashboard')">{{ t('nav.myLibrary') }}</button>
-            <button class="nav-dropdown-item" @click="go('browse')">{{ t('nav.browse') }}</button>
-            <button class="nav-dropdown-item" @click="go('messages')">{{ t('nav.messages') }}</button>
-            <button class="nav-dropdown-item" @click="go('support')">{{ t('nav.support') }}</button>
-            <button class="nav-dropdown-item" @click="go('settings')">{{ t('nav.settings') }}</button>
-            <template v-if="authStore.user?.is_admin">
-              <div class="nav-dropdown-divider"></div>
-              <button class="nav-dropdown-item nav-dropdown-admin" @click="go('admin')">{{ t('nav.admin') }}</button>
+            <template v-if="admin">
+              <button class="nav-dropdown-item" @click="adminPassword">{{ t('adminAuth.changeBtn') }}</button>
+              <button class="nav-dropdown-item" @click="leaveAdmin">{{ t('adminAuth.profile') }}</button>
+            </template>
+            <template v-else>
+              <button class="nav-dropdown-item" @click="go('profile')">{{ t('nav.profile') }}</button>
+              <button class="nav-dropdown-item" @click="go('dashboard')">{{ t('nav.myLibrary') }}</button>
+              <button class="nav-dropdown-item" @click="go('browse')">{{ t('nav.browse') }}</button>
+              <button class="nav-dropdown-item" @click="go('messages')">{{ t('nav.messages') }}</button>
+              <button class="nav-dropdown-item" @click="go('support')">{{ t('nav.support') }}</button>
+              <button class="nav-dropdown-item" @click="go('settings')">{{ t('nav.settings') }}</button>
             </template>
             <div class="nav-dropdown-divider"></div>
             <button class="nav-dropdown-item nav-dropdown-logout" @click="logout">{{ t('nav.logout') }}</button>
@@ -88,13 +91,18 @@
       <slot />
       <template v-if="authStore.user">
         <div class="nav-mobile-divider mt-1"></div>
-        <button class="nav-mob-link" @click="go('profile')">{{ t('nav.profile') }}</button>
-        <button class="nav-mob-link" @click="go('dashboard')">{{ t('nav.myLibrary') }}</button>
-        <button class="nav-mob-link" @click="go('browse')">{{ t('nav.browse') }}</button>
-        <button class="nav-mob-link" @click="go('messages')">{{ t('nav.messages') }}</button>
-        <button class="nav-mob-link" @click="go('support')">{{ t('nav.support') }}</button>
-        <button class="nav-mob-link" @click="go('settings')">{{ t('nav.settings') }}</button>
-        <button v-if="authStore.user?.is_admin" class="nav-mob-link nav-mob-admin" @click="go('admin')">{{ t('nav.admin') }}</button>
+        <template v-if="admin">
+          <button class="nav-mob-link" @click="adminPassword">{{ t('adminAuth.changeBtn') }}</button>
+          <button class="nav-mob-link" @click="leaveAdmin">{{ t('adminAuth.profile') }}</button>
+        </template>
+        <template v-else>
+          <button class="nav-mob-link" @click="go('profile')">{{ t('nav.profile') }}</button>
+          <button class="nav-mob-link" @click="go('dashboard')">{{ t('nav.myLibrary') }}</button>
+          <button class="nav-mob-link" @click="go('browse')">{{ t('nav.browse') }}</button>
+          <button class="nav-mob-link" @click="go('messages')">{{ t('nav.messages') }}</button>
+          <button class="nav-mob-link" @click="go('support')">{{ t('nav.support') }}</button>
+          <button class="nav-mob-link" @click="go('settings')">{{ t('nav.settings') }}</button>
+        </template>
         <div class="nav-mobile-divider"></div>
         <button class="nav-mob-link nav-mob-logout" @click="logout">{{ t('nav.logout') }}</button>
       </template>
@@ -111,6 +119,8 @@ import axios from 'axios'
 export default {
   name: 'AppNavbar',
   mixins: [langMixin],
+  props: { admin: Boolean },
+  emits: ['admin-password'],
   data() {
     return { themeStore, authStore, menuOpen: false, dropdownOpen: false, langDropOpen: false }
   },
@@ -153,6 +163,18 @@ export default {
       this.dropdownOpen = false
       this.menuOpen = false
       this.$router.push({ name })
+    },
+
+    adminPassword() {
+      this.dropdownOpen = false
+      this.menuOpen = false
+      this.$emit('admin-password')
+    },
+
+    // aizver admin paneli un iet uz profilu
+    async leaveAdmin() {
+      try { await axios.post('/api/admin/lock') } catch { /* ignorē */ }
+      this.go('dashboard')
     },
 
     async logout() {

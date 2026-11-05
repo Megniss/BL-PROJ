@@ -90,11 +90,19 @@ class AdminController extends Controller
 
     public function makeAdmin(Request $request, User $user)
     {
-        if ($user->id === $request->user()->id) {
-            return response()->json(['message' => 'You are already an admin.'], 422);
+        if ($user->id === $request->user()->id || $user->deleted_at) {
+            return response()->json(['message' => 'Cannot make this user an admin.'], 422);
         }
 
-        $user->update(['is_admin' => true, 'is_blocked' => false]);
+        // pagaidu admin parole, jaunais admins to nomaina pirmajā ieejā
+        $request->validate(['admin_password' => ['required', 'string', 'min:12']]);
+
+        $user->forceFill([
+            'is_admin' => true,
+            'is_blocked' => false,
+            'admin_password' => $request->admin_password,
+            'admin_password_change' => true,
+        ])->save();
         $this->log($request, 'make_admin', 'user', $user->id, $user->name);
         return response()->json(['message' => 'Admin rights granted.']);
     }
@@ -105,7 +113,14 @@ class AdminController extends Controller
             return response()->json(['message' => 'Cannot remove your own admin rights.'], 422);
         }
 
-        $user->update(['is_admin' => false]);
+        $user->forceFill([
+            'is_admin' => false,
+            'admin_password' => null,
+            'admin_password_change' => false,
+        ])->save();
+
+        // aizver admin paneli visās viņa sesijās
+        $user->tokens()->update(['admin_until' => null]);
         $this->log($request, 'remove_admin', 'user', $user->id, $user->name);
         return response()->json(['message' => 'Admin rights removed.']);
     }
