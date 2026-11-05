@@ -13,6 +13,10 @@
         <p class="modal-desc mb-3">{{ t('adminAuth.enterText') }}</p>
         <AdminUnlock @unlocked="onUnlocked" />
       </template>
+      <template v-else-if="gate === 'error'">
+        <div class="alert alert-danger mb-3">{{ t('admin.loadError') }}</div>
+        <button class="btn btn-primary" @click="checkStatus">{{ t('adminAuth.retry') }}</button>
+      </template>
       <template v-else-if="gate === 'must_change'">
         <h1 class="modal-title mb-2">{{ t('adminAuth.mustChangeTitle') }}</h1>
         <p class="modal-desc mb-3">{{ t('adminAuth.mustChangeText') }}</p>
@@ -635,16 +639,23 @@ export default {
       this.perPage = this.$route.query.per_page === 'all' ? 99999 : Number(this.$route.query.per_page)
     }
 
-    try {
-      const { data } = await axios.get('/api/admin/status')
-      await this.onUnlocked(data)
-    } catch {
-      this.$router.push({ name: 'dashboard' })
-    }
+    await this.checkStatus()
   },
 
   methods: {
     showToast,
+
+    async checkStatus() {
+      this.gate = 'checking'
+      try {
+        const { data } = await axios.get('/api/admin/status')
+        await this.onUnlocked(data)
+      } catch (err) {
+        // uz profilu sūta tikai tad, ja tiešām nav admins
+        if (err.response?.status === 403) this.$router.push({ name: 'dashboard' })
+        else this.gate = 'error'
+      }
+    },
 
     async onUnlocked(status) {
       if (status.unlocked === false) {

@@ -51,7 +51,7 @@
               {{ convo.user.name }}
               <span v-if="convo.is_blocked" class="convo-blocked-tag">{{ t('messages.blockedTag') }}</span>
             </div>
-            <div class="convo-last">{{ convo.last_message?.body }}</div>
+            <div class="convo-last">{{ convo.last_message?.body || (convo.last_message?.image ? '📷 ' + t('messages.photo') : '') }}</div>
           </div>
           <div v-if="convo.unread > 0" class="convo-badge">{{ convo.unread }}</div>
         </div>
@@ -115,7 +115,18 @@
                 </template>
 
                 <template v-else>
-                  <p class="msg-body">{{ msg.body }}</p>
+                  <img
+                    v-if="msg.image_url"
+                    :src="msg.image_url"
+                    class="msg-image"
+                    :alt="t('messages.photo')"
+                    loading="lazy"
+                    @click="lightbox = msg.image_url"
+                    @load="onImageLoad"
+                    @error="refreshImage(msg)"
+                  />
+                  <p v-else-if="msg.image_removed" class="msg-image-removed">{{ t('messages.photoRemoved') }}</p>
+                  <p v-if="msg.body" class="msg-body">{{ msg.body }}</p>
                   <div class="msg-meta">
                     <span v-if="msg.edited_at" class="msg-edited">{{ t('messages.edited') }}</span>
                     <span class="msg-time">{{ formatTime(msg.created_at) }}</span>
@@ -135,29 +146,55 @@
 
           <div v-else-if="activeUserBlocked" class="thread-blocked-notice">{{ t('msg.blocked') }}</div>
 
-          <div v-else class="thread-compose">
-            <textarea
-              v-model="compose"
-              class="compose-input"
-              :placeholder="t('messages.placeholder')"
-              aria-label="Rakstīt ziņu"
-              rows="1"
-              @keydown.enter.exact.prevent="sendMessage"
-              @input="autoResize"
-              ref="composeInput"
-            ></textarea>
-            <button
-              class="compose-send-btn"
-              :disabled="!compose.trim() || sending"
-              :class="{ active: compose.trim() }"
-              @click="sendMessage"
-              aria-label="Send"
-            >{{ sending ? '…' : '➤' }}</button>
-          </div>
+          <template v-else>
+            <!-- bilde pirms sūtīšanas -->
+            <div v-if="pendingPreview || imageError" class="compose-image-preview">
+              <div v-if="pendingPreview" class="compose-image-thumb">
+                <img :src="pendingPreview" :alt="t('messages.photo')" />
+                <button class="compose-image-remove" @click="clearImage" :aria-label="t('messages.removePhoto')">✕</button>
+              </div>
+              <span v-if="imageError" class="text-danger small">{{ imageError }}</span>
+            </div>
+
+            <div class="thread-compose">
+              <input ref="imageInput" type="file" accept="image/*" class="d-none" @change="onImagePicked" />
+              <button
+                class="compose-attach-btn"
+                :disabled="sending || preparingImage"
+                @click="$refs.imageInput.click()"
+                :aria-label="t('messages.addPhoto')"
+                :title="t('messages.addPhoto')"
+              >📎</button>
+              <textarea
+                v-model="compose"
+                class="compose-input"
+                :placeholder="t('messages.placeholder')"
+                aria-label="Rakstīt ziņu"
+                rows="1"
+                @keydown.enter.exact.prevent="sendMessage"
+                @input="autoResize"
+                @paste="onPaste"
+                ref="composeInput"
+              ></textarea>
+              <button
+                class="compose-send-btn"
+                :disabled="!canSend"
+                :class="{ active: canSend }"
+                @click="sendMessage"
+                aria-label="Send"
+              >{{ sending || preparingImage ? '…' : '➤' }}</button>
+            </div>
+          </template>
         </template>
 
       </main>
     </div>
+
+    <Teleport to="body">
+      <div v-if="lightbox" class="msg-lightbox" @click="lightbox = null">
+        <img :src="lightbox" :alt="t('messages.photo')" />
+      </div>
+    </Teleport>
 
   </div>
 </template>
@@ -167,6 +204,7 @@ import axios from 'axios'
 import { authStore } from '../authStore.js'
 import langMixin from '../langMixin.js'
 import AppNavbar from './AppNavbar.vue'
+import { resizeImage } from '../imageResize.js'
 
 export default {
   name: 'Messages',
@@ -182,6 +220,11 @@ export default {
       activeUser: null,
       messages: [],
       compose: '',
+      pendingImage: null,
+      pendingPreview: null,
+      preparingImage: false,
+      imageError: '',
+      lightbox: null,
       loadingConvos: true,
       loadingThread: false,
       sending: false,
@@ -200,6 +243,7 @@ export default {
 
   async mounted() {
     document.addEventListener('click', this.closeCtxMenu)
+    document.addEventListener('keydown', this.onKeydown)
     await this.fetchConversations()
 
     // ja atnācām no grāmatas kartītes vai profila, uzreiz atver sarunu
@@ -213,6 +257,14 @@ export default {
   beforeUnmount() {
     clearInterval(this.pollTimer)
     document.removeEventListener('click', this.closeCtxMenu)
+    document.removeEventListener('keydown', this.onKeydown)
+    this.clearImage()
+  },
+
+  computed: {
+    canSend() {
+      return (this.compose.trim() || this.pendingImage) && !this.sending && !this.preparingImage
+    },
   },
 
   methods: {
@@ -290,10 +342,10 @@ export default {
         const { data } = await axios.get(`/api/messages/${this.activeUser.id}`)
         const fresh = data.filter(m => m.id > lastId)
         if (fresh.length === 0) return
-        this.messages.push(...fresh)
+        this.addMessages(fresh)
         const convo = this.conversations.find(c => c.user.id === this.activeUser.id)
         if (convo) {
-          convo.last_message = { body: fresh.at(-1).body }
+          convo.last_message = { body: fresh.at(-1).body, image: !!fresh.at(-1).image_url }
           convo.unread = 0
         }
         await this.$nextTick()
@@ -302,17 +354,21 @@ export default {
     },
 
     async sendMessage() {
+      if (!this.canSend) return
       const body = this.compose.trim()
-      if (!body || this.sending) return
+      const image = !!this.pendingImage
+
+      const form = new FormData()
+      form.append('to_user_id', this.activeUser.id)
+      form.append('body', body)
+      if (this.pendingImage) form.append('image', this.pendingImage)
 
       this.sending = true
       try {
-        const { data } = await axios.post('/api/messages', {
-          to_user_id: this.activeUser.id,
-          body,
-        })
-        this.messages.push(data)
+        const { data } = await axios.post('/api/messages', form)
+        this.addMessages([data])
         this.compose = ''
+        this.clearImage()
         this.$nextTick(() => {
           if (this.$refs.composeInput) {
             this.$refs.composeInput.style.height = 'auto'
@@ -322,11 +378,11 @@ export default {
         // atjaunina vai izveido ierakstu sānbārā
         const convo = this.conversations.find(c => c.user.id === this.activeUser.id)
         if (convo) {
-          convo.last_message = { body, created_at: data.created_at }
+          convo.last_message = { body, image, created_at: data.created_at }
         } else {
           this.conversations.unshift({
             user:         this.activeUser,
-            last_message: { body, created_at: data.created_at },
+            last_message: { body, image, created_at: data.created_at },
             unread:       0,
           })
         }
@@ -338,6 +394,71 @@ export default {
       } finally {
         this.sending = false
       }
+    },
+
+    // pārbaude ik pēc 3s var atrast ziņu ātrāk par sūtīšanas atbildi
+    addMessages(list) {
+      const ids = new Set(this.messages.map(m => m.id))
+      this.messages.push(...list.filter(m => !ids.has(m.id)))
+    },
+
+    async attachImage(file) {
+      this.imageError = ''
+      if (!file.type.startsWith('image/')) return
+
+      this.preparingImage = true
+      try {
+        const resized = await resizeImage(file)
+        if (resized.size > 5 * 1024 * 1024) throw new Error('too big')
+        this.clearImage()
+        this.pendingImage = resized
+        this.pendingPreview = URL.createObjectURL(resized)
+      } catch {
+        this.imageError = this.t('messages.photoError')
+      } finally {
+        this.preparingImage = false
+      }
+    },
+
+    onImagePicked(e) {
+      const file = e.target.files?.[0]
+      e.target.value = ''
+      if (file) this.attachImage(file)
+    },
+
+    // Ctrl+V ar bildi
+    onPaste(e) {
+      const item = [...(e.clipboardData?.items ?? [])].find(i => i.type.startsWith('image/'))
+      if (!item) return
+      e.preventDefault()
+      this.attachImage(item.getAsFile())
+    },
+
+    clearImage() {
+      if (this.pendingPreview) URL.revokeObjectURL(this.pendingPreview)
+      this.pendingImage = null
+      this.pendingPreview = null
+    },
+
+    onKeydown(e) {
+      if (e.key === 'Escape') this.lightbox = null
+    },
+
+    // bilde ielādējas vēlāk par tekstu, tāpēc vēlreiz noritina uz leju
+    onImageLoad() {
+      const el = this.$refs.messageList
+      if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 400) this.scrollToBottom()
+    },
+
+    // saite novecojusi — paņem jaunu
+    async refreshImage(msg) {
+      if (msg.imageRetried) return
+      msg.imageRetried = true
+      try {
+        const { data } = await axios.get(`/api/messages/${this.activeUser.id}`)
+        const fresh = data.find(m => m.id === msg.id)
+        if (fresh?.image_url) msg.image_url = fresh.image_url
+      } catch { /* ignorē */ }
     },
 
     scrollToBottom() {
@@ -409,7 +530,7 @@ export default {
 
     async saveEdit(msg) {
       const body = this.editBody.trim()
-      if (!body || this.editSaving) return
+      if ((!body && !msg.image_url) || this.editSaving) return
       this.editSaving = true
       try {
         const { data } = await axios.put(`/api/messages/${msg.id}`, { body })

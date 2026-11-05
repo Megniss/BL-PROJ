@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AdminLog;
 use App\Models\Block;
 use App\Models\Book;
+use App\Models\Message;
 use App\Models\SwapRequest;
 use App\Models\User;
 use App\Notifications\SwapUnavailable;
@@ -123,6 +124,7 @@ class ProfileController extends Controller
 
         $books = $user->books()->get();
         $oldEmail = $user->email;
+        $chatImages = Message::where('from_user_id', $user->id)->whereNotNull('image_path')->pluck('image_path');
 
         DB::transaction(function () use ($user, $pending, $books, $oldEmail, $request) {
             // admina dzēšanu ieraksta žurnālā
@@ -147,6 +149,11 @@ class ProfileController extends Controller
             // grāmatas paslēpj, lai vēsturē paliek nosaukums
             Book::where('user_id', $user->id)->update(['status' => 'Removed', 'cover_image' => null]);
 
+            // sūtītās bildes dzēš, ziņā paliek atzīme
+            Message::where('from_user_id', $user->id)
+                ->whereNotNull('image_path')
+                ->update(['image_path' => null, 'image_removed' => true]);
+
             Block::where('blocker_id', $user->id)->orWhere('blocked_id', $user->id)->delete();
             $user->notifications()->delete();
             $user->tokens()->delete();
@@ -167,6 +174,8 @@ class ProfileController extends Controller
                 'deleted_at' => now(),
             ])->save();
         });
+
+        Storage::disk('local')->delete($chatImages->all());
 
         foreach ($books as $book) {
             if ($book->cover_image) {

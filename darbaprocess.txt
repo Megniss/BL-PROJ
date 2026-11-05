@@ -192,9 +192,9 @@ jaunas lietas ko vajag:
 viena gramatas karte ar vairakiem lietotajiem
 geolocation, filtret pec tuvakaa man
 2fa TOTP vai email OTP
-chatam bildes var ielikt
 
-
+noskaidrot ka prezentes darbu
+vai caur savu pc vai caur skolas kadu hernu
 
 palaist majaslapu:
 php artisan serve --host=0.0.0.0

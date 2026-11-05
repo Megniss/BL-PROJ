@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Notifications\NewMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class MessageController extends Controller
 {
@@ -47,7 +48,7 @@ class MessageController extends Controller
 
             return [
                 'user' => ['id' => $partner->id, 'name' => $partner->name, 'deleted' => (bool) $partner->deleted_at],
-                'last_message' => ['body' => $msg->body, 'created_at' => $msg->created_at],
+                'last_message' => ['body' => $msg->body, 'image' => $msg->image_path || $msg->image_removed, 'created_at' => $msg->created_at],
                 'unread' => $unreadCounts->get($partnerId, 0),
                 'is_blocked' => $blockedIds->contains($partnerId),
             ];
@@ -80,8 +81,10 @@ class MessageController extends Controller
     {
         $data = $request->validate([
             'to_user_id' => ['required', 'integer', 'exists:users,id'],
-            'body' => ['required', 'string', 'max:2000'],
+            'body' => ['nullable', 'string', 'max:2000', 'required_without:image'],
+            'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
+        $body = trim($data['body'] ?? '');
 
         if ((int) $data['to_user_id'] === $request->user()->id) {
             return response()->json(['message' => 'You cannot message yourself.'], 422);
@@ -109,12 +112,13 @@ class MessageController extends Controller
         $message = Message::create([
             'from_user_id' => $sender->id,
             'to_user_id' => $recipient->id,
-            'body' => $data['body'],
+            'body' => $body,
+            'image_path' => $request->file('image')?->store('chat', 'local'),
         ]);
 
         if (!$hasUnread) {
             try {
-                $recipient->notify(new NewMessage($sender, $data['body']));
+                $recipient->notify(new NewMessage($sender, $body !== '' ? $body : '📷 Image'));
             } catch (\Exception $e) {}
         }
 
@@ -132,10 +136,13 @@ class MessageController extends Controller
             return response()->json(['message' => 'Cannot edit a read message.'], 422);
         }
 
-        $data = $request->validate(['body' => ['required', 'string', 'max:2000']]);
+        // ziņai ar bildi tekstu var atstāt tukšu
+        $data = $request->validate([
+            'body' => [$message->image_path ? 'nullable' : 'required', 'string', 'max:2000'],
+        ]);
 
         $message->update([
-            'body' => $data['body'],
+            'body' => trim($data['body'] ?? ''),
             'edited_at' => now(),
         ]);
 
@@ -155,6 +162,10 @@ class MessageController extends Controller
 
         $senderId = $message->from_user_id;
         $recipientId = $message->to_user_id;
+
+        if ($message->image_path) {
+            Storage::disk('local')->delete($message->image_path);
+        }
 
         $message->delete();
 

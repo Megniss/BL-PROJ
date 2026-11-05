@@ -26,6 +26,15 @@
         </div>
 
         <div class="about-card">
+          <div class="about-card-accent" style="background:#3a7ca5"></div>
+          <div class="about-card-icon">📷</div>
+          <div>
+            <h2 class="about-card-title mb-2">{{ t('privacy.images.title') }}</h2>
+            <p class="about-card-text mb-0">{{ t('privacy.images.body') }}</p>
+          </div>
+        </div>
+
+        <div class="about-card">
           <div class="about-card-accent" style="background:#e07b39"></div>
           <div class="about-card-icon">🚫</div>
           <div>

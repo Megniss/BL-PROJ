@@ -73,6 +73,10 @@
               <button class="nav-dropdown-item" @click="go('messages')">{{ t('nav.messages') }}</button>
               <button class="nav-dropdown-item" @click="go('support')">{{ t('nav.support') }}</button>
               <button class="nav-dropdown-item" @click="go('settings')">{{ t('nav.settings') }}</button>
+              <template v-if="authStore.user?.is_admin">
+                <div class="nav-dropdown-divider"></div>
+                <button class="nav-dropdown-item nav-dropdown-admin" @click="openAdmin">{{ t('adminAuth.panel') }}</button>
+              </template>
             </template>
             <div class="nav-dropdown-divider"></div>
             <button class="nav-dropdown-item nav-dropdown-logout" @click="logout">{{ t('nav.logout') }}</button>
@@ -102,6 +106,7 @@
           <button class="nav-mob-link" @click="go('messages')">{{ t('nav.messages') }}</button>
           <button class="nav-mob-link" @click="go('support')">{{ t('nav.support') }}</button>
           <button class="nav-mob-link" @click="go('settings')">{{ t('nav.settings') }}</button>
+          <button v-if="authStore.user?.is_admin" class="nav-mob-link nav-mob-admin" @click="openAdmin">{{ t('adminAuth.panel') }}</button>
         </template>
         <div class="nav-mobile-divider"></div>
         <button class="nav-mob-link nav-mob-logout" @click="logout">{{ t('nav.logout') }}</button>
@@ -169,6 +174,12 @@ export default {
       this.dropdownOpen = false
       this.menuOpen = false
       this.$emit('admin-password')
+    },
+
+    // no profila uz admin paneli — parole jāievada vienmēr no jauna
+    async openAdmin() {
+      try { await axios.post('/api/admin/lock') } catch { /* ignorē */ }
+      this.go('admin')
     },
 
     // aizver admin paneli un iet uz profilu

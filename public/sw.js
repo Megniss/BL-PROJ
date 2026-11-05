@@ -1,4 +1,4 @@
-const CACHE = 'bookloop-v1'
+const CACHE = 'bookloop-v2'
 const STATIC = ['/', '/manifest.json']
 
 self.addEventListener('install', e => {
@@ -15,9 +15,10 @@ self.addEventListener('activate', e => {
   self.clients.claim()
 })
 
-// api nekešo, pārējo mēģina no tīkla, ja neizdodas tad no keša
+// api un privātās bildes nekešo, pārējo mēģina no tīkla, ja neizdodas tad no keša
 self.addEventListener('fetch', e => {
-  if (e.request.url.includes('/api/')) return
+  const url = e.request.url
+  if (e.request.method !== 'GET' || url.includes('/api/') || url.includes('signature=')) return
 
   e.respondWith(
     fetch(e.request).then(res => {
