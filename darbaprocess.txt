@@ -189,7 +189,6 @@ Iedomājies ka lietotājs pārlūkā noklikšķina "Browse" pogu. Lūk kas notie
 
 
 jaunas lietas ko vajag:
-profile deletion (ar visiem datiem visur kur tie ir, nepazaudejot gramatas kuras ir apmainitas)
 viena gramatas karte ar vairakiem lietotajiem
 geolocation, filtret pec tuvakaa man
 2fa TOTP vai email OTP

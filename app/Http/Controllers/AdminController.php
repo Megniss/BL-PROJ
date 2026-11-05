@@ -32,6 +32,7 @@ class AdminController extends Controller
     public function users()
     {
         $users = User::withCount('books')
+            ->whereNull('deleted_at')
             ->orderBy('created_at', 'asc')
             ->get()
             ->map(fn($u) => [
@@ -50,6 +51,7 @@ class AdminController extends Controller
     public function books()
     {
         $books = Book::with('user:id,name')
+            ->where('status', '!=', 'Removed')
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(fn($b) => [
@@ -67,8 +69,8 @@ class AdminController extends Controller
 
     public function blockUser(Request $request, User $user)
     {
-        // adminiem un sev nevar bloķēt
-        if ($user->is_admin || $user->id === $request->user()->id) {
+        // adminiem, sev un dzēstiem nevar bloķēt
+        if ($user->is_admin || $user->deleted_at || $user->id === $request->user()->id) {
             return response()->json(['message' => 'Cannot block this user.'], 422);
         }
 

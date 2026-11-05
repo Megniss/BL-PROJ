@@ -210,6 +210,15 @@ export const translations = {
     'settings.blocked': 'Blocked Users',
     'settings.noBlocked': 'You have not blocked anyone.',
     'settings.unblock': 'Unblock',
+    'settings.deleteTitle': 'Delete Account',
+    'settings.deleteText': 'Your account, books and personal data will be permanently deleted. Your past swaps, ratings and messages will stay visible to others as "Deleted user". This cannot be undone.',
+    'settings.deleteBtn': 'Delete account',
+    'settings.deleteConfirmTitle': 'Are you sure?',
+    'settings.deleteConfirmText': 'Enter your password to permanently delete your account.',
+    'settings.deletePwd': 'Password',
+    'settings.deleteCancel': 'Cancel',
+    'settings.deleting': 'Deleting…',
+    'settings.deleted': 'Your account has been deleted.',
 
     // Lietotāja profils
     'up.message': 'Message',
@@ -232,6 +241,7 @@ export const translations = {
     'up.sending': 'Sending…',
     'up.sendRequest': 'Send Request',
     'msg.blocked': 'You have blocked this user. Unblock them to send messages.',
+    'msg.deletedUser': 'This user has deleted their account. You can no longer reply.',
 
     // Paziņojumi
     'notif.title': 'Notifications',
@@ -385,7 +395,7 @@ export const translations = {
     'privacy.title': 'Privacy Policy',
     'privacy.subtitle': 'How we handle your account and data on BookLoop',
     'privacy.deletion.title': 'Account Deletion',
-    'privacy.deletion.body': 'Accounts on BookLoop can be deleted in the user profile settings at the very bottom, if you wish to delete your account, all your data will also be permenently deleted.',
+    'privacy.deletion.body': 'You can delete your account at the bottom of the Settings page by confirming with your password. Your name, email, password, books, book covers, notifications and block list are permanently deleted, and pending swap requests are cancelled. Completed swaps, ratings, chat messages and support requests stay visible to the other people involved, but your name is replaced with "Deleted user". Admin accounts cannot be deleted this way.',
     'privacy.blocking.title': 'Account Blocking',
     'privacy.blocking.body': 'An administrator may block your account at any point if your activity violates the platform rules. When blocked, you will receive an email explaining the reason. Blocked accounts cannot log in or interact with the platform until the block is lifted.',
     'privacy.contact.title': 'Questions?',
@@ -733,6 +743,15 @@ export const translations = {
     'settings.blocked': 'Bloķētie lietotāji',
     'settings.noBlocked': 'Tu neesi nevienu bloķējis.',
     'settings.unblock': 'Atbloķēt',
+    'settings.deleteTitle': 'Dzēst kontu',
+    'settings.deleteText': 'Tavs konts, grāmatas un personīgie dati tiks neatgriezeniski dzēsti. Iepriekšējās apmaiņas, vērtējumi un ziņas citiem paliks redzamas ar vārdu "Deleted user". To nevar atsaukt.',
+    'settings.deleteBtn': 'Dzēst kontu',
+    'settings.deleteConfirmTitle': 'Vai tiešām?',
+    'settings.deleteConfirmText': 'Ievadi savu paroli, lai neatgriezeniski dzēstu kontu.',
+    'settings.deletePwd': 'Parole',
+    'settings.deleteCancel': 'Atcelt',
+    'settings.deleting': 'Dzēš…',
+    'settings.deleted': 'Tavs konts ir dzēsts.',
 
     // Lietotāja profils
     'up.message': 'Rakstīt',
@@ -755,6 +774,7 @@ export const translations = {
     'up.sending': 'Sūta…',
     'up.sendRequest': 'Nosūtīt Pieprasījumu',
     'msg.blocked': 'Tu esi bloķējis šo lietotāju. Atbloķē, lai sūtītu ziņas.',
+    'msg.deletedUser': 'Šis lietotājs ir dzēsis savu kontu. Atbildēt vairs nevar.',
 
     // Paziņojumi
     'notif.title': 'Paziņojumi',
@@ -908,7 +928,7 @@ export const translations = {
     'privacy.title': 'Privātuma politika',
     'privacy.subtitle': 'Kā mēs apstrādājam tavu kontu un datus BookLoop',
     'privacy.deletion.title': 'Konta dzēšana',
-    'privacy.deletion.body': 'BookLoop kontus var dzēst lietotāja profila iestatījumos pašā apakšā. Ja vēlaties dzēst savu kontu, visi jūsu dati tiks neatgriezeniski dzēsti.',
+    'privacy.deletion.body': 'Kontu var dzēst Iestatījumu lapas apakšā, apstiprinot ar paroli. Jūsu vārds, e-pasts, parole, grāmatas, grāmatu vāki, paziņojumi un bloķēto saraksts tiek neatgriezeniski dzēsti, un gaidošie apmaiņas pieprasījumi tiek atcelti. Notikušās apmaiņas, vērtējumi, čata ziņas un atbalsta pieprasījumi paliek redzami citiem iesaistītajiem, bet jūsu vārds tiek aizstāts ar "Deleted user". Administratoru kontus šādi dzēst nevar.',
     'privacy.blocking.title': 'Konta bloķēšana',
     'privacy.blocking.body': 'Administrators var bloķēt tavu kontu jebkurā brīdī, ja tava darbība pārkāpj platformas noteikumus. Bloķēšanas gadījumā saņemsi e-pastu ar iemesla skaidrojumu. Bloķēts konts nevar ielogoties vai izmantot platformu līdz bloķēšana tiek atcelta.',
     'privacy.contact.title': 'Jautājumi?',

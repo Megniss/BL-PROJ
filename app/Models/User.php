@@ -51,6 +51,7 @@ class User extends Authenticatable
             'show_swap_history' => 'boolean',
             'is_admin' => 'boolean',
             'is_blocked' => 'boolean',
+            'deleted_at' => 'datetime',
         ];
     }
 }

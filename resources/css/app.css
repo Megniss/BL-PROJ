@@ -1824,6 +1824,7 @@ body {
   padding-top: 12px;
 }
 .settings-divider span { font-weight: 400; }
+.settings-card--danger { border-color: rgba(220,53,69,0.4); }
 .settings-blocked-row {
   display: flex;
   align-items: center;

@@ -209,7 +209,7 @@ class BookController extends Controller
     {
         return response()->json([
             'books' => Book::where('status', 'Available')->count(),
-            'users' => User::count(),
+            'users' => User::whereNull('deleted_at')->count(),
         ]);
     }
 }

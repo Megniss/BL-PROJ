@@ -67,7 +67,7 @@
       </div>
 
       <!-- bloķētie -->
-      <div class="settings-card">
+      <div class="settings-card mb-4">
         <h2 class="settings-section-title">{{ t('settings.blocked') }}</h2>
 
         <div v-if="blockedLoading" class="text-muted small py-2">{{ t('profile.loading') }}</div>
@@ -83,14 +83,50 @@
         </div>
       </div>
 
+      <!-- konta dzēšana -->
+      <div v-if="!authStore.user?.is_admin" class="settings-card settings-card--danger">
+        <h2 class="settings-section-title text-danger">{{ t('settings.deleteTitle') }}</h2>
+        <p class="text-muted small mb-3">{{ t('settings.deleteText') }}</p>
+        <button class="btn btn-outline-danger" @click="openDelete">{{ t('settings.deleteBtn') }}</button>
+      </div>
+
     </div>
     <AppFooter />
+
+    <Teleport to="body">
+      <div v-if="deleteOpen" class="modal-overlay" @click.self="closeDelete">
+        <form class="modal-card modal-card--sm" @submit.prevent="deleteAccount">
+          <h2 class="modal-title mb-2">{{ t('settings.deleteConfirmTitle') }}</h2>
+          <p class="modal-desc mb-3">{{ t('settings.deleteConfirmText') }}</p>
+
+          <label for="delete-pwd" class="form-label fw-semibold">{{ t('settings.deletePwd') }}</label>
+          <input
+            id="delete-pwd"
+            ref="deletePwd"
+            v-model="deletePassword"
+            class="form-control"
+            :class="{ 'is-invalid': deleteError }"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
+          <div v-if="deleteError" class="invalid-feedback">{{ deleteError }}</div>
+
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button type="button" class="btn btn-outline-secondary" @click="closeDelete">{{ t('settings.deleteCancel') }}</button>
+            <button type="submit" class="btn btn-danger" :disabled="!deletePassword || deleting">
+              {{ deleting ? t('settings.deleting') : t('settings.deleteBtn') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
-import { authStore, updateUser } from '../authStore.js'
+import { authStore, updateUser, clearAuth } from '../authStore.js'
 import { showToast } from '../toast.js'
 import AppNavbar from './AppNavbar.vue'
 import AppFooter from './AppFooter.vue'
@@ -120,6 +156,11 @@ export default {
 
       blockedUsers: [],
       blockedLoading: true,
+
+      deleteOpen: false,
+      deletePassword: '',
+      deleteError: '',
+      deleting: false,
     }
   },
 
@@ -179,6 +220,36 @@ export default {
         await axios.delete(`/api/blocks/${user.id}`)
         this.blockedUsers = this.blockedUsers.filter(u => u.id !== user.id)
       } catch { /* ignore */ }
+    },
+
+    openDelete() {
+      this.deleteOpen = true
+      this.deletePassword = ''
+      this.deleteError = ''
+      this.$nextTick(() => this.$refs.deletePwd?.focus())
+    },
+
+    closeDelete() {
+      if (this.deleting) return
+      this.deleteOpen = false
+      this.deletePassword = ''
+    },
+
+    async deleteAccount() {
+      this.deleting = true
+      this.deleteError = ''
+      try {
+        await axios.delete('/api/profile', { data: { password: this.deletePassword } })
+        clearAuth()
+        showToast(this.t('settings.deleted'))
+        this.$router.push({ name: 'home' })
+      } catch (err) {
+        // servera kļūdas lietotājam nerāda
+        const errors = err.response?.data?.errors
+        this.deleteError = errors ? Object.values(errors).flat()[0] : this.t('dash.genericError')
+      } finally {
+        this.deleting = false
+      }
     },
   }
 }

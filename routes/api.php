@@ -35,6 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::patch('/profile', [ProfileController::class, 'update']);
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->middleware('throttle:5,1');
     Route::patch('/profile/privacy', [ProfileController::class, 'updatePrivacy']);
     Route::get('/profile/history', [ProfileController::class, 'history']);
     Route::get('/notifications', [ProfileController::class, 'notifications']);

@@ -2,9 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Block;
+use App\Models\Book;
 use App\Models\SwapRequest;
+use App\Models\User;
+use App\Notifications\SwapUnavailable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 
 class ProfileController extends Controller
@@ -84,6 +91,80 @@ class ProfileController extends Controller
             'show_swaps' => $user->show_swaps,
             'show_swap_history' => $user->show_swap_history,
         ]);
+    }
+
+    // konta dzēšana — lietotājs tiek anonimizēts, vēsture paliek
+    public function destroy(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->is_admin) {
+            return response()->json(['message' => 'Admin accounts cannot be deleted.'], 403);
+        }
+
+        $request->validate(['password' => ['required', 'string']]);
+
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'errors' => ['password' => ['Password is incorrect.']],
+            ], 422);
+        }
+
+        $pending = SwapRequest::where('status', 'pending')
+            ->where(fn($q) => $q->where('requester_id', $user->id)->orWhere('owner_id', $user->id))
+            ->with(['offeredBook', 'wantedBook'])
+            ->get();
+
+        $books = $user->books()->get();
+        $oldEmail = $user->email;
+
+        DB::transaction(function () use ($user, $pending, $books, $oldEmail) {
+            // noraida gaidošās apmaiņas, otra grāmata atkal brīva
+            foreach ($pending as $swap) {
+                $otherBook = $swap->requester_id === $user->id ? $swap->wanted_book_id : $swap->offered_book_id;
+                Book::where('id', $otherBook)->update(['status' => 'Available']);
+                $swap->update(['status' => 'declined']);
+            }
+
+            // grāmatas paslēpj, lai vēsturē paliek nosaukums
+            Book::where('user_id', $user->id)->update(['status' => 'Removed', 'cover_image' => null]);
+
+            Block::where('blocker_id', $user->id)->orWhere('blocked_id', $user->id)->delete();
+            $user->notifications()->delete();
+            $user->tokens()->delete();
+            DB::table('password_reset_tokens')->where('email', $oldEmail)->delete();
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+
+            $user->forceFill([
+                'name' => 'Deleted user',
+                'email' => "deleted-{$user->id}@deleted.invalid",
+                'password' => Hash::make(Str::random(40)),
+                'remember_token' => null,
+                'show_joined' => false,
+                'show_swaps' => false,
+                'show_swap_history' => false,
+                'deleted_at' => now(),
+            ])->save();
+        });
+
+        foreach ($books as $book) {
+            if ($book->cover_image) {
+                Storage::disk('public')->delete($book->cover_image);
+            }
+        }
+
+        // paziņo otram lietotājam
+        foreach ($pending as $swap) {
+            $isRequester = $swap->requester_id === $user->id;
+            $other = User::find($isRequester ? $swap->owner_id : $swap->requester_id);
+            $title = $isRequester ? $swap->wantedBook?->title : $swap->offeredBook?->title;
+
+            try {
+                $other?->notify(new SwapUnavailable($title ?? ''));
+            } catch (\Exception $e) {}
+        }
+
+        return response()->json(null, 204);
     }
 
     public function history(Request $request)

@@ -46,7 +46,7 @@ class MessageController extends Controller
             if (!$partner) return null;
 
             return [
-                'user' => ['id' => $partner->id, 'name' => $partner->name],
+                'user' => ['id' => $partner->id, 'name' => $partner->name, 'deleted' => (bool) $partner->deleted_at],
                 'last_message' => ['body' => $msg->body, 'created_at' => $msg->created_at],
                 'unread' => $unreadCounts->get($partnerId, 0),
                 'is_blocked' => $blockedIds->contains($partnerId),
@@ -95,6 +95,10 @@ class MessageController extends Controller
 
         $sender = $request->user();
         $recipient = User::find($data['to_user_id']);
+
+        if ($recipient->deleted_at) {
+            return response()->json(['message' => 'This user has deleted their account.'], 422);
+        }
 
         // nesūta notifikāciju ja jau ir nelasīta
         $hasUnread = Message::where('from_user_id', $sender->id)

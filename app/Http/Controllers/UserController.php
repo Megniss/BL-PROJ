@@ -18,6 +18,7 @@ class UserController extends Controller
 
         $users = User::withCount(['books' => fn($q) => $q->where('status', 'Available')])
             ->where('is_blocked', false)
+            ->whereNull('deleted_at')
             ->when($authUser, fn($q) => $q->where('id', '!=', $authUser->id))
             ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
             ->when($blockedIds->isNotEmpty(), fn($q) => $q->whereNotIn('id', $blockedIds))
@@ -39,6 +40,10 @@ class UserController extends Controller
     // publiskais profils
     public function show(User $user)
     {
+        if ($user->deleted_at) {
+            abort(404);
+        }
+
         $authUser = auth('sanctum')->user();
 
         $books = $user->books()

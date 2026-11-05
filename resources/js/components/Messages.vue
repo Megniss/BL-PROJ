@@ -71,10 +71,10 @@
               class="thread-user-link"
               role="button"
               tabindex="0"
-              @click="$router.push({ name: 'userProfile', params: { id: activeUser.id } })"
-              @keyup.enter="$router.push({ name: 'userProfile', params: { id: activeUser.id } })"
+              @click="!activeUser.deleted && $router.push({ name: 'userProfile', params: { id: activeUser.id } })"
+              @keyup.enter="!activeUser.deleted && $router.push({ name: 'userProfile', params: { id: activeUser.id } })"
             >{{ activeUser.name }}</span>
-            <button class="thread-block-btn" :class="{ blocked: activeUserBlocked }" @click="toggleBlock">
+            <button v-if="!activeUser.deleted" class="thread-block-btn" :class="{ blocked: activeUserBlocked }" @click="toggleBlock">
               {{ activeUserBlocked ? t('up.unblock') : t('up.block') }}
             </button>
           </div>
@@ -131,7 +131,9 @@
             </div>
           </div>
 
-          <div v-if="activeUserBlocked" class="thread-blocked-notice">{{ t('msg.blocked') }}</div>
+          <div v-if="activeUser.deleted" class="thread-blocked-notice">{{ t('msg.deletedUser') }}</div>
+
+          <div v-else-if="activeUserBlocked" class="thread-blocked-notice">{{ t('msg.blocked') }}</div>
 
           <div v-else class="thread-compose">
             <textarea
