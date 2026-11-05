@@ -23,7 +23,10 @@
             <div class="up-avatar">{{ profile.name[0].toUpperCase() }}</div>
             <div class="flex-grow-1">
               <h1 class="h4 fw-bold mb-1">{{ profile.name }}</h1>
-              <p v-if="profile.joined" class="text-muted mb-3 small">{{ t('profile.memberSince') }} {{ formatDate(profile.joined) }}</p>
+              <p v-if="profile.joined" class="text-muted mb-1 small">{{ t('profile.memberSince') }} {{ formatDate(profile.joined) }}</p>
+              <p v-if="profile.distance_km !== null && profile.distance_km !== undefined" class="text-muted mb-3 small">
+                📍 {{ t('location.fromYou').replace('{d}', formatDistance(profile.distance_km)) }}
+              </p>
               <div class="d-flex gap-4">
                 <div>
                   <div class="up-stat-num">{{ profile.books }}</div>
@@ -129,6 +132,7 @@ import AppFooter from './AppFooter.vue'
 import { coverColor } from '../coverColor.js'
 import { conditionClass } from '../conditionClass.js'
 import langMixin from '../langMixin.js'
+import { formatDistance } from '../distance.js'
 
 export default {
   name: 'UserProfile',
@@ -162,6 +166,8 @@ export default {
   },
 
   methods: {
+    formatDistance,
+
     async fetchProfile() {
       this.loading = true
       this.error = ''

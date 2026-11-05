@@ -66,6 +66,12 @@
         </div>
       </div>
 
+      <!-- atrašanās vieta -->
+      <div class="settings-card mb-4">
+        <h2 class="settings-section-title">{{ t('location.title') }}</h2>
+        <LocationPicker v-if="profileLoaded" :latitude="location.latitude" :longitude="location.longitude" />
+      </div>
+
       <!-- bloķētie -->
       <div class="settings-card mb-4">
         <h2 class="settings-section-title">{{ t('settings.blocked') }}</h2>
@@ -136,12 +142,13 @@ import { authStore, updateUser, clearAuth } from '../authStore.js'
 import { showToast } from '../toast.js'
 import AppNavbar from './AppNavbar.vue'
 import AppFooter from './AppFooter.vue'
+import LocationPicker from './LocationPicker.vue'
 import langMixin from '../langMixin.js'
 
 export default {
   name: 'Settings',
 
-  components: { AppNavbar, AppFooter },
+  components: { AppNavbar, AppFooter, LocationPicker },
 
   mixins: [langMixin],
 
@@ -163,6 +170,8 @@ export default {
       blockedUsers: [],
       blockedLoading: true,
 
+      profileLoaded: false,
+      location: { latitude: null, longitude: null },
       isAdmin: false,
       isOnlyAdmin: false,
       deleteOpen: false,
@@ -185,6 +194,8 @@ export default {
     this.privacyForm.show_swap_history = profile.data.show_swap_history
     this.isAdmin = profile.data.is_admin
     this.isOnlyAdmin = profile.data.is_only_admin
+    this.location = { latitude: profile.data.latitude, longitude: profile.data.longitude }
+    this.profileLoaded = true
   },
 
   methods: {

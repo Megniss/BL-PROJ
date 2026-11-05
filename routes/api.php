@@ -38,6 +38,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update']);
     Route::delete('/profile', [ProfileController::class, 'destroy'])->middleware('throttle:5,1');
     Route::patch('/profile/privacy', [ProfileController::class, 'updatePrivacy']);
+    Route::put('/profile/location', [ProfileController::class, 'updateLocation']);
+    Route::delete('/profile/location', [ProfileController::class, 'removeLocation']);
     Route::get('/profile/history', [ProfileController::class, 'history']);
     Route::get('/notifications', [ProfileController::class, 'notifications']);
     Route::post('/notifications/read-all', [ProfileController::class, 'markAllRead']);

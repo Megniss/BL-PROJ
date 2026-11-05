@@ -41,7 +41,33 @@ class ProfileController extends Controller
             'show_swap_history' => $user->show_swap_history,
             'is_admin' => $user->is_admin,
             'is_only_admin' => $user->is_admin && !$this->hasOtherAdmins($user),
+            'latitude' => $user->latitude,
+            'longitude' => $user->longitude,
         ]);
+    }
+
+    // atrašanās vieta tiek noapaļota līdz ~1 km
+    public function updateLocation(Request $request)
+    {
+        $data = $request->validate([
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+        ]);
+
+        $user = $request->user();
+        $user->forceFill([
+            'latitude' => round($data['latitude'], 2),
+            'longitude' => round($data['longitude'], 2),
+        ])->save();
+
+        return response()->json(['latitude' => $user->latitude, 'longitude' => $user->longitude]);
+    }
+
+    public function removeLocation(Request $request)
+    {
+        $request->user()->forceFill(['latitude' => null, 'longitude' => null])->save();
+
+        return response()->json(['latitude' => null, 'longitude' => null]);
     }
 
     public function update(Request $request)
@@ -171,6 +197,8 @@ class ProfileController extends Controller
                 'show_joined' => false,
                 'show_swaps' => false,
                 'show_swap_history' => false,
+                'latitude' => null,
+                'longitude' => null,
                 'deleted_at' => now(),
             ])->save();
         });

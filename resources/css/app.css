@@ -2206,3 +2206,6 @@ body {
 }
 .msg-lightbox img { max-width: 100%; max-height: 100%; border-radius: 8px; }
 [data-theme="dark"] .compose-image-preview { background: #1a1612; }
+
+/* attālums */
+.book-card-distance { font-size: 12px; color: var(--muted); white-space: nowrap; }

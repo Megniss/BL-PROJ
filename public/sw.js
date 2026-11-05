@@ -1,4 +1,4 @@
-const CACHE = 'bookloop-v2'
+const CACHE = 'bookloop-v3'
 const STATIC = ['/', '/manifest.json']
 
 self.addEventListener('install', e => {
@@ -15,16 +15,35 @@ self.addEventListener('activate', e => {
   self.clients.claim()
 })
 
-// api un privātās bildes nekešo, pārējo mēģina no tīkla, ja neizdodas tad no keša
+// kešo tikai savas lapas failus; api, privātās bildes un citu lapu
+// pieprasījumus (piem. kartes) laiž tieši uz tīklu
 self.addEventListener('fetch', e => {
-  const url = e.request.url
-  if (e.request.method !== 'GET' || url.includes('/api/') || url.includes('signature=')) return
+  const url = new URL(e.request.url)
+  if (
+    e.request.method !== 'GET' ||
+    url.origin !== self.location.origin ||
+    url.pathname.startsWith('/api/') ||
+    url.searchParams.has('signature')
+  ) return
 
   e.respondWith(
-    fetch(e.request).then(res => {
-      const copy = res.clone()
-      caches.open(CACHE).then(cache => cache.put(e.request, copy))
-      return res
-    }).catch(() => caches.match(e.request))
+    fetch(e.request)
+      .then(res => {
+        if (res.ok) {
+          const copy = res.clone()
+          caches.open(CACHE).then(cache => cache.put(e.request, copy))
+        }
+        return res
+      })
+      .catch(async () => {
+        // bez tīkla — no keša; lapām der arī sākumlapa, jo tā ir SPA
+        const cached = await caches.match(e.request)
+        if (cached) return cached
+        if (e.request.mode === 'navigate') {
+          const home = await caches.match('/')
+          if (home) return home
+        }
+        return Response.error()
+      })
   )
 })

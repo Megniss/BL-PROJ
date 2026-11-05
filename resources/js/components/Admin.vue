@@ -83,6 +83,7 @@
               <th scope="col">{{ t('admin.col.joined') }}</th>
               <th scope="col">{{ t('admin.col.role') }}</th>
               <th scope="col">{{ t('admin.col.status') }}</th>
+              <th scope="col">{{ t('location.title') }}</th>
               <th scope="col" class="ab-col"></th>
               <th scope="col" class="ab-col"></th>
             </tr>
@@ -102,6 +103,10 @@
                 <span class="stag" :class="u.is_blocked ? 'stag-red' : 'stag-green'" :title="u.is_blocked ? t('admin.status.blocked') : t('admin.status.active')">
                   {{ u.is_blocked ? '✕' : '✓' }}
                 </span>
+              </td>
+              <td>
+                <button v-if="u.latitude !== null" class="btn btn-sm btn-outline-secondary text-nowrap" @click="mapUser = u">📍 {{ t('admin.showMap') }}</button>
+                <span v-else class="text-muted">—</span>
               </td>
               <template v-if="u.id !== currentUserId">
                 <td class="ab-col">
@@ -466,6 +471,17 @@
       </form>
     </div>
 
+    <!-- lietotāja aptuvenā atrašanās vieta -->
+    <div v-if="mapUser" class="modal-overlay" @click.self="mapUser = null">
+      <div class="modal-card">
+        <h2 class="modal-title mb-3">{{ mapUser.name }}</h2>
+        <LocationPicker readonly :latitude="mapUser.latitude" :longitude="mapUser.longitude" />
+        <div class="d-flex justify-content-end mt-3">
+          <button class="btn btn-outline-secondary" @click="mapUser = null">{{ t('adminAuth.back') }}</button>
+        </div>
+      </div>
+    </div>
+
     <!-- savas admin paroles maiņa -->
     <div v-if="pwdModal" class="modal-overlay" @click.self="pwdModal = false">
       <div class="modal-card modal-card--sm">
@@ -489,11 +505,12 @@ import Pagination from './Pagination.vue'
 import Support from './Support.vue'
 import AdminUnlock from './AdminUnlock.vue'
 import AdminPasswordForm from './AdminPasswordForm.vue'
+import LocationPicker from './LocationPicker.vue'
 import langMixin from '../langMixin.js'
 
 export default {
   name: 'AdminPanel',
-  components: { AppNavbar, AppFooter, Pagination, Support, AdminUnlock, AdminPasswordForm },
+  components: { AppNavbar, AppFooter, Pagination, Support, AdminUnlock, AdminPasswordForm, LocationPicker },
   mixins: [langMixin],
 
   data() {
@@ -501,6 +518,7 @@ export default {
       gate: 'checking',
       pwdModal: false,
       makeAdminUser: null,
+      mapUser: null,
       tempPassword: '',
       makeAdminError: '',
       users: [],

@@ -43,6 +43,8 @@ class AdminController extends Controller
                 'is_blocked' => $u->is_blocked,
                 'books_count' => $u->books_count,
                 'joined' => $u->created_at->toDateString(),
+                'latitude' => $u->latitude,
+                'longitude' => $u->longitude,
             ]);
 
         return response()->json($users);

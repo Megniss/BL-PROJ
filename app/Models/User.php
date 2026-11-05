@@ -14,7 +14,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Laravel\Sanctum\PersonalAccessToken;
 
 #[Fillable(['name', 'email', 'password', 'show_joined', 'show_swaps', 'show_swap_history', 'is_admin', 'is_blocked'])]
-#[Hidden(['password', 'remember_token', 'admin_password'])]
+#[Hidden(['password', 'remember_token', 'admin_password', 'latitude', 'longitude'])]
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -42,6 +42,11 @@ class User extends Authenticatable
         return $out->merge($in)->unique()->values();
     }
 
+    public function hasLocation(): bool
+    {
+        return $this->latitude !== null && $this->longitude !== null;
+    }
+
     // vai ar pašreizējo tokenu ir ievadīta admin parole
     public function adminUnlocked(): bool
     {
@@ -66,6 +71,8 @@ class User extends Authenticatable
             'admin_password_change' => 'boolean',
             'is_blocked' => 'boolean',
             'deleted_at' => 'datetime',
+            'latitude' => 'float',
+            'longitude' => 'float',
         ];
     }
 }

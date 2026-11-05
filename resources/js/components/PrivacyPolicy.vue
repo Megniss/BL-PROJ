@@ -26,6 +26,15 @@
         </div>
 
         <div class="about-card">
+          <div class="about-card-accent" style="background:#6a9a3a"></div>
+          <div class="about-card-icon">📍</div>
+          <div>
+            <h2 class="about-card-title mb-2">{{ t('privacy.location.title') }}</h2>
+            <p class="about-card-text mb-0">{{ t('privacy.location.body') }}</p>
+          </div>
+        </div>
+
+        <div class="about-card">
           <div class="about-card-accent" style="background:#3a7ca5"></div>
           <div class="about-card-icon">📷</div>
           <div>

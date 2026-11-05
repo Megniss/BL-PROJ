@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Models\User;
+use App\Support\Distance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -40,7 +41,25 @@ class BookController extends Controller
             $query->whereIn('language', (array) $languages);
         }
 
-        match ($request->query('sort', 'title_asc')) {
+        // attālums līdz grāmatas īpašniekam, ja man ir atrašanās vieta
+        $hasLocation = $user?->hasLocation() ?? false;
+        if ($hasLocation) {
+            $expr = Distance::sql($user, 'owners.latitude', 'owners.longitude');
+            $distance = "(select $expr from users as owners where owners.id = books.user_id)";
+
+            // withAvg jau ielicis books.*, tāpēc tikai pievieno kolonnu
+            $query->selectRaw("$distance as distance_sq");
+
+            if ($km = (int) $request->query('max_km')) {
+                $query->whereRaw("$distance <= " . Distance::limit($km));
+            }
+        }
+
+        $sort = $request->query('sort', 'title_asc');
+
+        if ($sort === 'nearest' && $hasLocation) {
+            $query->orderByRaw('distance_sq is null')->orderBy('distance_sq');
+        } else match ($sort) {
             'title_asc' => $query->orderBy('title', 'asc'),
             'title_desc' => $query->orderBy('title', 'desc'),
             'author_asc' => $query->orderBy('author', 'asc'),
@@ -52,7 +71,14 @@ class BookController extends Controller
         };
 
         $perPage = min((int) $request->query('per_page', 12), 500);
-        return response()->json($query->paginate($perPage));
+        $books = $query->paginate($perPage);
+
+        $books->getCollection()->each(function ($book) {
+            $book->distance_km = Distance::toKm($book->distance_sq);
+            unset($book->distance_sq);
+        });
+
+        return response()->json([...$books->toArray(), 'has_location' => $hasLocation]);
     }
 
     public function index(Request $request)

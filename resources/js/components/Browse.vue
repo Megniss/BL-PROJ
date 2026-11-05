@@ -51,7 +51,7 @@
               <rect x="3" y="5.5" width="10" height="2" rx="1" fill="currentColor"/>
               <rect x="6" y="11" width="4"  height="2" rx="1" fill="currentColor"/>
             </svg>
-            <span class="filter-more-dot" v-if="genreFilters.length || langFilters.length || sortBy !== 'title_asc'"></span>
+            <span class="filter-more-dot" v-if="genreFilters.length || langFilters.length || sortBy !== 'title_asc' || maxKm"></span>
           </button>
         </div>
 
@@ -95,12 +95,25 @@
               <option value="newest">{{ t('featured.recent') }}</option>
               <option value="popular">{{ t('featured.popular') }}</option>
               <option value="top_rated">{{ t('featured.topRated') }}</option>
+              <option v-if="authStore.user" value="nearest">{{ t('location.nearest') }}</option>
+            </select>
+          </div>
+
+          <div v-if="authStore.user" style="min-width:130px">
+            <select v-model="maxKm" class="form-select" :aria-label="t('location.within')" @change="applyFilters">
+              <option value="">{{ t('location.anyDistance') }}</option>
+              <option v-for="km in distanceOptions" :key="km" :value="String(km)">{{ t('location.withinKm').replace('{km}', km) }}</option>
             </select>
           </div>
         </div>
 
+        <p v-if="needsLocation(sortBy === 'nearest' || maxKm, hasLocation)" class="small text-muted mb-1">
+          📍 {{ t('location.missing') }}
+          <router-link :to="{ name: 'settings' }">{{ t('nav.settings') }}</router-link>
+        </p>
+
         <!-- aktīvie filtra tagi -->
-        <div v-if="genreFilters.length || langFilters.length || searchQuery || sortBy !== 'title_asc'" class="d-flex flex-wrap align-items-center gap-1 mt-1">
+        <div v-if="genreFilters.length || langFilters.length || searchQuery || sortBy !== 'title_asc' || maxKm" class="d-flex flex-wrap align-items-center gap-1 mt-1">
           <span v-for="g in genreFilters" :key="g" class="table-genre-tag">
             {{ t('genre.' + g) }}
             <button :aria-label="'Noņemt: ' + t('genre.' + g)" @mousedown.prevent="removeGenre(g)">×</button>
@@ -109,12 +122,32 @@
             {{ t('lang.' + l) }}
             <button :aria-label="'Noņemt: ' + t('lang.' + l)" @mousedown.prevent="removeLang(l)">×</button>
           </span>
+          <span v-if="maxKm" class="table-genre-tag" style="background:#3a7ca5">
+            📍 {{ t('location.withinKm').replace('{km}', maxKm) }}
+            <button :aria-label="t('location.anyDistance')" @mousedown.prevent="maxKm = ''; applyFilters()">×</button>
+          </span>
           <button class="btn btn-sm btn-outline-secondary ms-1" @mousedown.prevent="clearAll">{{ t('books.clearFilters') }}</button>
         </div>
         </div>
 
         <div v-else key="users-search">
-          <input v-model="userSearch" class="form-control" :placeholder="t('browse.searchUsers')" :aria-label="t('browse.searchUsers')" @input="onUserSearch" style="max-width:420px" />
+          <div class="d-flex flex-wrap gap-2">
+            <input v-model="userSearch" class="form-control" :placeholder="t('browse.searchUsers')" :aria-label="t('browse.searchUsers')" @input="onUserSearch" style="max-width:420px" />
+            <template v-if="authStore.user">
+              <select v-model="userSort" class="form-select" style="width:auto" :aria-label="t('location.nearest')" @change="onUserSearch">
+                <option value="name">{{ t('location.byName') }}</option>
+                <option value="nearest">{{ t('location.nearest') }}</option>
+              </select>
+              <select v-model="userMaxKm" class="form-select" style="width:auto" :aria-label="t('location.within')" @change="onUserSearch">
+                <option value="">{{ t('location.anyDistance') }}</option>
+                <option v-for="km in distanceOptions" :key="km" :value="String(km)">{{ t('location.withinKm').replace('{km}', km) }}</option>
+              </select>
+            </template>
+          </div>
+          <p v-if="needsLocation(userSort === 'nearest' || userMaxKm, usersHaveLocation)" class="small text-muted mt-2 mb-0">
+            📍 {{ t('location.missing') }}
+            <router-link :to="{ name: 'settings' }">{{ t('nav.settings') }}</router-link>
+          </p>
         </div>
         </transition>
         </div>
@@ -165,6 +198,7 @@
               <p class="book-card-author mb-1">{{ book.author }}</p>
               <p class="book-card-owner mb-2">
                 {{ t('books.ownedBy') }} <span class="owner-link" @click.stop="$router.push({ name: 'userProfile', params: { id: book.user.id } })">{{ book.user?.name }}</span>
+                <span v-if="book.distance_km !== null && book.distance_km !== undefined" class="book-card-distance">· 📍 {{ formatDistance(book.distance_km) }}</span>
               </p>
               <div class="d-flex flex-wrap gap-1 mb-2">
                 <span class="tag">{{ t('lang.' + book.language) }}</span>
@@ -205,7 +239,10 @@
               <td>{{ t('lang.' + book.language) }}</td>
               <td>{{ book.condition }}</td>
               <td><span class="tag" :class="book.status === 'Available' ? 'tag-green' : 'tag-yellow'">{{ t('books.status.' + book.status) }}</span></td>
-              <td><span class="owner-link" @click.stop="$router.push({ name: 'userProfile', params: { id: book.user.id } })">{{ book.user?.name }}</span></td>
+              <td>
+                <span class="owner-link" @click.stop="$router.push({ name: 'userProfile', params: { id: book.user.id } })">{{ book.user?.name }}</span>
+                <span v-if="book.distance_km !== null && book.distance_km !== undefined" class="book-card-distance d-block">📍 {{ formatDistance(book.distance_km) }}</span>
+              </td>
               <td @click.stop>
                 <button class="btn-swap btn-swap-sm" :disabled="book.status !== 'Available'" @click="openSwap(book)">{{ t('books.requestSwap') }}</button>
               </td>
@@ -236,7 +273,10 @@
               <div class="user-card-avatar" :style="{ background: avatarColor(user) }">{{ user.name[0].toUpperCase() }}</div>
               <div class="user-card-info">
                 <p class="user-card-name">{{ user.name }}</p>
-                <p class="user-card-meta">{{ user.books_count }} {{ t('browse.availableBooks') }}</p>
+                <p class="user-card-meta">
+                  {{ user.books_count }} {{ t('browse.availableBooks') }}
+                  <span v-if="user.distance_km !== null && user.distance_km !== undefined"> · 📍 {{ formatDistance(user.distance_km) }}</span>
+                </p>
               </div>
               <span class="user-card-arrow">→</span>
             </div>
@@ -292,6 +332,7 @@ import SwapModal from './SwapModal.vue'
 import AppNavbar from './AppNavbar.vue'
 import AppFooter from './AppFooter.vue'
 import Pagination from './Pagination.vue'
+import { formatDistance } from '../distance.js'
 
 export default {
   name: 'Browse',
@@ -310,6 +351,9 @@ export default {
       showGenreSugg: false,
       showLangSugg: false,
       sortBy: 'title_asc',
+      maxKm: '',
+      hasLocation: null,
+      distanceOptions: [5, 10, 25, 50],
       currentPage: 1,
       lastPage: 1,
       totalBooks: 0,
@@ -321,6 +365,9 @@ export default {
       tab: 'books',
       users: [],
       userSearch: '',
+      userSort: 'name',
+      userMaxKm: '',
+      usersHaveLocation: null,
       loadingUsers: false,
       userPage: 1,
       userLastPage: 1,
@@ -348,6 +395,7 @@ export default {
         case 'popular': return this.t('featured.popular')
         case 'top_rated': return this.t('featured.topRated')
         case 'newest': return this.t('featured.recent')
+        case 'nearest': return this.t('location.nearest')
         default: return this.t('browse.allBooks')
       }
     },
@@ -414,6 +462,7 @@ export default {
     readRouteParams(q) {
       this.searchQuery = q.search || ''
       this.sortBy = q.sort || 'title_asc'
+      this.maxKm = q.max_km || ''
       this.langFilters = q.languages ? q.languages.split(',') : []
       this.langSearch = ''
       this.genreFilters = q.genres ? q.genres.split(',') : []
@@ -424,6 +473,7 @@ export default {
       const q = {}
       if (this.searchQuery.trim()) q.search = this.searchQuery.trim()
       if (this.sortBy !== 'title_asc') q.sort = this.sortBy
+      if (this.maxKm) q.max_km = this.maxKm
       if (this.langFilters.length) q.languages = this.langFilters.join(',')
       if (this.genreFilters.length) q.genres = this.genreFilters.join(',')
       if (this.currentPage > 1) q.page = this.currentPage
@@ -450,10 +500,12 @@ export default {
             genres: this.genreFilters.length ? this.genreFilters : undefined,
             languages: this.langFilters.length ? this.langFilters : undefined,
             sort: this.sortBy,
+            max_km: this.maxKm || undefined,
             page: this.currentPage,
             per_page: perPage,
           },
         })
+        this.hasLocation = data.has_location
         this.books = data.data
         this.currentPage = data.current_page
         this.lastPage = data.last_page
@@ -574,9 +626,12 @@ export default {
         const { data } = await axios.get('/api/users', {
           params: {
             search: this.userSearch.trim() || undefined,
+            sort: this.userSort,
+            max_km: this.userMaxKm || undefined,
             page: this.userPage,
           }
         })
+        this.usersHaveLocation = data.has_location
         this.users = data.data
         this.userPage = data.current_page
         this.userLastPage = data.last_page
@@ -584,6 +639,13 @@ export default {
       } catch { /* ignorē */ } finally {
         this.loadingUsers = false
       }
+    },
+
+    formatDistance,
+
+    // filtrs pēc attāluma izvēlēts, bet pašam nav vietas
+    needsLocation(wantsDistance, has) {
+      return !!wantsDistance && has === false
     },
 
     async openDetail(book) {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SwapRequest;
 use App\Models\User;
+use App\Support\Distance;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -16,17 +17,35 @@ class UserController extends Controller
             ? $authUser->blockedUserIds()
             : collect();
 
-        $users = User::withCount(['books' => fn($q) => $q->where('status', 'Available')])
+        $query = User::select(['id', 'name', 'created_at'])
+            ->withCount(['books' => fn($q) => $q->where('status', 'Available')])
             ->where('is_blocked', false)
             ->whereNull('deleted_at')
             ->when($authUser, fn($q) => $q->where('id', '!=', $authUser->id))
             ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
-            ->when($blockedIds->isNotEmpty(), fn($q) => $q->whereNotIn('id', $blockedIds))
-            ->orderBy('name')
-            ->paginate(18, ['id', 'name', 'created_at']);
+            ->when($blockedIds->isNotEmpty(), fn($q) => $q->whereNotIn('id', $blockedIds));
 
-        // pieliek grāmatu priekšskatījumu katram
+        $hasLocation = $authUser?->hasLocation() ?? false;
+        if ($hasLocation) {
+            $expr = Distance::sql($authUser, 'latitude', 'longitude');
+            $query->selectRaw("$expr as distance_sq");
+
+            if ($km = (int) $request->query('max_km')) {
+                $query->whereRaw("$expr <= " . Distance::limit($km));
+            }
+        }
+
+        if ($request->query('sort') === 'nearest' && $hasLocation) {
+            $query->orderByRaw('distance_sq is null')->orderBy('distance_sq');
+        }
+
+        $users = $query->orderBy('name')->paginate(18);
+
+        // pieliek grāmatu priekšskatījumu un attālumu katram
         $users->each(function ($user) {
+            $user->distance_km = Distance::toKm($user->distance_sq);
+            unset($user->distance_sq);
+
             $user->preview_books = $user->books()
                 ->where('status', 'Available')
                 ->latest()
@@ -34,7 +53,7 @@ class UserController extends Controller
                 ->get(['id', 'cover_image', 'genre']);
         });
 
-        return response()->json($users);
+        return response()->json([...$users->toArray(), 'has_location' => $hasLocation]);
     }
 
     // publiskais profils
@@ -95,6 +114,7 @@ class UserController extends Controller
             'library' => $books,
             'is_blocked' => $iBlockedThem,
             'they_blocked_me' => $theyBlockedMe,
+            'distance_km' => $authUser && $authUser->id !== $user->id ? Distance::between($authUser, $user) : null,
         ]);
     }
 }
