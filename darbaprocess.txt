@@ -189,9 +189,7 @@ Iedomājies ka lietotājs pārlūkā noklikšķina "Browse" pogu. Lūk kas notie
 
 
 jaunas lietas ko vajag:
-viena gramatas karte ar vairakiem lietotajiem
-geolocation, filtret pec tuvakaa man
-2fa TOTP vai email OTP
+2fa email OTP
 
 noskaidrot ka prezentes darbu
 vai caur savu pc vai caur skolas kadu hernu
