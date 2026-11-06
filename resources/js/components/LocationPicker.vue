@@ -30,6 +30,29 @@ import langMixin from '../langMixin.js'
 // Latvijas centrs, ja vieta vēl nav izvēlēta
 const DEFAULT_VIEW = { center: [56.88, 24.6], zoom: 7 }
 
+const OSM_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
+
+// MapTiler ar atslēgu no .env; bez atslēgas — OSM (tas mēdz bloķēt lietotnes)
+function tileLayer() {
+  const key = import.meta.env.VITE_MAPTILER_KEY
+
+  if (!key) {
+    return L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 15,
+      attribution: OSM_ATTRIBUTION,
+    })
+  }
+
+  return L.tileLayer(`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${key}`, {
+    tileSize: 512,
+    zoomOffset: -1,
+    minZoom: 1,
+    maxZoom: 15,
+    crossOrigin: true,
+    attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> ' + OSM_ATTRIBUTION,
+  })
+}
+
 export default {
   name: 'LocationPicker',
   mixins: [langMixin],
@@ -67,10 +90,7 @@ export default {
       this.picked ? 11 : DEFAULT_VIEW.zoom,
     )
 
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 15,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    }).addTo(this.map)
+    tileLayer().addTo(this.map)
 
     if (!this.readonly) this.map.on('click', e => this.pick(e.latlng.lat, e.latlng.lng))
     if (this.picked) this.drawArea()
