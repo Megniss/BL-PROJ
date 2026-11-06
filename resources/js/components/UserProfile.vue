@@ -80,7 +80,8 @@
                 </div>
                 <p v-if="book.description" class="book-card-desc mb-0">{{ book.description }}</p>
                 <div v-if="authStore.user && authStore.user.id !== profile.id && !isBlocked && !theyBlockedMe" class="mt-auto pt-2">
-                  <button class="btn-swap" :disabled="book.status !== 'Available'" @click="requestSwap(book)">{{ t('books.requestSwap') }}</button>
+                  <span v-if="book.i_have" class="copies-badge">✓ {{ t('copies.iHaveShort') }}</span>
+                  <button v-else class="btn-swap" :disabled="book.status !== 'Available'" @click="requestSwap(book)">{{ t('books.requestSwap') }}</button>
                 </div>
               </div>
             </div>

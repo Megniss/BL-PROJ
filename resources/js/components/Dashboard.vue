@@ -163,11 +163,30 @@
           <div class="row g-3 mb-3">
             <div class="col-6">
               <label for="book-title" class="form-label fw-semibold">{{ t('modal.fieldTitle') }}</label>
-              <input id="book-title" v-model="form.title" class="form-control" type="text" required />
+              <AutocompleteInput
+                id="book-title"
+                v-model="form.title"
+                url="/api/books/autocomplete"
+                required
+                :disabled-when="item => item.mine"
+                @select="pickExistingBook"
+              >
+                <template #default="{ item }">
+                  <span class="fw-semibold">{{ item.title }}</span>
+                  <span class="text-muted"> — {{ item.author }}</span>
+                  <span v-if="item.mine" class="autocomplete-note">{{ t('copies.iHaveShort') }}</span>
+                </template>
+              </AutocompleteInput>
             </div>
             <div class="col-6">
               <label for="book-author" class="form-label fw-semibold">{{ t('modal.fieldAuthor') }}</label>
-              <input id="book-author" v-model="form.author" class="form-control" type="text" required />
+              <AutocompleteInput
+                id="book-author"
+                v-model="form.author"
+                url="/api/books/authors"
+                required
+                @select="author => form.author = author"
+              />
             </div>
             <div class="col-6">
               <label for="book-genre" class="form-label fw-semibold">{{ t('modal.fieldGenre') }}</label>
@@ -251,11 +270,12 @@ import { showToast } from '../toast.js'
 import langMixin from '../langMixin.js'
 import AppNavbar from './AppNavbar.vue'
 import AppFooter from './AppFooter.vue'
+import AutocompleteInput from './AutocompleteInput.vue'
 
 export default {
   name: 'Dashboard',
 
-  components: { AppNavbar, AppFooter },
+  components: { AppNavbar, AppFooter, AutocompleteInput },
 
   mixins: [langMixin],
 
@@ -434,6 +454,13 @@ export default {
       } catch (err) {
         this.flashError(err.response?.data?.message || this.t('dash.genericError'))
       }
+    },
+
+    // izvēlēta jau esoša grāmata — nosaukums un autors sakritīs precīzi
+    pickExistingBook(book) {
+      this.form.title = book.title
+      this.form.author = book.author
+      this.form.genre = book.genre
     },
 
     openAddModal() {

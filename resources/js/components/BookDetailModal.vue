@@ -16,14 +16,9 @@
 
           <div class="d-flex flex-wrap gap-1 mb-3">
             <span class="tag">{{ t('genre.' + book.genre) }}</span>
-            <span class="tag">{{ t('lang.' + book.language) }}</span>
-            <span class="tag" :class="conditionClass(book.condition)">{{ book.condition }}</span>
-            <span class="tag" :class="book.status === 'Available' ? 'tag-green' : 'tag-yellow'">
-              {{ t('books.status.' + book.status) }}
-            </span>
           </div>
 
-          <div class="mb-3" style="font-size:0.9rem">
+          <div class="mb-1" style="font-size:0.9rem">
             <template v-if="book.ratings_count > 0">
               <span style="color:#f5a623;font-size:1.1rem">★</span>
               {{ Number(book.ratings_avg_stars).toFixed(1) }}
@@ -31,22 +26,38 @@
             </template>
             <span v-else class="detail-placeholder">{{ t('books.noRatings') }}</span>
           </div>
+        </div>
+      </div>
 
-          <p v-if="book.description" class="book-detail-desc mb-3">{{ book.description }}</p>
-          <p v-else class="detail-placeholder mb-3">{{ t('bookDetail.noDesc') }}</p>
+      <!-- visi lietotāji, kuriem ir šī grāmata -->
+      <div class="book-copies">
+        <p class="suggestions-label">{{ t('copies.title') }}</p>
 
-          <p class="small mb-4">
-            <span class="text-muted">{{ t('bookDetail.owner') }}:</span>
-            <span class="owner-link ms-1" role="button" tabindex="0" @click="$emit('profile', book.user)" @keyup.enter="$emit('profile', book.user)">{{ book.user?.name }}</span>
-          </p>
+        <p v-if="loadingCopies" class="detail-placeholder">{{ t('dash.loading') }}</p>
+        <p v-else-if="iHave" class="detail-placeholder">{{ t('copies.iHave') }}</p>
+        <p v-else-if="copies.length === 0" class="detail-placeholder">{{ t('copies.none') }}</p>
 
-          <div class="detail-actions">
-            <button v-if="!isOwnBook && !blocked" class="btn-swap" :disabled="book.status !== 'Available'" @click="$emit('swap', book)">
-              <span class="btn-icon">⇄</span>{{ t('books.requestSwap') }}
-            </button>
-            <button v-if="!blocked && !isOwnBook" class="btn-msg-owner" @click="$emit('message', book.user)">
-              <span class="btn-icon">✉</span>{{ t('books.msgOwner') }}
-            </button>
+        <div v-for="c in copies" :key="c.id" class="copy-row">
+          <div class="copy-cover" :style="!c.cover_image ? { background: coverColor(c) } : {}">
+            <img v-if="c.cover_image" :src="'/storage/' + c.cover_image" :alt="c.title" />
+          </div>
+
+          <div class="copy-info">
+            <p class="mb-1">
+              <span class="owner-link fw-semibold" role="button" tabindex="0" @click="$emit('profile', c.user)" @keyup.enter="$emit('profile', c.user)">{{ c.user?.name }}</span>
+              <span v-if="c.distance_km !== null && c.distance_km !== undefined" class="book-card-distance ms-1">· 📍 {{ formatDistance(c.distance_km) }}</span>
+            </p>
+            <div class="d-flex flex-wrap gap-1 mb-1">
+              <span class="tag">{{ t('lang.' + c.language) }}</span>
+              <span class="tag" :class="conditionClass(c.condition)">{{ c.condition }}</span>
+              <span v-if="c.ratings_count > 0" class="tag">★ {{ Number(c.ratings_avg_stars).toFixed(1) }} ({{ c.ratings_count }})</span>
+            </div>
+            <p v-if="c.description" class="copy-desc mb-0">{{ c.description }}</p>
+          </div>
+
+          <div v-if="!c.blocked" class="copy-actions">
+            <button class="btn-swap btn-swap-sm" @click="$emit('swap', c)">⇄ {{ t('books.requestSwap') }}</button>
+            <button class="btn-msg-owner btn-sm" @click="$emit('message', c.user)">✉ {{ t('books.msgOwner') }}</button>
           </div>
         </div>
       </div>
@@ -87,32 +98,44 @@ import langMixin from '../langMixin.js'
 import { coverColor } from '../coverColor.js'
 import { conditionClass } from '../conditionClass.js'
 import { authStore } from '../authStore.js'
+import { formatDistance } from '../distance.js'
 
 export default {
   name: 'BookDetailModal',
   mixins: [langMixin],
   props: {
     book: { type: Object, default: null },
-    blocked: { type: Boolean, default: false },
   },
   emits: ['close', 'swap', 'message', 'profile', 'suggest'],
   data() {
-    return { authStore, suggestions: [] }
-  },
-  computed: {
-    isOwnBook() {
-      return authStore.user && this.book?.user?.id === authStore.user.id
-    }
+    return { authStore, suggestions: [], copies: [], iHave: false, loadingCopies: false }
   },
   watch: {
     book(val) {
       this.suggestions = []
-      if (val) this.fetchSuggestions(val.id)
+      this.copies = []
+      this.iHave = false
+      if (val) {
+        this.fetchCopies(val)
+        this.fetchSuggestions(val.id)
+      }
     }
   },
   methods: {
     coverColor,
     conditionClass,
+    formatDistance,
+
+    async fetchCopies(book) {
+      this.loadingCopies = true
+      try {
+        const { data } = await axios.get('/api/browse/copies', { params: { title: book.title, author: book.author } })
+        this.copies = data.copies
+        this.iHave = data.i_have
+      } catch { /* klusums */ } finally {
+        this.loadingCopies = false
+      }
+    },
 
     async fetchSuggestions(bookId) {
       try {

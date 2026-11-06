@@ -76,12 +76,11 @@
         </template>
         <template v-else>
           <div v-for="book in recentBooks" :key="book.id" class="featured-card" @click="openDetail(book)">
-            <div v-if="book.status === 'Pending'" class="pending-overlay"></div>
-            <div v-if="isNew(book)" class="new-ribbon">{{ t('books.newRibbon') }}</div>
+                        <div v-if="isNew(book)" class="new-ribbon">{{ t('books.newRibbon') }}</div>
             <div class="featured-cover" :style="!book.cover_image ? { background: coverColor(book) } : {}">
               <img v-if="book.cover_image" :src="'/storage/' + book.cover_image" :alt="book.title" class="book-card-cover-img" />
               <span class="book-card-genre">{{ t('genre.' + book.genre) }}</span>
-              <button v-if="book.status === 'Available'" class="card-quick-swap" @click.stop="authStore.user ? requestSwap(book) : $router.push({ name: 'login' })">⇄ {{ t('featured.swap') }}</button>
+              <button class="card-quick-swap" @click.stop="quickSwap(book)">⇄ {{ t('featured.swap') }}</button>
             </div>
             <div class="featured-body">
               <p class="featured-title">{{ book.title }}</p>
@@ -118,11 +117,10 @@
         </template>
         <template v-else>
           <div v-for="book in popularBooks" :key="book.id" class="featured-card" @click="openDetail(book)">
-            <div v-if="book.status === 'Pending'" class="pending-overlay"></div>
-            <div class="featured-cover" :style="!book.cover_image ? { background: coverColor(book) } : {}">
+                        <div class="featured-cover" :style="!book.cover_image ? { background: coverColor(book) } : {}">
               <img v-if="book.cover_image" :src="'/storage/' + book.cover_image" :alt="book.title" class="book-card-cover-img" />
               <span class="book-card-genre">{{ t('genre.' + book.genre) }}</span>
-              <button v-if="book.status === 'Available'" class="card-quick-swap" @click.stop="authStore.user ? requestSwap(book) : $router.push({ name: 'login' })">⇄ {{ t('featured.swap') }}</button>
+              <button class="card-quick-swap" @click.stop="quickSwap(book)">⇄ {{ t('featured.swap') }}</button>
             </div>
             <div class="featured-body">
               <p class="featured-title">{{ book.title }}</p>
@@ -160,11 +158,10 @@
         </template>
         <template v-else>
           <div v-for="book in topRatedBooks" :key="book.id" class="featured-card" @click="openDetail(book)">
-            <div v-if="book.status === 'Pending'" class="pending-overlay"></div>
-            <div class="featured-cover" :style="!book.cover_image ? { background: coverColor(book) } : {}">
+                        <div class="featured-cover" :style="!book.cover_image ? { background: coverColor(book) } : {}">
               <img v-if="book.cover_image" :src="'/storage/' + book.cover_image" :alt="book.title" class="book-card-cover-img" />
               <span class="book-card-genre">{{ t('genre.' + book.genre) }}</span>
-              <button v-if="book.status === 'Available'" class="card-quick-swap" @click.stop="authStore.user ? requestSwap(book) : $router.push({ name: 'login' })">⇄ {{ t('featured.swap') }}</button>
+              <button class="card-quick-swap" @click.stop="quickSwap(book)">⇄ {{ t('featured.swap') }}</button>
             </div>
             <div class="featured-body">
               <p class="featured-title">{{ book.title }}</p>
@@ -216,8 +213,7 @@
 
   <BookDetailModal
     :book="detailBook"
-    :blocked="detailBookBlocked"
-    @close="detailBook = null; detailBookBlocked = false"
+    @close="detailBook = null"
     @swap="requestSwap"
     @message="goToMessages"
     @profile="(user) => $router.push({ name: 'userProfile', params: { id: user.id } })"
@@ -314,15 +310,15 @@ export default {
       this.$router.push({ name: 'messages', query: { userId: user.id, userName: user.name } })
     },
 
-    async openDetail(book) {
+    openDetail(book) {
       this.detailBook = book
-      this.detailBookBlocked = false
-      if (authStore.user && book.user?.id) {
-        try {
-          const { data } = await axios.get(`/api/users/${book.user.id}`)
-          this.detailBookBlocked = (data.is_blocked || data.they_blocked_me) ?? false
-        } catch { /* ignorē */ }
-      }
+    },
+
+    // ja grāmata ir vairākiem, vispirms jāizvēlas, ar kuru mainīties
+    quickSwap(book) {
+      if (!authStore.user) return this.$router.push({ name: 'login' })
+      if (book.copies_count > 1) return this.openDetail(book)
+      this.requestSwap(book)
     },
 
     async requestSwap(book) {
@@ -377,7 +373,6 @@ export default {
       topRatedBooks: [],
       homeSearch: '',
       detailBook: null,
-      detailBookBlocked: false,
       swapModal: {
         open: false, wantedBook: null, myBooks: [],
         selectedBookId: null, sending: false, error: '',

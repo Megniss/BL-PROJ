@@ -72,6 +72,14 @@ class UserController extends Controller
             ->latest()
             ->get();
 
+        // atzīmē grāmatas, kas man jau ir
+        if ($authUser && $authUser->id !== $user->id) {
+            $mine = $authUser->books()->where('status', '!=', 'Removed')->get(['title', 'author'])
+                ->map(fn($b) => mb_strtolower($b->title . '|' . $b->author));
+
+            $books->each(fn($b) => $b->i_have = $mine->contains(mb_strtolower($b->title . '|' . $b->author)));
+        }
+
         $swapsCount = SwapRequest::where('status', 'accepted')
             ->where(function ($q) use ($user) {
                 $q->where('requester_id', $user->id)->orWhere('owner_id', $user->id);

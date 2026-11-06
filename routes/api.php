@@ -22,6 +22,7 @@ Route::get('/translations/{code}', [LanguageController::class, 'translations']);
 Route::get('/browse', [BookController::class, 'browse']);
 Route::get('/stats', [BookController::class, 'stats']);
 Route::get('/books/{book}/suggestions', [BookController::class, 'suggestions']);
+Route::get('/browse/copies', [BookController::class, 'copies']);
 Route::get('/users', [UserController::class, 'search'])->middleware('throttle:30,1');
 Route::get('/users/{user}', [UserController::class, 'show'])->middleware('throttle:60,1');
 
@@ -46,6 +47,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/notifications/{id}/read', [ProfileController::class, 'markRead']);
 
     Route::get('/books', [BookController::class, 'index']);
+    Route::get('/books/autocomplete', [BookController::class, 'autocomplete']);
+    Route::get('/books/authors', [BookController::class, 'authors']);
     Route::post('/books', [BookController::class, 'store']);
     Route::put('/books/{book}', [BookController::class, 'update']);
     Route::delete('/books/{book}', [BookController::class, 'destroy']);

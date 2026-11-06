@@ -187,7 +187,6 @@
       <div v-else-if="viewMode === 'cards'" class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-3">
         <div v-for="book in books" :key="book.id" class="col">
           <div class="card h-100 book-card border" style="cursor:pointer; position:relative" @click="openDetail(book)">
-            <div v-if="book.status === 'Pending'" class="pending-overlay"></div>
             <div v-if="isNew(book)" class="new-ribbon">{{ t('books.newRibbon') }}</div>
             <div class="book-card-cover" :style="!book.cover_image ? { background: coverColor(book) } : {}">
               <img v-if="book.cover_image" :src="'/storage/' + book.cover_image" :alt="book.title" class="book-card-cover-img" />
@@ -197,13 +196,16 @@
               <h3 class="book-card-title mb-1">{{ book.title }}</h3>
               <p class="book-card-author mb-1">{{ book.author }}</p>
               <p class="book-card-owner mb-2">
-                {{ t('books.ownedBy') }} <span class="owner-link" @click.stop="$router.push({ name: 'userProfile', params: { id: book.user.id } })">{{ book.user?.name }}</span>
+                <template v-if="book.copies_count > 1">👥 {{ t('copies.count').replace('{n}', book.copies_count) }}</template>
+                <template v-else>
+                  {{ t('books.ownedBy') }} <span class="owner-link" @click.stop="$router.push({ name: 'userProfile', params: { id: book.user.id } })">{{ book.user?.name }}</span>
+                </template>
                 <span v-if="book.distance_km !== null && book.distance_km !== undefined" class="book-card-distance">· 📍 {{ formatDistance(book.distance_km) }}</span>
               </p>
-              <div class="d-flex flex-wrap gap-1 mb-2">
+              <!-- valoda un stāvoklis ir katram eksemplāram savs -->
+              <div v-if="book.copies_count === 1" class="d-flex flex-wrap gap-1 mb-2">
                 <span class="tag">{{ t('lang.' + book.language) }}</span>
                 <span class="tag" :class="conditionClass(book.condition)">{{ book.condition }}</span>
-                <span class="tag" :class="book.status === 'Available' ? 'tag-green' : 'tag-yellow'">{{ t('books.status.' + book.status) }}</span>
               </div>
               <div class="mt-auto book-card-rating">
                 <template v-if="book.ratings_count > 0">
@@ -224,9 +226,7 @@
               <th @click="sortTable('title')">{{ t('books.colTitle') }} <span class="sort-arrow">{{ tableSortArrow('title') }}</span></th>
               <th @click="sortTable('author')">{{ t('books.colAuthor') }} <span class="sort-arrow">{{ tableSortArrow('author') }}</span></th>
               <th @click="sortTable('genre')">{{ t('books.colGenre') }} <span class="sort-arrow">{{ tableSortArrow('genre') }}</span></th>
-              <th @click="sortTable('language')">{{ t('books.colLang') }} <span class="sort-arrow">{{ tableSortArrow('language') }}</span></th>
-              <th @click="sortTable('condition')">{{ t('books.colCondition') }} <span class="sort-arrow">{{ tableSortArrow('condition') }}</span></th>
-              <th @click="sortTable('status')">{{ t('books.colStatus') }} <span class="sort-arrow">{{ tableSortArrow('status') }}</span></th>
+              <th>{{ t('copies.colUsers') }}</th>
               <th>{{ t('books.colOwner') }}</th>
               <th>{{ t('books.colActions') }}</th>
             </tr>
@@ -236,15 +236,14 @@
               <td>{{ book.title }}</td>
               <td>{{ book.author }}</td>
               <td>{{ t('genre.' + book.genre) }}</td>
-              <td>{{ t('lang.' + book.language) }}</td>
-              <td>{{ book.condition }}</td>
-              <td><span class="tag" :class="book.status === 'Available' ? 'tag-green' : 'tag-yellow'">{{ t('books.status.' + book.status) }}</span></td>
+              <td>{{ book.copies_count }}</td>
               <td>
-                <span class="owner-link" @click.stop="$router.push({ name: 'userProfile', params: { id: book.user.id } })">{{ book.user?.name }}</span>
+                <span v-if="book.copies_count > 1" class="text-muted">—</span>
+                <span v-else class="owner-link" @click.stop="$router.push({ name: 'userProfile', params: { id: book.user.id } })">{{ book.user?.name }}</span>
                 <span v-if="book.distance_km !== null && book.distance_km !== undefined" class="book-card-distance d-block">📍 {{ formatDistance(book.distance_km) }}</span>
               </td>
               <td @click.stop>
-                <button class="btn-swap btn-swap-sm" :disabled="book.status !== 'Available'" @click="openSwap(book)">{{ t('books.requestSwap') }}</button>
+                <button class="btn-swap btn-swap-sm" @click="book.copies_count > 1 ? openDetail(book) : openSwap(book)">{{ book.copies_count > 1 ? t('copies.choose') : t('books.requestSwap') }}</button>
               </td>
             </tr>
           </tbody>
@@ -299,8 +298,7 @@
 
   <BookDetailModal
     :book="detailBook"
-    :blocked="detailBookBlocked"
-    @close="detailBook = null; detailBookBlocked = false"
+    @close="detailBook = null"
     @swap="openSwap"
     @message="goToMessages"
     @profile="(user) => $router.push({ name: 'userProfile', params: { id: user.id } })"
@@ -373,7 +371,6 @@ export default {
       userLastPage: 1,
       userTotal: 0,
       detailBook: null,
-      detailBookBlocked: false,
       swapModal: {
         open: false, wantedBook: null, myBooks: [],
         selectedBookId: null, sending: false, error: '', success: false,
@@ -648,15 +645,8 @@ export default {
       return !!wantsDistance && has === false
     },
 
-    async openDetail(book) {
+    openDetail(book) {
       this.detailBook = book
-      this.detailBookBlocked = false
-      if (authStore.user && book.user?.id) {
-        try {
-          const { data } = await axios.get(`/api/users/${book.user.id}`)
-          this.detailBookBlocked = (data.is_blocked || data.they_blocked_me) ?? false
-        } catch { /* ignorē */ }
-      }
     },
 
     coverColor,
