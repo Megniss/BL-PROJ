@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Notifications\LoginLocked;
+use App\Support\TwoFactor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
@@ -76,6 +77,18 @@ class AuthController extends Controller
         }
 
         RateLimiter::clear($key);
+
+        // 2FA — kods uz e-pastu, ja šī ierīce nav atcerēta
+        if ($user->two_factor_enabled && !TwoFactor::isTrusted($user, $request->input('device_token'))) {
+            try {
+                $challenge = TwoFactor::start($user, 'login');
+            } catch (\Throwable $e) {
+                report($e);
+                return response()->json(['message' => 'Could not send the verification code.'], 503);
+            }
+
+            return response()->json(['two_factor' => true, 'challenge' => $challenge]);
+        }
 
         $token = $user->createToken('auth_token')->plainTextToken;
 

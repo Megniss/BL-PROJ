@@ -26,6 +26,15 @@
         </div>
 
         <div class="about-card">
+          <div class="about-card-accent" style="background:#8a5a9a"></div>
+          <div class="about-card-icon">🔐</div>
+          <div>
+            <h2 class="about-card-title mb-2">{{ t('privacy.twofa.title') }}</h2>
+            <p class="about-card-text mb-0">{{ t('privacy.twofa.body') }}</p>
+          </div>
+        </div>
+
+        <div class="about-card">
           <div class="about-card-accent" style="background:#6a9a3a"></div>
           <div class="about-card-icon">📍</div>
           <div>

@@ -2267,3 +2267,11 @@ body {
 .autocomplete-item.disabled { opacity: .55; cursor: default; }
 .autocomplete-note { margin-left: 6px; font-size: 12px; color: var(--muted); }
 [data-theme="dark"] .autocomplete-list { background: #211d18; }
+
+/* 2FA kods */
+.twofa-code-input {
+  font-size: 22px;
+  letter-spacing: 8px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}

@@ -31,6 +31,47 @@
           </div>
         </div>
 
+        <!-- otrais solis — kods no e-pasta -->
+        <template v-if="challenge">
+          <h1 class="auth-title mb-1">{{ t('twofa.title') }}</h1>
+          <p class="auth-sub mb-4">{{ t('twofa.sent') }}</p>
+
+          <form @submit.prevent="verifyCode">
+            <div class="mb-3">
+              <label for="login-code" class="form-label fw-semibold">{{ t('twofa.code') }}</label>
+              <input
+                id="login-code"
+                ref="codeInput"
+                v-model="code"
+                class="form-control twofa-code-input"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                maxlength="6"
+                placeholder="000000"
+                required
+              />
+            </div>
+
+            <div class="form-check mb-3">
+              <input id="login-remember" v-model="remember" class="form-check-input" type="checkbox" />
+              <label for="login-remember" class="form-check-label">{{ t('twofa.remember') }}</label>
+            </div>
+
+            <div v-if="errorMsg" class="alert alert-danger py-2 px-3 mb-3">{{ errorMsg }}</div>
+            <div v-if="infoMsg" class="alert alert-success py-2 px-3 mb-3">{{ infoMsg }}</div>
+
+            <button type="submit" class="btn btn-primary w-100 py-2" :disabled="loading || code.length < 6">
+              {{ loading ? t('login.loading') : t('twofa.verify') }}
+            </button>
+          </form>
+
+          <div class="d-flex justify-content-between mt-3">
+            <a class="forgot-link" @click="backToLogin">← {{ t('twofa.back') }}</a>
+            <a class="forgot-link" @click="resendCode">{{ t('twofa.resend') }}</a>
+          </div>
+        </template>
+
+        <template v-else>
         <h1 class="auth-title mb-1">{{ t('login.title') }}</h1>
         <p class="auth-sub mb-4">{{ t('login.sub') }}</p>
 
@@ -60,6 +101,7 @@
           {{ t('login.switch') }}
           <a @click="$router.push({ name: 'register' })">{{ t('login.switchLink') }}</a>
         </p>
+        </template>
         <a class="auth-back mt-2" @click="$router.push({ name: 'home' })">{{ t('login.back') }}</a>
       </div>
     </div>
@@ -93,6 +135,7 @@ import axios from 'axios'
 import langMixin from '../langMixin.js'
 import { setAuth } from '../authStore.js'
 import AdminUnlock from './AdminUnlock.vue'
+import { getDeviceToken, saveDeviceToken } from '../trustedDevice.js'
 
 export default {
   name: 'Login',
@@ -108,6 +151,10 @@ export default {
       errorMsg: '',
       adminChoice: false,
       adminUnlock: false,
+      challenge: null,
+      code: '',
+      remember: false,
+      infoMsg: '',
     }
   },
 
@@ -116,14 +163,19 @@ export default {
       this.errorMsg = ''
       this.loading = true
       try {
-        const { data } = await axios.post('/api/login', this.form)
-        setAuth(data.user, data.token)
+        const { data } = await axios.post('/api/login', {
+          ...this.form,
+          device_token: getDeviceToken(this.form.email),
+        })
 
-        if (data.user.is_admin) {
-          this.adminChoice = true
-        } else {
-          this.$router.push({ name: 'dashboard' })
+        if (data.two_factor) {
+          this.challenge = data.challenge
+          this.code = ''
+          this.$nextTick(() => this.$refs.codeInput?.focus())
+          return
         }
+
+        this.finishLogin(data)
       } catch (e) {
         const data = e.response?.data
         if (data?.throttled) {
@@ -136,6 +188,68 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+
+    finishLogin(data) {
+      setAuth(data.user, data.token)
+
+      if (data.user.is_admin) {
+        this.adminChoice = true
+      } else {
+        this.$router.push({ name: 'dashboard' })
+      }
+    },
+
+    async verifyCode() {
+      this.errorMsg = ''
+      this.infoMsg = ''
+      this.loading = true
+      try {
+        const { data } = await axios.post('/api/login/verify', {
+          challenge: this.challenge,
+          code: this.code,
+          remember: this.remember,
+        })
+        if (data.device_token) saveDeviceToken(this.form.email, data.device_token)
+        this.finishLogin(data)
+      } catch (e) {
+        const data = e.response?.data
+        if (data?.error === 'expired') {
+          // kods novecojis vai par daudz kļūdu — sāk no paroles
+          this.backToLogin()
+          this.errorMsg = this.t('twofa.expired')
+        } else if (data?.blocked) {
+          this.errorMsg = this.t('login.errorBlocked')
+        } else {
+          this.errorMsg = this.t('twofa.wrong')
+          this.code = ''
+        }
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async resendCode() {
+      this.errorMsg = ''
+      this.infoMsg = ''
+      try {
+        await axios.post('/api/login/resend', { challenge: this.challenge })
+        this.infoMsg = this.t('twofa.resent')
+      } catch (e) {
+        if (e.response?.data?.error === 'expired') {
+          this.backToLogin()
+          this.errorMsg = this.t('twofa.expired')
+        } else {
+          this.errorMsg = this.t('twofa.resendWait')
+        }
+      }
+    },
+
+    backToLogin() {
+      this.challenge = null
+      this.code = ''
+      this.form.password = ''
+      this.infoMsg = ''
     }
   }
 }

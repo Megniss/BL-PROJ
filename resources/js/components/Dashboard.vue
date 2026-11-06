@@ -258,12 +258,27 @@
     </div>
 
     <AppFooter />
+
+    <!-- jautājums par 2FA pēc reģistrācijas vai pirmā login -->
+    <div v-if="showTwoFactorPrompt" class="modal-overlay">
+      <div class="modal-card modal-card--sm">
+        <h2 class="modal-title mb-2">🔐 {{ t('twofa.promptTitle') }}</h2>
+        <template v-if="!twoFactorSetup">
+          <p class="modal-desc mb-4">{{ t('twofa.promptText') }}</p>
+          <div class="d-flex justify-content-end gap-2">
+            <button class="btn btn-outline-secondary" @click="dismissTwoFactor">{{ t('twofa.notNow') }}</button>
+            <button class="btn btn-primary" @click="twoFactorSetup = true">{{ t('twofa.enableBtn') }}</button>
+          </div>
+        </template>
+        <TwoFactorSetup v-else @enabled="twoFactorEnabled" @cancel="twoFactorSetup = false" />
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
-import { authStore } from '../authStore.js'
+import { authStore, updateUser } from '../authStore.js'
 import { coverColor } from '../coverColor.js'
 import { conditionClass } from '../conditionClass.js'
 import { showToast } from '../toast.js'
@@ -271,11 +286,12 @@ import langMixin from '../langMixin.js'
 import AppNavbar from './AppNavbar.vue'
 import AppFooter from './AppFooter.vue'
 import AutocompleteInput from './AutocompleteInput.vue'
+import TwoFactorSetup from './TwoFactorSetup.vue'
 
 export default {
   name: 'Dashboard',
 
-  components: { AppNavbar, AppFooter, AutocompleteInput },
+  components: { AppNavbar, AppFooter, AutocompleteInput, TwoFactorSetup },
 
   mixins: [langMixin],
 
@@ -289,6 +305,7 @@ export default {
       fetchError: '',
       unreadMessages: 0,
       showModal: false,
+      twoFactorSetup: false,
       editingBook: null,
       deletingBook: null,
       saving: false,
@@ -308,6 +325,11 @@ export default {
   },
 
   computed: {
+    showTwoFactorPrompt() {
+      const u = authStore.user
+      return !!u && !u.two_factor_prompted && !u.two_factor_enabled
+    },
+
     pendingIncoming() {
       return this.incoming.filter(r => r.status === 'pending')
     },
@@ -331,6 +353,17 @@ export default {
   },
 
   methods: {
+    async dismissTwoFactor() {
+      updateUser({ ...authStore.user, two_factor_prompted: true })
+      try { await axios.post('/api/two-factor/dismiss') } catch { /* ignorē */ }
+    },
+
+    twoFactorEnabled() {
+      updateUser({ ...authStore.user, two_factor_enabled: true, two_factor_prompted: true })
+      this.twoFactorSetup = false
+      showToast(this.t('twofa.enabled'))
+    },
+
     async fetchAll() {
       this.loading = true
       this.fetchError = ''

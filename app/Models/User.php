@@ -71,6 +71,8 @@ class User extends Authenticatable
             'admin_password_change' => 'boolean',
             'is_blocked' => 'boolean',
             'deleted_at' => 'datetime',
+            'two_factor_enabled' => 'boolean',
+            'two_factor_prompted' => 'boolean',
             'latitude' => 'float',
             'longitude' => 'float',
         ];

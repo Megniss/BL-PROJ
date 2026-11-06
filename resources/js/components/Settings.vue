@@ -66,6 +66,38 @@
         </div>
       </div>
 
+      <!-- divpakāpju verifikācija -->
+      <div class="settings-card mb-4">
+        <h2 class="settings-section-title">🔐 {{ t('twofa.promptTitle') }}</h2>
+        <p class="text-muted small mb-3">{{ t('twofa.settingsText') }}</p>
+
+        <template v-if="twoFactor.enabled">
+          <p class="small mb-3"><span class="tag tag-green">{{ t('twofa.on') }}</span></p>
+          <form v-if="twoFactor.disabling" class="d-flex flex-wrap gap-2 align-items-start" @submit.prevent="disableTwoFactor">
+            <div style="flex:1;min-width:200px">
+              <input
+                v-model="twoFactor.password"
+                class="form-control"
+                :class="{ 'is-invalid': twoFactor.error }"
+                type="password"
+                autocomplete="current-password"
+                :placeholder="t('settings.deletePwd')"
+                required
+              />
+              <div v-if="twoFactor.error" class="invalid-feedback">{{ twoFactor.error }}</div>
+            </div>
+            <button type="button" class="btn btn-outline-secondary" @click="twoFactor.disabling = false">{{ t('settings.deleteCancel') }}</button>
+            <button type="submit" class="btn btn-outline-danger" :disabled="!twoFactor.password">{{ t('twofa.disableBtn') }}</button>
+          </form>
+          <button v-else class="btn btn-outline-danger" @click="twoFactor.disabling = true; twoFactor.password = ''; twoFactor.error = ''">{{ t('twofa.disableBtn') }}</button>
+        </template>
+
+        <template v-else>
+          <TwoFactorSetup v-if="twoFactor.setup" @enabled="onTwoFactorEnabled" @cancel="twoFactor.setup = false" />
+          <button v-else class="btn btn-primary" @click="twoFactor.setup = true">{{ t('twofa.enableBtn') }}</button>
+        </template>
+      </div>
+
       <!-- atrašanās vieta -->
       <div class="settings-card mb-4">
         <h2 class="settings-section-title">{{ t('location.title') }}</h2>
@@ -143,12 +175,13 @@ import { showToast } from '../toast.js'
 import AppNavbar from './AppNavbar.vue'
 import AppFooter from './AppFooter.vue'
 import LocationPicker from './LocationPicker.vue'
+import TwoFactorSetup from './TwoFactorSetup.vue'
 import langMixin from '../langMixin.js'
 
 export default {
   name: 'Settings',
 
-  components: { AppNavbar, AppFooter, LocationPicker },
+  components: { AppNavbar, AppFooter, LocationPicker, TwoFactorSetup },
 
   mixins: [langMixin],
 
@@ -171,6 +204,7 @@ export default {
       blockedLoading: true,
 
       profileLoaded: false,
+      twoFactor: { enabled: false, setup: false, disabling: false, password: '', error: '' },
       location: { latitude: null, longitude: null },
       isAdmin: false,
       isOnlyAdmin: false,
@@ -195,6 +229,7 @@ export default {
     this.isAdmin = profile.data.is_admin
     this.isOnlyAdmin = profile.data.is_only_admin
     this.location = { latitude: profile.data.latitude, longitude: profile.data.longitude }
+    this.twoFactor.enabled = profile.data.two_factor_enabled
     this.profileLoaded = true
   },
 
@@ -242,6 +277,26 @@ export default {
         await axios.delete(`/api/blocks/${user.id}`)
         this.blockedUsers = this.blockedUsers.filter(u => u.id !== user.id)
       } catch { /* ignore */ }
+    },
+
+    onTwoFactorEnabled() {
+      this.twoFactor.enabled = true
+      this.twoFactor.setup = false
+      updateUser({ ...authStore.user, two_factor_enabled: true, two_factor_prompted: true })
+      showToast(this.t('twofa.enabled'))
+    },
+
+    async disableTwoFactor() {
+      this.twoFactor.error = ''
+      try {
+        await axios.post('/api/two-factor/disable', { password: this.twoFactor.password })
+        this.twoFactor.enabled = false
+        this.twoFactor.disabling = false
+        updateUser({ ...authStore.user, two_factor_enabled: false })
+        showToast(this.t('twofa.disabled'))
+      } catch (err) {
+        this.twoFactor.error = err.response?.status === 422 ? this.t('twofa.wrongPassword') : this.t('dash.genericError')
+      }
     },
 
     openDelete() {

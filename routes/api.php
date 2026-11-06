@@ -12,6 +12,7 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\SwapRequestController;
+use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -28,6 +29,8 @@ Route::get('/users/{user}', [UserController::class, 'show'])->middleware('thrott
 
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+Route::post('/login/verify', [TwoFactorController::class, 'verifyLogin'])->middleware('throttle:10,1');
+Route::post('/login/resend', [TwoFactorController::class, 'resendLogin'])->middleware('throttle:3,1');
 Route::post('/forgot-password', [PasswordResetController::class, 'sendLink'])->middleware('throttle:5,1');
 Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:5,1');
 
@@ -39,6 +42,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update']);
     Route::delete('/profile', [ProfileController::class, 'destroy'])->middleware('throttle:5,1');
     Route::patch('/profile/privacy', [ProfileController::class, 'updatePrivacy']);
+    Route::post('/two-factor/send', [TwoFactorController::class, 'sendEnableCode'])->middleware('throttle:3,1');
+    Route::post('/two-factor/enable', [TwoFactorController::class, 'enable'])->middleware('throttle:10,1');
+    Route::post('/two-factor/disable', [TwoFactorController::class, 'disable']);
+    Route::post('/two-factor/dismiss', [TwoFactorController::class, 'dismissPrompt']);
     Route::put('/profile/location', [ProfileController::class, 'updateLocation']);
     Route::delete('/profile/location', [ProfileController::class, 'removeLocation']);
     Route::get('/profile/history', [ProfileController::class, 'history']);

@@ -9,6 +9,7 @@ use App\Models\Message;
 use App\Models\SwapRequest;
 use App\Models\User;
 use App\Notifications\SwapUnavailable;
+use App\Support\TwoFactor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -43,6 +44,7 @@ class ProfileController extends Controller
             'is_only_admin' => $user->is_admin && !$this->hasOtherAdmins($user),
             'latitude' => $user->latitude,
             'longitude' => $user->longitude,
+            'two_factor_enabled' => $user->two_factor_enabled,
         ]);
     }
 
@@ -182,6 +184,7 @@ class ProfileController extends Controller
 
             Block::where('blocker_id', $user->id)->orWhere('blocked_id', $user->id)->delete();
             $user->notifications()->delete();
+            TwoFactor::forget($user);
             $user->tokens()->delete();
             DB::table('password_reset_tokens')->where('email', $oldEmail)->delete();
             DB::table('sessions')->where('user_id', $user->id)->delete();
@@ -199,6 +202,7 @@ class ProfileController extends Controller
                 'show_swap_history' => false,
                 'latitude' => null,
                 'longitude' => null,
+                'two_factor_enabled' => false,
                 'deleted_at' => now(),
             ])->save();
         });
