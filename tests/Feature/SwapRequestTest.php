@@ -92,7 +92,7 @@ class SwapRequestTest extends TestCase
 
         $this->assertDatabaseHas('swap_requests', ['id' => $swap->id, 'status' => 'accepted']);
 
-        // Books should have changed ownership
+        // grāmatas samainījušās
         $this->assertDatabaseHas('books', ['id' => $offered->id, 'user_id' => $owner->id]);
         $this->assertDatabaseHas('books', ['id' => $wanted->id,  'user_id' => $requester->id]);
     }
@@ -117,7 +117,7 @@ class SwapRequestTest extends TestCase
 
         $this->assertDatabaseHas('swap_requests', ['id' => $swap->id, 'status' => 'declined']);
 
-        // Books should be available again
+        // grāmatas atkal pieejamas
         $this->assertDatabaseHas('books', ['id' => $offered->id, 'status' => 'Available']);
         $this->assertDatabaseHas('books', ['id' => $wanted->id,  'status' => 'Available']);
     }
@@ -148,7 +148,7 @@ class SwapRequestTest extends TestCase
         $owner     = User::factory()->create();
         ['offered' => $offered, 'wanted' => $wanted] = $this->makeSwap($requester, $owner);
 
-        // Create the swap via the API so both books are set to Pending
+        // caur API, lai abas grāmatas kļūst Pending
         $response = $this->actingAs($requester)->postJson('/api/swap-requests', [
             'offered_book_id' => $offered->id,
             'wanted_book_id'  => $wanted->id,
@@ -164,14 +164,14 @@ class SwapRequestTest extends TestCase
              ->deleteJson("/api/swap-requests/{$swapId}")
              ->assertOk();
 
-        // Cancelling a pending request marks it declined + dismissed (not deleted)
+        // atcelts pieprasījums netiek dzēsts, bet atzīmēts kā declined
         $this->assertDatabaseHas('swap_requests', [
             'id'                   => $swapId,
             'status'               => 'declined',
             'requester_dismissed'  => true,
         ]);
 
-        // Both books must be Available again after cancellation
+        // abas grāmatas atkal pieejamas
         $this->assertDatabaseHas('books', ['id' => $offered->id, 'status' => 'Available']);
         $this->assertDatabaseHas('books', ['id' => $wanted->id,  'status' => 'Available']);
     }

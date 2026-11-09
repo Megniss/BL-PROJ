@@ -21,8 +21,7 @@ class Message extends Model
         'image_removed' => 'boolean',
     ];
 
-    // īslaicīga relatīva saite uz bildi; derīguma laiks noapaļots līdz stundai,
-    // lai saite nemainās katrā pieprasījumā
+    // īslaicīga saite uz bildi, noapaļota līdz stundai, lai nemainās katrā pieprasījumā
     protected function imageUrl(): Attribute
     {
         return Attribute::get(fn() => $this->image_path

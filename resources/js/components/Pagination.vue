@@ -28,19 +28,19 @@ export default {
       if (t <= 7) return Array.from({ length: t }, (_, i) => i + 1)
 
       const items = []
-      // always first
+      // vienmēr pirmā
       items.push(1)
 
       if (c > 3) items.push('...')
 
-      // window around current
+      // lapas ap pašreizējo
       const from = Math.max(2, c - 1)
       const to = Math.min(t - 1, c + 1)
       for (let i = from; i <= to; i++) items.push(i)
 
       if (c < t - 2) items.push('...')
 
-      // always last
+      // vienmēr pēdējā
       items.push(t)
       return items
     }

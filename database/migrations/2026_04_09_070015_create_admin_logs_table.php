@@ -11,10 +11,10 @@ return new class extends Migration
         Schema::create('admin_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('admin_id')->constrained('users')->cascadeOnDelete();
-            $table->string('action');          // delete_book, block_user, review_book, etc.
+            $table->string('action');          // delete_book, block_user utt.
             $table->string('target_type');     // book, user, swap
             $table->unsignedBigInteger('target_id')->nullable();
-            $table->string('target_name');     // title or name at time of action
+            $table->string('target_name');     // nosaukums vai vārds darbības brīdī
             $table->string('reason')->nullable();
             $table->timestamps();
         });

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // seed EN and LV
+        // sākumā EN un LV
         DB::table('languages')->insert([
             ['code' => 'en', 'name' => 'English',  'flag' => '🇬🇧', 'is_active' => true, 'sort_order' => 1, 'created_at' => now(), 'updated_at' => now()],
             ['code' => 'lv', 'name' => 'Latvian',  'flag' => '🇱🇻', 'is_active' => true, 'sort_order' => 2, 'created_at' => now(), 'updated_at' => now()],

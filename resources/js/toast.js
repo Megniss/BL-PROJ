@@ -3,7 +3,7 @@ import { reactive } from 'vue'
 export const toasts = reactive([])
 let _id = 0
 
-// type: 'success' | 'error' | 'info'
+// tips: 'success' | 'error' | 'info'
 export function showToast(message, type = 'success', duration = 3200) {
   const id = ++_id
   toasts.push({ id, message, type })

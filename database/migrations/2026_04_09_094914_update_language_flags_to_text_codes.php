@@ -7,7 +7,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Country flag emoji sequences don't render on Windows — switch to text codes
+        // karogu emoji Windows nerādās, tāpēc teksta kodi
         DB::table('languages')->where('code', 'en')->update(['flag' => 'EN']);
         DB::table('languages')->where('code', 'lv')->update(['flag' => 'LV']);
     }

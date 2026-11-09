@@ -13,10 +13,10 @@ return new class extends Migration
             $table->unsignedBigInteger('owner_id')->nullable()->after('requester_id');
         });
 
-        // backfill pending/declined rows — wanted_book.user_id is still the original owner
+        // esošajiem pieprasījumiem īpašnieks ir wanted_book īpašnieks
         DB::statement("UPDATE swap_requests SET owner_id = (SELECT user_id FROM books WHERE books.id = swap_requests.wanted_book_id)");
 
-        // for accepted swaps ownership has flipped; the offered_book now belongs to the original owner
+        // pieņemtajās apmaiņās grāmatas jau samainītas, tāpēc ņem offered_book
         DB::statement("UPDATE swap_requests SET owner_id = (SELECT user_id FROM books WHERE books.id = swap_requests.offered_book_id) WHERE status = 'accepted'");
 
         Schema::table('swap_requests', function (Blueprint $table) {

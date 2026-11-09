@@ -1,4 +1,4 @@
-// samazina bildi un pārvērš par JPEG — tā arī pazūd EXIF dati (GPS u.c.)
+// samazina bildi un pārvērš par JPEG, tā pazūd arī GPS dati
 export async function resizeImage(file, maxSize = 1600, quality = 0.85) {
   const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
 

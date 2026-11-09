@@ -188,9 +188,6 @@ Iedomājies ka lietotājs pārlūkā noklikšķina "Browse" pogu. Lūk kas notie
 
 
 
-jaunas lietas ko vajag:
-2fa email OTP
-
 noskaidrot ka prezentes darbu
 vai caur savu pc vai caur skolas kadu hernu
 

@@ -78,7 +78,7 @@ class AuthTest extends TestCase
              ->postJson('/api/logout')
              ->assertOk();
 
-        // Token should have been deleted from the database
+        // tokenam jābūt izdzēstam
         $this->assertDatabaseMissing('personal_access_tokens', [
             'tokenable_id' => $user->id,
         ]);

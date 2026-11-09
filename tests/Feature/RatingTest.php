@@ -13,7 +13,7 @@ class RatingTest extends TestCase
 {
     use RefreshDatabase;
 
-    // Creates two users each with a book, creates an accepted swap between them
+    // divi lietotāji ar grāmatām un pieņemta apmaiņa
     private function createAcceptedSwap(): array
     {
         $requester = User::factory()->create();
@@ -30,7 +30,7 @@ class RatingTest extends TestCase
             'status'         => 'accepted',
         ]);
 
-        // simulate ownership transfer that accept() would have done
+        // kā pēc accept() — grāmatas samainītas
         $offeredBook->update(['user_id' => $owner->id, 'status' => 'Swapped']);
         $wantedBook->update(['user_id' => $requester->id, 'status' => 'Swapped']);
 
@@ -169,7 +169,7 @@ class RatingTest extends TestCase
             'stars'           => 5,
         ]);
 
-        // mark books as Available so they appear in browse
+        // lai grāmatas redzamas browse
         $offeredBook->update(['status' => 'Available']);
         $wantedBook->update(['status' => 'Available']);
 

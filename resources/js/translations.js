@@ -140,7 +140,7 @@ export const translations = {
     'footer.browse': 'Browse Books',
     'footer.copy': '© 2025 BookLoop · Eduards Megnis',
 
-    // Auth left panel
+    // Login lapas kreisā puse
     'auth.leftTitle': 'Your next great read is one swap away.',
     'auth.leftSub': 'Join readers across Latvia exchanging books for free.',
     'auth.perk1': "List books you've finished",
@@ -462,7 +462,7 @@ export const translations = {
     'privacy.contact.title': 'Questions?',
     'privacy.contact.body': 'If you have any questions about your account or this policy, you can reach out through the support system available after logging in.',
 
-    // Support
+    // Atbalsts
     'nav.support': 'Support',
     'support.title': 'Support',
     'support.newBtn': '+ New Complaint',
@@ -483,7 +483,7 @@ export const translations = {
     'support.createError': 'Failed to submit complaint. Please try again.',
     'support.contactLink': 'Contact Support',
 
-    // Admin panel
+    // Admin panelis
     'nav.admin': 'Admin Panel',
     'admin.title': 'Admin Panel',
     'admin.loadError': 'Failed to load admin data.',
@@ -763,7 +763,7 @@ export const translations = {
     'footer.browse': 'Pārlūkot Grāmatas',
     'footer.copy': '© 2025 BookLoop · Eduards Megnis',
 
-    // Auth left panel
+    // Login lapas kreisā puse
     'auth.leftTitle': 'Nākamā lieliskā grāmata ir tikai viena apmaiņa prom.',
     'auth.leftSub': 'Pievienojies Latvijas lasītājiem, kas apmainās ar grāmatām bez maksas.',
     'auth.perk1': 'Pievieno izlasītās grāmatas',

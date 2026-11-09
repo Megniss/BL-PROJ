@@ -55,7 +55,7 @@ class TwoFactor
         return true;
     }
 
-    // atgriež lietotāju, ja kods pareizs; 'invalid' vai 'expired' citādi
+    // lietotājs, ja kods pareizs, citādi 'invalid' vai 'expired'
     public static function verify(string $token, string $code, string $purpose): User|string
     {
         $challenge = self::find($token, $purpose);

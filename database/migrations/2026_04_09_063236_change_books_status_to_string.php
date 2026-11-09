@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('books', function (Blueprint $table) {
-            // change enum to plain string so we can use any status value (e.g. UnderReview)
+            // enum vietā teksts, lai var arī UnderReview u.c.
             $table->string('status')->default('Available')->change();
         });
     }

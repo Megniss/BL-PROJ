@@ -4,14 +4,12 @@ namespace App\Support;
 
 use App\Models\User;
 
-// attālums pēc vienkāršotas formulas — Latvijas mērogā pietiekami precīzi
-// un SQL nevajag trigonometrijas funkcijas
+// vienkāršota attāluma formula, Latvijas mērogā pietiek
 class Distance
 {
     private const KM_PER_DEGREE = 111.32;
 
-    // SQL izteiksme ar attāluma kvadrātu grādos; skaitļi ielikti tieši,
-    // jo PDO tos padotu kā tekstu un SQLite salīdzinātu nepareizi
+    // skaitļi ielikti tieši, jo PDO tos padod kā tekstu un SQLite salīdzina nepareizi
     public static function sql(User $from, string $latCol, string $lngCol): string
     {
         $lat = self::num((float) $from->latitude);

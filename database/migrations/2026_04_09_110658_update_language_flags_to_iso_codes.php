@@ -7,7 +7,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Store ISO 3166-1 alpha-2 country codes (lowercase) for flag-icons CSS library
+        // ISO valstu kodi priekš flag-icons
         DB::table('languages')->where('code', 'en')->update(['flag' => 'gb']);
         DB::table('languages')->where('code', 'lv')->update(['flag' => 'lv']);
     }

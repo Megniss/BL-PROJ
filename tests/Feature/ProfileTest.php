@@ -77,7 +77,7 @@ class ProfileTest extends TestCase
             'new_password_confirmation' => 'NewPassword1!',
         ])->assertOk();
 
-        // Verify new password works
+        // jaunā parole strādā
         $this->postJson('/api/login', ['email' => $user->email, 'password' => 'NewPassword1!'])->assertOk();
     }
 
@@ -134,7 +134,7 @@ class ProfileTest extends TestCase
     {
         $user = User::factory()->create();
 
-        // Create a database notification manually
+        // paziņojums ar roku
         $user->notifications()->create([
             'id'   => \Illuminate\Support\Str::uuid(),
             'type' => 'App\\Notifications\\SwapAccepted',

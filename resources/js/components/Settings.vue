@@ -235,8 +235,6 @@ export default {
 
   methods: {
     async saveProfile() {
-      this.profileError = ''
-      this.profileSuccess = ''
       this.profileSaving = true
       try {
         const { data } = await axios.patch('/api/profile', this.profileForm)

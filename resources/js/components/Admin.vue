@@ -30,7 +30,7 @@
 
     <div v-if="error" class="alert alert-danger">{{ error }}</div>
 
-    <!-- tab strip -->
+    <!-- cilnes -->
     <div class="admin-tabs-wrap mb-4">
       <div class="admin-tabs">
         <button v-for="tab in tabs" :key="tab.key"
@@ -57,7 +57,7 @@
       <span class="spinner-border spinner-border-sm text-success"></span>
     </div>
 
-    <!-- users -->
+    <!-- lietotāji -->
     <div v-show="activeTab === 'users' && !loading[activeTab]" class="admin-card">
       <div class="mt-1">
         <div class="filter-bar mb-3">
@@ -130,7 +130,7 @@
       </div>
     </div>
 
-    <!-- books -->
+    <!-- grāmatas -->
     <div v-show="activeTab === 'books' && !loading[activeTab]" class="admin-card">
       <div class="mt-1">
         <div class="filter-bar mb-3">
@@ -189,7 +189,7 @@
       </div>
     </div>
 
-    <!-- swaps -->
+    <!-- apmaiņas -->
     <div v-show="activeTab === 'swaps' && !loading[activeTab]" class="admin-card">
       <div class="mt-1">
         <div class="filter-bar mb-3">
@@ -244,7 +244,7 @@
       </div>
     </div>
 
-    <!-- ratings -->
+    <!-- vērtējumi -->
     <div v-show="activeTab === 'ratings' && !loading[activeTab]" class="admin-card">
       <div class="mt-1">
         <div class="filter-bar mb-3">
@@ -288,11 +288,11 @@
       </div>
     </div>
 
-    <!-- languages -->
+    <!-- valodas -->
     <div v-show="activeTab === 'langs' && !loading[activeTab]" class="admin-card">
       <div class="mt-1">
 
-        <!-- lang list -->
+        <!-- valodu saraksts -->
         <div style="overflow-x:auto">
         <table class="table table-hover align-middle mb-3" style="min-width:560px">
           <thead>
@@ -340,7 +340,7 @@
         </table>
         </div>
 
-        <!-- add new lang form toggle -->
+        <!-- jaunas valodas forma -->
         <div v-if="!addingLang">
           <button class="btn btn-sm btn-outline-primary" @click="addingLang = true">{{ t('admin.btn.addLang') }}</button>
         </div>
@@ -363,7 +363,7 @@
           <button class="btn btn-sm btn-outline-secondary" @click="addingLang = false">{{ t('modal.cancel') }}</button>
         </div>
 
-        <!-- translation editor modal -->
+        <!-- tulkojumu redaktors -->
         <div v-if="editingLang" class="lang-editor-overlay" @click.self="editingLang = null">
           <div class="lang-editor-modal">
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -393,7 +393,7 @@
       </div>
     </div>
 
-    <!-- logs -->
+    <!-- žurnāls -->
     <div v-show="activeTab === 'logs' && !loading[activeTab]" class="admin-card">
       <div class="mt-1">
         <div class="filter-bar mb-3">
@@ -614,7 +614,7 @@ export default {
     },
 
     allTranslationKeys() {
-      // use EN as the master list of keys + fallback values
+      // EN ir galvenais atslēgu saraksts
       return translations['en'] ?? {}
     },
 
@@ -650,7 +650,7 @@ export default {
   },
 
   async mounted() {
-    // read state from URL if someone lands on a direct link
+    // stāvoklis no URL, ja atvērts pa tiešo saiti
     if (this.$route.params.tab) this.activeTab = this.$route.params.tab
     if (this.$route.query.page) this.pages[this.activeTab] = Number(this.$route.query.page)
     if (this.$route.query.per_page) {
@@ -854,7 +854,7 @@ export default {
         const { data } = await axios.patch(`/api/admin/languages/${lang.code}`, this.langRowEdit)
         lang.flag = data.flag
         lang.name = data.name
-        // also update the navbar switcher if it's there
+        // atjauno arī navbar valodu pārslēdzēju
         const entry = this.langStore.languages.find(l => l.code === lang.code)
         if (entry) { entry.flag = data.flag; entry.name = data.name }
         this.editingLangRow = null
@@ -880,10 +880,10 @@ export default {
       if (!confirm(this.t('admin.confirm.deactivateLang').replace('{name}', lang.name))) return
       await axios.patch(`/api/admin/languages/${lang.code}/deactivate`)
       lang.is_active = false
-      // pull it out of the navbar switcher too
+      // izņem arī no navbar
       const idx = this.langStore.languages.findIndex(l => l.code === lang.code)
       if (idx !== -1) this.langStore.languages.splice(idx, 1)
-      // if the user was on that lang, fall back to EN
+      // ja bija šī valoda, pārslēdz uz EN
       if (this.langStore.locale === lang.code) setLocale('en')
     },
 
@@ -897,10 +897,10 @@ export default {
 
     async openLangEditor(lang) {
       this.editingLang = lang.code
-      // start with the static file, new langs just use EN as base
+      // sāk ar failu, jaunām valodām pamatā EN
       const staticBase = { ...(translations[lang.code] ?? translations['en']) }
       const { data } = await axios.get(`/api/admin/translations/${lang.code}`)
-      // db overrides take priority over the static file
+      // db labojumi svarīgāki par failu
       this.langTranslations = { ...staticBase, ...data }
     },
 
@@ -999,11 +999,11 @@ export default {
 
 .table th { font-weight: 600; font-size: .85rem; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
 
-/* fixed-width action columns */
+/* pogu kolonnas */
 .ab-col { width: 1%; white-space: nowrap; padding-left: .35rem; padding-right: .35rem; }
 .ab { min-width: 72px; white-space: nowrap; font-size: .72rem; padding: .2rem .45rem; }
 
-/* status tag chips */
+/* statusa birkas */
 .stag {
   display: inline-flex;
   align-items: center;
@@ -1050,7 +1050,7 @@ export default {
 
 .toggle-arrow.rotated { transform: rotate(90deg); }
 
-/* dark mode overrides */
+/* tumšais režīms */
 :global([data-theme="dark"]) .admin-tab-btn { color: #9a9088; }
 :global([data-theme="dark"]) .admin-tab-btn:hover { color: #e8e0d5; }
 :global([data-theme="dark"]) .admin-tab-btn.active { color: #6aab6e; border-bottom-color: #6aab6e; }
@@ -1118,7 +1118,7 @@ export default {
 </style>
 
 <style>
-/* dark mode — has to be unscoped so [data-theme] actually reaches */
+/* tumšais režīms — bez scoped, citādi [data-theme] nestrādā */
 [data-theme="dark"] .admin-card {
   background: #211d18;
   box-shadow: 0 2px 8px rgba(0,0,0,.3);

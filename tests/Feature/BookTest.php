@@ -133,7 +133,7 @@ class BookTest extends TestCase
 
         $response->assertOk();
 
-        // Swapped books must never appear
+        // apmainītās grāmatas nedrīkst parādīties
         foreach ($response->json('data') as $book) {
             $this->assertNotSame('Swapped', $book['status']);
         }

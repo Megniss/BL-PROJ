@@ -97,7 +97,6 @@ import axios from 'axios'
 import langMixin from '../langMixin.js'
 import { coverColor } from '../coverColor.js'
 import { conditionClass } from '../conditionClass.js'
-import { authStore } from '../authStore.js'
 import { formatDistance } from '../distance.js'
 
 export default {
@@ -108,7 +107,7 @@ export default {
   },
   emits: ['close', 'swap', 'message', 'profile', 'suggest'],
   data() {
-    return { authStore, suggestions: [], copies: [], iHave: false, loadingCopies: false }
+    return { suggestions: [], copies: [], iHave: false, loadingCopies: false }
   },
   watch: {
     book(val) {

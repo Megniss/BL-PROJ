@@ -15,8 +15,7 @@ self.addEventListener('activate', e => {
   self.clients.claim()
 })
 
-// kešo tikai savas lapas failus; api, privātās bildes un citu lapu
-// pieprasījumus (piem. kartes) laiž tieši uz tīklu
+// kešo tikai savus failus, api, bildes un kartes laiž tieši uz tīklu
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url)
   if (
@@ -36,7 +35,7 @@ self.addEventListener('fetch', e => {
         return res
       })
       .catch(async () => {
-        // bez tīkla — no keša; lapām der arī sākumlapa, jo tā ir SPA
+        // bez tīkla ņem no keša, lapām der sākumlapa (SPA)
         const cached = await caches.match(e.request)
         if (cached) return cached
         if (e.request.mode === 'navigate') {

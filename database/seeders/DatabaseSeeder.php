@@ -10,7 +10,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // --- USERS ---
+        // lietotāji
         $users = [
             [
                 'id' => 1,
@@ -71,7 +71,7 @@ class DatabaseSeeder extends Seeder
         // testa admin parole
         DB::table('users')->where('id', 1)->update(['admin_password' => Hash::make('admin12345678')]);
 
-        // --- BOOKS ---
+        // grāmatas
         $books = [
             [
                 'id' => 1,

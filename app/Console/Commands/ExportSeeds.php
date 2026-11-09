@@ -30,12 +30,12 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // --- USERS ---
+        // lietotāji
         \$users = $usersPhp;
 
         DB::table('users')->insert(\$users);
 
-        // --- BOOKS ---
+        // grāmatas
         \$books = $booksPhp;
 
         DB::table('books')->insert(\$books);

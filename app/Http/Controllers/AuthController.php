@@ -15,7 +15,7 @@ use Illuminate\Validation\ValidationException;
 class AuthController extends Controller
 {
     private const MAX_ATTEMPTS = 5;
-    private const LOCKOUT_SECONDS = 900; // 15 minutes
+    private const LOCKOUT_SECONDS = 900; // 15 min
 
     public function register(Request $request)
     {

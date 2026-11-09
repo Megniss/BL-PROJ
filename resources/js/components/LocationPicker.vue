@@ -32,7 +32,7 @@ const DEFAULT_VIEW = { center: [56.88, 24.6], zoom: 7 }
 
 const OSM_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
 
-// MapTiler ar atslēgu no .env; bez atslēgas — OSM (tas mēdz bloķēt lietotnes)
+// MapTiler, ja .env ir atslēga, citādi OSM
 function tileLayer() {
   const key = import.meta.env.VITE_MAPTILER_KEY
 
