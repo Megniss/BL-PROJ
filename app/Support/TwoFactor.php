@@ -12,7 +12,7 @@ class TwoFactor
 {
     public const CODE_MINUTES = 10;
     public const MAX_ATTEMPTS = 5;
-    public const DEVICE_DAYS = 3;
+    public const DEVICE_MINUTES = 10;
 
     // izveido jaunu kodu, nosūta to un atgriež pieprasījuma atslēgu
     public static function start(User $user, string $purpose): string
@@ -88,7 +88,7 @@ class TwoFactor
         DB::table('trusted_devices')->insert([
             'user_id' => $user->id,
             'token_hash' => hash('sha256', $token),
-            'expires_at' => now()->addDays(self::DEVICE_DAYS),
+            'expires_at' => now()->addMinutes(self::DEVICE_MINUTES),
             'created_at' => now(),
             'updated_at' => now(),
         ]);

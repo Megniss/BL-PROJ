@@ -101,7 +101,7 @@ class TwoFactorTest extends TestCase
         $this->postJson('/api/login/verify', ['challenge' => $challenge, 'code' => $code])->assertStatus(422);
     }
 
-    public function test_remembered_device_skips_code_for_three_days(): void
+    public function test_remembered_device_skips_code_for_ten_minutes(): void
     {
         $user = $this->userWith2fa();
         $challenge = $this->login()->json('challenge');
@@ -112,9 +112,10 @@ class TwoFactorTest extends TestCase
 
         $this->assertNotEmpty($device);
 
+        $this->travel(9)->minutes();
         $this->login(['device_token' => $device])->assertJsonStructure(['token'])->assertJsonMissing(['two_factor' => true]);
 
-        $this->travel(4)->days();
+        $this->travel(2)->minutes();
         $this->login(['device_token' => $device])->assertJsonPath('two_factor', true);
     }
 
