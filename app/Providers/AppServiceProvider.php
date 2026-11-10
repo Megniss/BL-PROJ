@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -15,6 +16,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // e2e testos vienmēr nobūvētie faili, arī ja strādā npm run dev
+        if (env('E2E_TESTS')) {
+            Vite::useHotFile(storage_path('framework/e2e-no-hot'));
+        }
+
         if (config('app.env') === 'production') {
             \URL::forceScheme('https');
         }
