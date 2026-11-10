@@ -231,7 +231,6 @@ routes/api.php          ← ~45 REST API galapunkti
 **Pirmo reizi:**
 ```bash
 composer install
-php artisan storage:link
 npm install
 ```
 
@@ -249,6 +248,31 @@ composer run test
 ```
 
 > Datubāze ar demo datiem ir iekļauta repozitorijā — migrācijas palaist nav nepieciešams.
+
+### Palaist ar Docker (uz jebkura datora)
+
+Vajag tikai **Docker Desktop** (Windows/Mac) vai **Docker Engine** (Linux) — PHP, Node un Composer nav jāuzstāda.
+
+```bash
+git clone https://github.com/Megniss/BL-PROJ.git
+cd BL-PROJ
+docker compose up -d --build
+```
+
+Lapa atveras **http://localhost:8080**. Pirmā būve aizņem dažas minūtes.
+
+- Datubāze pirmajā palaišanā ir kopija no faila `bookloop`, tāpēc lietotāji un grāmatas ir tie paši.
+- Datubāze un augšupielādētās bildes glabājas Docker "volume" un saglabājas arī pēc restarta.
+- E-pasti (arī 2FA kodi) netiek sūtīti, tie redzami žurnālā:
+  ```bash
+  docker compose logs app | grep "Your code"
+  ```
+- Ja `.env` ir `VITE_MAPTILER_KEY`, karte izmanto MapTiler, citādi OpenStreetMap.
+
+```bash
+docker compose down      # apturēt
+docker compose down -v   # apturēt un izdzēst datus (nākamreiz sāks no jauna)
+```
 
 ---
 

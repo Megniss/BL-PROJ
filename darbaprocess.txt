@@ -200,3 +200,8 @@ npm run dev -- --host 0.0.0.0
 palaist playwright:
 npm run test:e2e
 npx playwright show-report
+
+palaist docker:
+git clone https://github.com/Megniss/BL-PROJ.git
+cd BL-PROJ
+docker compose up -d --build

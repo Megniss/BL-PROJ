@@ -1,0 +1,21 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        # ņem no .env, ja tur ir; bez tās karte izmanto OSM
+        VITE_MAPTILER_KEY: ${VITE_MAPTILER_KEY:-}
+    image: bookloop
+    ports:
+      - "8080:80"
+    env_file: .env.docker
+    volumes:
+      - bookloop-db:/var/www/html/database/data
+      - bookloop-covers:/var/www/html/public/storage
+      - bookloop-storage:/var/www/html/storage/app
+    restart: unless-stopped
+
+volumes:
+  bookloop-db:
+  bookloop-covers:
+  bookloop-storage:

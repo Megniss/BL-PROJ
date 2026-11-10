@@ -21,7 +21,8 @@ class AppServiceProvider extends ServiceProvider
             Vite::useHotFile(storage_path('framework/e2e-no-hot'));
         }
 
-        if (config('app.env') === 'production') {
+        // https tikai, ja lapa tiešām ir uz https (docker strādā uz http://localhost)
+        if (config('app.env') === 'production' && str_starts_with(config('app.url'), 'https://')) {
             \URL::forceScheme('https');
         }
         
