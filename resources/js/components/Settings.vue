@@ -63,6 +63,11 @@
             <input type="checkbox" v-model="privacyForm.show_swap_history" @change="savePrivacy" />
             <span class="privacy-toggle-switch"></span>
           </label>
+          <label class="privacy-toggle">
+            <span class="privacy-toggle-label">{{ t('map.showMe') }}</span>
+            <input type="checkbox" v-model="privacyForm.show_on_map" @change="savePrivacy" />
+            <span class="privacy-toggle-switch"></span>
+          </label>
         </div>
       </div>
 
@@ -198,7 +203,7 @@ export default {
       },
       profileSaving: false,
 
-      privacyForm: { show_joined: true, show_swaps: true, show_swap_history: true },
+      privacyForm: { show_joined: true, show_swaps: true, show_swap_history: true, show_on_map: true },
 
       blockedUsers: [],
       blockedLoading: true,
@@ -226,6 +231,7 @@ export default {
     this.privacyForm.show_joined = profile.data.show_joined
     this.privacyForm.show_swaps = profile.data.show_swaps
     this.privacyForm.show_swap_history = profile.data.show_swap_history
+    this.privacyForm.show_on_map = profile.data.show_on_map
     this.isAdmin = profile.data.is_admin
     this.isOnlyAdmin = profile.data.is_only_admin
     this.location = { latitude: profile.data.latitude, longitude: profile.data.longitude }

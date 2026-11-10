@@ -193,7 +193,6 @@ vai caur savu pc vai caur skolas kadu hernu
 
 
 admin paneli mobil view un everything salikt minimal stuff, un ja griabs more, tad spied view more
-un admin panle location tab kur ir uz mapes visi lietotaji raditi
 un adminpanle books tab jabut order by, lai vieglak parskatit
 
 palaist majaslapu:

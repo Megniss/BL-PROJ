@@ -30,6 +30,7 @@
           <div class="view-toggle">
             <button :class="['view-toggle-btn', tab === 'books' ? 'active' : '']" @click="tab = 'books'" :aria-pressed="tab === 'books'">{{ t('nav.browse') }}</button>
             <button :class="['view-toggle-btn', tab === 'users' ? 'active' : '']" @click="tab = 'users'; userPage = 1; fetchUsers()" :aria-pressed="tab === 'users'">{{ t('browse.users') }}</button>
+            <button :class="['view-toggle-btn', tab === 'map' ? 'active' : '']" @click="tab = 'map'" :aria-pressed="tab === 'map'">{{ t('map.tab') }}</button>
           </div>
           <div class="d-flex justify-content-end">
             <div class="view-toggle" :style="{ opacity: tab === 'books' ? 1 : 0, pointerEvents: tab === 'books' ? 'auto' : 'none' }" style="transition: opacity 0.2s">
@@ -130,7 +131,7 @@
         </div>
         </div>
 
-        <div v-else key="users-search">
+        <div v-else-if="tab === 'users'" key="users-search">
           <div class="d-flex flex-wrap gap-2">
             <input v-model="userSearch" class="form-control" :placeholder="t('browse.searchUsers')" :aria-label="t('browse.searchUsers')" @input="onUserSearch" style="max-width:420px" />
             <template v-if="authStore.user">
@@ -254,6 +255,11 @@
 
     </section>
 
+    <!-- lietotāji kartē -->
+    <section v-if="tab === 'map'" class="container-xl py-4" style="min-height:60vh">
+      <UsersMap height="560px" />
+    </section>
+
     <section v-show="tab === 'users'" class="container-xl py-4" style="min-height:60vh">
       <div v-if="loadingUsers" class="text-center py-5 text-muted">
         <div class="fs-1">⏳</div>
@@ -330,12 +336,13 @@ import SwapModal from './SwapModal.vue'
 import AppNavbar from './AppNavbar.vue'
 import AppFooter from './AppFooter.vue'
 import Pagination from './Pagination.vue'
+import UsersMap from './UsersMap.vue'
 import { formatDistance } from '../distance.js'
 
 export default {
   name: 'Browse',
 
-  components: { BookDetailModal, SwapModal, AppNavbar, AppFooter, Pagination },
+  components: { BookDetailModal, SwapModal, AppNavbar, AppFooter, Pagination, UsersMap },
 
   mixins: [langMixin],
 
@@ -387,6 +394,7 @@ export default {
 
     pageTitle() {
       if (this.tab === 'users') return this.t('browse.users')
+      if (this.tab === 'map') return this.t('map.title')
       if (this.searchQuery) return `${this.t('browse.searchFor')}: "${this.searchQuery}"`
       switch (this.sortBy) {
         case 'popular': return this.t('featured.popular')

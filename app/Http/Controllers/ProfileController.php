@@ -40,6 +40,7 @@ class ProfileController extends Controller
             'show_joined' => $user->show_joined,
             'show_swaps' => $user->show_swaps,
             'show_swap_history' => $user->show_swap_history,
+            'show_on_map' => $user->show_on_map,
             'is_admin' => $user->is_admin,
             'is_only_admin' => $user->is_admin && !$this->hasOtherAdmins($user),
             'latitude' => $user->latitude,
@@ -111,17 +112,20 @@ class ProfileController extends Controller
             'show_joined' => ['required', 'boolean'],
             'show_swaps' => ['required', 'boolean'],
             'show_swap_history' => ['required', 'boolean'],
+            'show_on_map' => ['sometimes', 'boolean'],
         ]);
 
         $user->show_joined = $data['show_joined'];
         $user->show_swaps = $data['show_swaps'];
         $user->show_swap_history = $data['show_swap_history'];
+        $user->show_on_map = $data['show_on_map'] ?? $user->show_on_map;
         $user->save();
 
         return response()->json([
             'show_joined' => $user->show_joined,
             'show_swaps' => $user->show_swaps,
             'show_swap_history' => $user->show_swap_history,
+            'show_on_map' => $user->show_on_map,
         ]);
     }
 

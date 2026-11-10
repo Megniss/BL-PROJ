@@ -190,6 +190,15 @@
       </div>
     </section>
 
+    <!-- lietotāji kartē -->
+    <section class="py-5">
+      <div class="container-xl">
+        <h2 class="section-title text-center">{{ t('map.title') }}</h2>
+        <p class="text-center text-muted mt-2 mb-4">{{ t('map.subtitle') }}</p>
+        <UsersMap height="420px" />
+      </div>
+    </section>
+
     <section class="how-section py-5" id="how-it-works">
       <div class="container-xl">
         <h2 class="section-title text-center">{{ t('how.title') }}</h2>
@@ -240,6 +249,7 @@ import langMixin from '../langMixin.js'
 import { authStore } from '../authStore.js'
 import SwapModal from './SwapModal.vue'
 import BookDetailModal from './BookDetailModal.vue'
+import UsersMap from './UsersMap.vue'
 import AppNavbar from './AppNavbar.vue'
 import AppFooter from './AppFooter.vue'
 import { coverColor } from '../coverColor.js'
@@ -247,7 +257,7 @@ import { coverColor } from '../coverColor.js'
 export default {
   name: 'Home',
 
-  components: { SwapModal, BookDetailModal, AppNavbar, AppFooter },
+  components: { SwapModal, BookDetailModal, AppNavbar, AppFooter, UsersMap },
 
   mixins: [homeMethods, langMixin],
 

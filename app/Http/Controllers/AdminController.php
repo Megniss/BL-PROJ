@@ -61,9 +61,11 @@ class AdminController extends Controller
                 'title' => $b->title,
                 'author' => $b->author,
                 'genre' => $b->genre,
+                'language' => $b->language,
+                'condition' => $b->condition,
                 'status' => $b->status,
                 'owner' => $b->user?->name,
-                'created_at' => $b->created_at->toDateString(),
+                'created_at' => $b->created_at->format('Y-m-d H:i'),
             ]);
 
         return response()->json($books);

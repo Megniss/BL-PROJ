@@ -53,6 +53,11 @@
 
     <Support v-if="activeTab === 'support'" admin />
 
+    <!-- lietotāji kartē -->
+    <div v-if="activeTab === 'map' && !loading[activeTab]" class="admin-card">
+      <AdminUsersMap :users="users" />
+    </div>
+
     <div v-if="loading[activeTab]" class="admin-card text-center py-5">
       <span class="spinner-border spinner-border-sm text-success"></span>
     </div>
@@ -72,6 +77,10 @@
             <option value="active">{{ t('admin.status.active') }}</option>
             <option value="blocked">{{ t('admin.status.blocked') }}</option>
           </select>
+          <select v-model="filters.users.sort" class="form-select form-select-sm" :aria-label="t('admin.sort.label')">
+            <option v-for="o in sortOptions.users" :key="o[0]" :value="o[0]">{{ t(o[1]) }}</option>
+          </select>
+          <button v-if="hasFilters('users')" class="btn btn-sm btn-outline-secondary" @click="resetFilters('users')">{{ t('books.clearFilters') }}</button>
         </div>
         <div class="table-responsive">
         <table class="table table-hover align-middle" :aria-label="t('admin.users')">
@@ -142,6 +151,22 @@
             <option value="UnderReview">{{ t('books.status.UnderReview') }}</option>
             <option value="Exchanged">{{ t('books.status.Exchanged') }}</option>
           </select>
+          <select v-model="filters.books.genre" class="form-select form-select-sm">
+            <option value="">{{ t('search.allGenres') }}</option>
+            <option v-for="g in bookOptions('genre')" :key="g" :value="g">{{ g }}</option>
+          </select>
+          <select v-model="filters.books.language" class="form-select form-select-sm">
+            <option value="">{{ t('search.allLanguages') }}</option>
+            <option v-for="l in bookOptions('language')" :key="l" :value="l">{{ l }}</option>
+          </select>
+          <select v-model="filters.books.condition" class="form-select form-select-sm">
+            <option value="">{{ t('admin.filter.allConditions') }}</option>
+            <option v-for="c in ['New', 'Good', 'Fair', 'Worn']" :key="c" :value="c">{{ c }}</option>
+          </select>
+          <select v-model="filters.books.sort" class="form-select form-select-sm" :aria-label="t('admin.sort.label')">
+            <option v-for="o in sortOptions.books" :key="o[0]" :value="o[0]">{{ t(o[1]) }}</option>
+          </select>
+          <button v-if="hasFilters('books')" class="btn btn-sm btn-outline-secondary" @click="resetFilters('books')">{{ t('books.clearFilters') }}</button>
         </div>
         <div class="table-responsive">
         <table class="table table-hover align-middle" :aria-label="t('admin.books')">
@@ -200,6 +225,10 @@
             <option value="accepted">{{ t('admin.status.accepted') }}</option>
             <option value="declined">{{ t('admin.status.declined') }}</option>
           </select>
+          <select v-model="filters.swaps.sort" class="form-select form-select-sm" :aria-label="t('admin.sort.label')">
+            <option v-for="o in sortOptions.swaps" :key="o[0]" :value="o[0]">{{ t(o[1]) }}</option>
+          </select>
+          <button v-if="hasFilters('swaps')" class="btn btn-sm btn-outline-secondary" @click="resetFilters('swaps')">{{ t('books.clearFilters') }}</button>
         </div>
         <div class="table-responsive">
         <table class="table table-hover align-middle" :aria-label="t('admin.swaps')">
@@ -257,6 +286,10 @@
             <option value="4">★★★★</option>
             <option value="5">★★★★★</option>
           </select>
+          <select v-model="filters.ratings.sort" class="form-select form-select-sm" :aria-label="t('admin.sort.label')">
+            <option v-for="o in sortOptions.ratings" :key="o[0]" :value="o[0]">{{ t(o[1]) }}</option>
+          </select>
+          <button v-if="hasFilters('ratings')" class="btn btn-sm btn-outline-secondary" @click="resetFilters('ratings')">{{ t('books.clearFilters') }}</button>
         </div>
         <div class="table-responsive">
         <table class="table table-hover align-middle" :aria-label="t('admin.ratings')">
@@ -421,6 +454,10 @@
             <option value="change_admin_password">{{ t('admin.log.change_admin_password') }}</option>
             <option value="delete_account">{{ t('admin.log.delete_account') }}</option>
           </select>
+          <select v-model="filters.logs.sort" class="form-select form-select-sm" :aria-label="t('admin.sort.label')">
+            <option v-for="o in sortOptions.logs" :key="o[0]" :value="o[0]">{{ t(o[1]) }}</option>
+          </select>
+          <button v-if="hasFilters('logs')" class="btn btn-sm btn-outline-secondary" @click="resetFilters('logs')">{{ t('books.clearFilters') }}</button>
         </div>
         <div class="table-responsive">
           <table class="table table-hover align-middle" :aria-label="t('admin.logs')">
@@ -506,11 +543,57 @@ import Support from './Support.vue'
 import AdminUnlock from './AdminUnlock.vue'
 import AdminPasswordForm from './AdminPasswordForm.vue'
 import LocationPicker from './LocationPicker.vue'
+import AdminUsersMap from './AdminUsersMap.vue'
 import langMixin from '../langMixin.js'
+
+const DEFAULT_FILTERS = {
+  users: { search: '', role: '', status: '', sort: 'joined:asc' },
+  books: { search: '', status: '', genre: '', language: '', condition: '', sort: 'created_at:desc' },
+  swaps: { search: '', status: '', sort: 'created_at:desc' },
+  ratings: { search: '', stars: '', sort: 'date:desc' },
+  logs: { search: '', action: '', sort: 'date:desc' },
+}
+
+const SORT_OPTIONS = {
+  users: [
+    ['joined:asc', 'admin.sort.oldest'], ['joined:desc', 'admin.sort.newest'],
+    ['name:asc', 'admin.sort.nameAsc'], ['name:desc', 'admin.sort.nameDesc'],
+    ['books_count:desc', 'admin.sort.mostBooks'],
+  ],
+  books: [
+    ['created_at:desc', 'admin.sort.newest'], ['created_at:asc', 'admin.sort.oldest'],
+    ['title:asc', 'admin.sort.titleAsc'], ['title:desc', 'admin.sort.titleDesc'],
+    ['author:asc', 'admin.sort.authorAsc'], ['owner:asc', 'admin.sort.ownerAsc'],
+    ['genre:asc', 'admin.sort.genreAsc'], ['status:asc', 'admin.sort.status'],
+  ],
+  swaps: [
+    ['created_at:desc', 'admin.sort.newest'], ['created_at:asc', 'admin.sort.oldest'],
+    ['status:asc', 'admin.sort.status'],
+  ],
+  ratings: [
+    ['date:desc', 'admin.sort.newest'], ['date:asc', 'admin.sort.oldest'],
+    ['stars:desc', 'admin.sort.starsDesc'], ['stars:asc', 'admin.sort.starsAsc'],
+  ],
+  logs: [
+    ['date:desc', 'admin.sort.newest'], ['date:asc', 'admin.sort.oldest'],
+  ],
+}
+
+// 'lauks:asc' vai 'lauks:desc'; skaitļi kā skaitļi, teksts pēc latviešu alfabēta
+function sortList(list, value) {
+  const [field, dir] = value.split(':')
+  return [...list].sort((a, b) => {
+    const x = a[field], y = b[field]
+    const res = typeof x === 'number' && typeof y === 'number'
+      ? x - y
+      : String(x ?? '').localeCompare(String(y ?? ''), 'lv', { sensitivity: 'base' })
+    return dir === 'asc' ? res : -res
+  })
+}
 
 export default {
   name: 'AdminPanel',
-  components: { AppNavbar, AppFooter, Pagination, Support, AdminUnlock, AdminPasswordForm, LocationPicker },
+  components: { AppNavbar, AppFooter, Pagination, Support, AdminUnlock, AdminPasswordForm, LocationPicker, AdminUsersMap },
   mixins: [langMixin],
 
   data() {
@@ -544,16 +627,12 @@ export default {
         { key: 'swaps', label: 'admin.swaps' },
         { key: 'ratings', label: 'admin.ratings' },
         { key: 'langs', label: 'admin.languages' },
+        { key: 'map', label: 'adminMap.tab' },
         { key: 'support', label: 'admin.support' },
         { key: 'logs', label: 'admin.logs' },
       ],
-      filters: {
-        users: { search: '', role: '', status: '' },
-        books: { search: '', status: '' },
-        swaps: { search: '', status: '' },
-        ratings: { search: '', stars: '' },
-        logs: { search: '', action: '' },
-      },
+      filters: structuredClone(DEFAULT_FILTERS),
+      sortOptions: SORT_OPTIONS,
       pages: (() => {
         const tab = window.location.pathname.split('/admin/')[1] || 'users'
         const page = Number(new URLSearchParams(window.location.search).get('page')) || 1
@@ -577,7 +656,7 @@ export default {
       if (this.filters.users.role === 'user') list = list.filter(u => !u.is_admin)
       if (this.filters.users.status === 'active') list = list.filter(u => !u.is_blocked)
       if (this.filters.users.status === 'blocked') list = list.filter(u => u.is_blocked)
-      return list
+      return sortList(list, this.filters.users.sort)
     },
 
     filteredBooks() {
@@ -589,8 +668,11 @@ export default {
         b.owner?.toLowerCase().includes(s) ||
         b.genre?.toLowerCase().includes(s)
       )
-      if (this.filters.books.status) list = list.filter(b => b.status === this.filters.books.status)
-      return list
+      const f = this.filters.books
+      for (const key of ['status', 'genre', 'language', 'condition']) {
+        if (f[key]) list = list.filter(b => b[key] === f[key])
+      }
+      return sortList(list, f.sort)
     },
 
     filteredSwaps() {
@@ -602,7 +684,7 @@ export default {
         sw.wanted_book?.title?.toLowerCase().includes(s)
       )
       if (this.filters.swaps.status) list = list.filter(sw => sw.status === this.filters.swaps.status)
-      return list
+      return sortList(list, this.filters.swaps.sort)
     },
 
     filteredRatings() {
@@ -610,7 +692,7 @@ export default {
       const s = this.filters.ratings.search.toLowerCase()
       if (s) list = list.filter(r => r.book?.toLowerCase().includes(s) || r.rater?.toLowerCase().includes(s))
       if (this.filters.ratings.stars) list = list.filter(r => r.stars === Number(this.filters.ratings.stars))
-      return list
+      return sortList(list, this.filters.ratings.sort)
     },
 
     allTranslationKeys() {
@@ -623,7 +705,7 @@ export default {
       const s = this.filters.logs.search.toLowerCase()
       if (s) list = list.filter(l => l.admin?.toLowerCase().includes(s) || l.target_name?.toLowerCase().includes(s))
       if (this.filters.logs.action) list = list.filter(l => l.action === this.filters.logs.action)
-      return list
+      return sortList(list, this.filters.logs.sort)
     },
 
     pagedUsers() { return this.paginate(this.filteredUsers, this.pages.users) },
@@ -662,6 +744,19 @@ export default {
 
   methods: {
     showToast,
+
+    hasFilters(tab) {
+      return JSON.stringify(this.filters[tab]) !== JSON.stringify(DEFAULT_FILTERS[tab])
+    },
+
+    resetFilters(tab) {
+      this.filters[tab] = structuredClone(DEFAULT_FILTERS[tab])
+    },
+
+    // izvēles no tā, kas grāmatās tiešām ir
+    bookOptions(key) {
+      return [...new Set(this.books.map(b => b[key]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'lv'))
+    },
 
     async checkStatus() {
       this.gate = 'checking'
@@ -724,6 +819,7 @@ export default {
       try {
         const endpoints = {
           users: '/api/admin/users',
+          map: '/api/admin/users',
           books: '/api/admin/books',
           swaps: '/api/admin/swaps',
           ratings: '/api/admin/ratings',
@@ -732,6 +828,7 @@ export default {
         }
         const targets = {
           users: 'users',
+          map: 'users',
           books: 'books',
           swaps: 'swaps',
           ratings: 'ratings',

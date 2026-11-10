@@ -159,6 +159,60 @@ class LocationTest extends TestCase
         $this->assertSame(23.72, $anna['longitude']);
     }
 
+    public function test_public_map_shows_users_with_available_books(): void
+    {
+        $anna = $this->userAt(self::RIGA, ['name' => 'Anna']);
+        Book::factory()->create(['user_id' => $anna->id, 'status' => 'Available']);
+        Book::factory()->create(['user_id' => $anna->id, 'status' => 'Pending']);
+
+        $noBooks = $this->userAt(self::JELGAVA, ['name' => 'Bez grāmatām']);
+        $hidden = $this->userAt(self::VALMIERA, ['name' => 'Slēpjas', 'show_on_map' => false]);
+        $blocked = $this->userAt(self::ADAZI, ['name' => 'Bloķēts', 'is_blocked' => true]);
+        $nowhere = $this->userAt(null, ['name' => 'Bez vietas']);
+        foreach ([$hidden, $blocked, $nowhere] as $u) {
+            Book::factory()->create(['user_id' => $u->id, 'status' => 'Available']);
+        }
+
+        $map = $this->getJson('/api/users/map')->assertOk()->json();
+
+        $this->assertCount(1, $map);
+        $this->assertSame('Anna', $map[0]['name']);
+        $this->assertSame(1, $map[0]['books']);
+        $this->assertSame(['id', 'name', 'books', 'lat', 'lng'], array_keys($map[0]));
+    }
+
+    public function test_public_map_location_is_coarse(): void
+    {
+        $anna = $this->userAt([56.96, 24.10]);
+        $janis = $this->userAt([56.99, 24.15]);
+        foreach ([$anna, $janis] as $u) {
+            Book::factory()->create(['user_id' => $u->id, 'status' => 'Available']);
+        }
+
+        $map = $this->getJson('/api/users/map')->json();
+
+        // abi vienā ~5 km šūnā, un tā nav neviena īstā vieta
+        $this->assertSame([$map[0]['lat'], $map[0]['lng']], [$map[1]['lat'], $map[1]['lng']]);
+        $this->assertNotEquals(56.96, $map[0]['lat']);
+        $this->assertNotEquals(56.99, $map[0]['lat']);
+    }
+
+    public function test_public_map_hides_myself_and_can_be_turned_off(): void
+    {
+        $me = $this->userAt(self::RIGA);
+        Book::factory()->create(['user_id' => $me->id, 'status' => 'Available']);
+
+        $this->getJson('/api/users/map')->assertJsonCount(1);
+        $this->actingAs($me)->getJson('/api/users/map')->assertJsonCount(0);
+
+        $this->patchJson('/api/profile/privacy', [
+            'show_joined' => true, 'show_swaps' => true, 'show_swap_history' => true, 'show_on_map' => false,
+        ])->assertOk();
+
+        $this->app['auth']->forgetGuards();
+        $this->getJson('/api/users/map')->assertJsonCount(0);
+    }
+
     public function test_account_deletion_removes_location(): void
     {
         $user = $this->userAt(self::RIGA);
