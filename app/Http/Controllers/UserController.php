@@ -56,37 +56,6 @@ class UserController extends Controller
         return response()->json([...$users->toArray(), 'has_location' => $hasLocation]);
     }
 
-    // kopējā karte — tikai tie, kam ir pieejamas grāmatas, vieta noapaļota līdz ~5 km
-    public function map()
-    {
-        $authUser = auth('sanctum')->user();
-
-        $users = User::select(['id', 'name', 'latitude', 'longitude'])
-            ->withCount(['books' => fn($q) => $q->where('status', 'Available')])
-            ->where('show_on_map', true)
-            ->where('is_blocked', false)
-            ->whereNull('deleted_at')
-            ->whereNotNull('latitude')
-            ->whereNotNull('longitude')
-            ->whereHas('books', fn($q) => $q->where('status', 'Available'))
-            ->when($authUser, fn($q) => $q->where('id', '!=', $authUser->id))
-            ->get();
-
-        return response()->json($users->map(fn($u) => [
-            'id' => $u->id,
-            'name' => $u->name,
-            'books' => $u->books_count,
-            'lat' => $this->coarse($u->latitude, 0.05),
-            'lng' => $this->coarse($u->longitude, 0.08),
-        ]));
-    }
-
-    // režģa šūnas centrs — ~5 km Latvijā
-    private function coarse(float $value, float $step): float
-    {
-        return round(floor($value / $step) * $step + $step / 2, 3);
-    }
-
     // publiskais profils
     public function show(User $user)
     {

@@ -18,7 +18,7 @@
             <span class="tag">{{ t('genre.' + book.genre) }}</span>
           </div>
 
-          <div class="mb-1" style="font-size:0.9rem">
+          <div v-if="book.ratings_count !== undefined" class="mb-1" style="font-size:0.9rem">
             <template v-if="book.ratings_count > 0">
               <span style="color:#f5a623;font-size:1.1rem">★</span>
               {{ Number(book.ratings_avg_stars).toFixed(1) }}

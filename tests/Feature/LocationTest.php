@@ -159,58 +159,81 @@ class LocationTest extends TestCase
         $this->assertSame(23.72, $anna['longitude']);
     }
 
-    public function test_public_map_shows_users_with_available_books(): void
+    private function bookFor(User $owner, string $title, string $author = 'Autors', string $status = 'Available'): void
     {
-        $anna = $this->userAt(self::RIGA, ['name' => 'Anna']);
-        Book::factory()->create(['user_id' => $anna->id, 'status' => 'Available']);
-        Book::factory()->create(['user_id' => $anna->id, 'status' => 'Pending']);
-
-        $noBooks = $this->userAt(self::JELGAVA, ['name' => 'Bez grāmatām']);
-        $hidden = $this->userAt(self::VALMIERA, ['name' => 'Slēpjas', 'show_on_map' => false]);
-        $blocked = $this->userAt(self::ADAZI, ['name' => 'Bloķēts', 'is_blocked' => true]);
-        $nowhere = $this->userAt(null, ['name' => 'Bez vietas']);
-        foreach ([$hidden, $blocked, $nowhere] as $u) {
-            Book::factory()->create(['user_id' => $u->id, 'status' => 'Available']);
-        }
-
-        $map = $this->getJson('/api/users/map')->assertOk()->json();
-
-        $this->assertCount(1, $map);
-        $this->assertSame('Anna', $map[0]['name']);
-        $this->assertSame(1, $map[0]['books']);
-        $this->assertSame(['id', 'name', 'books', 'lat', 'lng'], array_keys($map[0]));
+        Book::factory()->create(['user_id' => $owner->id, 'title' => $title, 'author' => $author, 'status' => $status]);
     }
 
-    public function test_public_map_location_is_coarse(): void
+    public function test_map_shows_available_books_without_users(): void
     {
-        $anna = $this->userAt([56.96, 24.10]);
-        $janis = $this->userAt([56.99, 24.15]);
-        foreach ([$anna, $janis] as $u) {
-            Book::factory()->create(['user_id' => $u->id, 'status' => 'Available']);
+        $anna = $this->userAt(self::RIGA, ['name' => 'Anna']);
+        $this->bookFor($anna, 'Dune');
+        $this->bookFor($anna, 'Pending', status: 'Pending');
+
+        $hidden = $this->userAt(self::VALMIERA, ['show_on_map' => false]);
+        $blocked = $this->userAt(self::ADAZI, ['is_blocked' => true]);
+        $nowhere = $this->userAt(null);
+        foreach ([$hidden, $blocked, $nowhere] as $u) {
+            $this->bookFor($u, 'Slepena');
         }
 
-        $map = $this->getJson('/api/users/map')->json();
+        $response = $this->getJson('/api/books/map')->assertOk();
+        $map = $response->json();
 
-        // abi vienā ~5 km šūnā, un tā nav neviena īstā vieta
-        $this->assertSame([$map[0]['lat'], $map[0]['lng']], [$map[1]['lat'], $map[1]['lng']]);
+        $this->assertCount(1, $map);
+        $this->assertSame(['Dune'], array_column($map[0]['books'], 'title'));
+        $this->assertSame(['lat', 'lng', 'books'], array_keys($map[0]));
+        $this->assertStringNotContainsString('Anna', $response->getContent());
+    }
+
+    public function test_map_merges_same_book_in_region(): void
+    {
+        // abi vienā ~5 km šūnā
+        $anna = $this->userAt([56.96, 24.10]);
+        $janis = $this->userAt([56.99, 24.15]);
+        $this->bookFor($anna, 'Dune', 'Herbert');
+        $this->bookFor($janis, 'dune', 'herbert');
+        $this->bookFor($janis, 'Hobits');
+
+        $map = $this->getJson('/api/books/map')->json();
+
+        $this->assertCount(1, $map);
+        $books = collect($map[0]['books'])->keyBy(fn($b) => strtolower($b['title']));
+        $this->assertCount(2, $books);
+        $this->assertSame(2, $books['dune']['copies']);
+        $this->assertSame(1, $books['hobits']['copies']);
+        // vieta noapaļota, nevis kāda no īstajām
         $this->assertNotEquals(56.96, $map[0]['lat']);
         $this->assertNotEquals(56.99, $map[0]['lat']);
     }
 
-    public function test_public_map_hides_myself_and_can_be_turned_off(): void
+    public function test_map_hides_my_books_and_books_i_have(): void
     {
         $me = $this->userAt(self::RIGA);
-        Book::factory()->create(['user_id' => $me->id, 'status' => 'Available']);
+        $other = $this->userAt(self::JELGAVA);
+        $this->bookFor($me, 'Dune');
+        $this->bookFor($other, 'Dune');
+        $this->bookFor($other, 'Hobits');
 
-        $this->getJson('/api/users/map')->assertJsonCount(1);
-        $this->actingAs($me)->getJson('/api/users/map')->assertJsonCount(0);
+        $titles = collect($this->actingAs($me)->getJson('/api/books/map')->json())
+            ->flatMap(fn($p) => array_column($p['books'], 'title'));
 
-        $this->patchJson('/api/profile/privacy', [
+        $this->assertSame(['Hobits'], $titles->all());
+    }
+
+    public function test_map_can_be_turned_off(): void
+    {
+        $me = $this->userAt(self::RIGA);
+        $this->bookFor($me, 'Dune');
+
+        $this->getJson('/api/books/map')->assertJsonCount(1);
+
+        $this->actingAs($me)->patchJson('/api/profile/privacy', [
             'show_joined' => true, 'show_swaps' => true, 'show_swap_history' => true, 'show_on_map' => false,
         ])->assertOk();
 
         $this->app['auth']->forgetGuards();
-        $this->getJson('/api/users/map')->assertJsonCount(0);
+        $this->getJson('/api/books/map')->assertJsonCount(0);
     }
 
     public function test_account_deletion_removes_location(): void

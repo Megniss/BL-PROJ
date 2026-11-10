@@ -24,8 +24,8 @@ Route::get('/browse', [BookController::class, 'browse']);
 Route::get('/stats', [BookController::class, 'stats']);
 Route::get('/books/{book}/suggestions', [BookController::class, 'suggestions']);
 Route::get('/browse/copies', [BookController::class, 'copies']);
+Route::get('/books/map', [BookController::class, 'map'])->middleware('throttle:60,1');
 Route::get('/users', [UserController::class, 'search'])->middleware('throttle:30,1');
-Route::get('/users/map', [UserController::class, 'map'])->middleware('throttle:60,1');
 Route::get('/users/{user}', [UserController::class, 'show'])->middleware('throttle:60,1');
 
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');

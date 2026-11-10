@@ -255,9 +255,9 @@
 
     </section>
 
-    <!-- lietotāji kartē -->
+    <!-- grāmatas kartē -->
     <section v-if="tab === 'map'" class="container-xl py-4" style="min-height:60vh">
-      <UsersMap height="560px" />
+      <BooksMap height="560px" @book="openDetail" />
     </section>
 
     <section v-show="tab === 'users'" class="container-xl py-4" style="min-height:60vh">
@@ -336,13 +336,13 @@ import SwapModal from './SwapModal.vue'
 import AppNavbar from './AppNavbar.vue'
 import AppFooter from './AppFooter.vue'
 import Pagination from './Pagination.vue'
-import UsersMap from './UsersMap.vue'
+import BooksMap from './BooksMap.vue'
 import { formatDistance } from '../distance.js'
 
 export default {
   name: 'Browse',
 
-  components: { BookDetailModal, SwapModal, AppNavbar, AppFooter, Pagination, UsersMap },
+  components: { BookDetailModal, SwapModal, AppNavbar, AppFooter, Pagination, BooksMap },
 
   mixins: [langMixin],
 

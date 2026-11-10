@@ -91,6 +91,59 @@ class BookController extends Controller
         return response()->json([...$groups->toArray(), 'has_location' => $hasLocation]);
     }
 
+    // kopējā karte — pieejamās grāmatas pa ~5 km reģioniem, bez lietotāju vārdiem
+    public function map()
+    {
+        $user = auth('sanctum')->user();
+        $mine = $user ? $this->ownedKeys($user) : collect();
+
+        $books = Book::query()
+            ->where('status', 'Available')
+            ->whereHas('user', fn($q) => $q->where('show_on_map', true)
+                ->where('is_blocked', false)
+                ->whereNull('deleted_at')
+                ->whereNotNull('latitude')
+                ->whereNotNull('longitude'))
+            ->when($user, fn($q) => $q->where('user_id', '!=', $user->id))
+            ->with('user:id,latitude,longitude')
+            ->orderBy('title')
+            ->get()
+            ->reject(fn($b) => $mine->contains($this->key($b->title, $b->author)));
+
+        $points = [];
+        foreach ($books as $book) {
+            $lat = $this->coarse($book->user->latitude, 0.05);
+            $lng = $this->coarse($book->user->longitude, 0.08);
+            $cell = "$lat,$lng";
+            $key = $this->key($book->title, $book->author);
+
+            $points[$cell] ??= ['lat' => $lat, 'lng' => $lng, 'books' => []];
+
+            // vienāda grāmata vienā reģionā — vienreiz ar skaitu
+            if (isset($points[$cell]['books'][$key])) {
+                $points[$cell]['books'][$key]['copies']++;
+                $points[$cell]['books'][$key]['cover_image'] ??= $book->cover_image;
+                continue;
+            }
+
+            $points[$cell]['books'][$key] = [
+                ...$book->only(['id', 'title', 'author', 'genre', 'cover_image']),
+                'copies' => 1,
+            ];
+        }
+
+        return response()->json(array_values(array_map(fn($p) => [
+            ...$p,
+            'books' => array_values($p['books']),
+        ], $points)));
+    }
+
+    // režģa šūnas centrs — ~5 km Latvijā
+    private function coarse(float $value, float $step): float
+    {
+        return round(floor($value / $step) * $step + $step / 2, 3);
+    }
+
     // visi pieejamie konkrētās grāmatas eksemplāri
     public function copies(Request $request)
     {

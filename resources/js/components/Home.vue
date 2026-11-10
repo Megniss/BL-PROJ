@@ -190,12 +190,12 @@
       </div>
     </section>
 
-    <!-- lietotāji kartē -->
+    <!-- grāmatas kartē -->
     <section class="py-5">
       <div class="container-xl">
         <h2 class="section-title text-center">{{ t('map.title') }}</h2>
         <p class="text-center text-muted mt-2 mb-4">{{ t('map.subtitle') }}</p>
-        <UsersMap height="420px" />
+        <BooksMap height="420px" @book="openDetail" />
       </div>
     </section>
 
@@ -249,7 +249,7 @@ import langMixin from '../langMixin.js'
 import { authStore } from '../authStore.js'
 import SwapModal from './SwapModal.vue'
 import BookDetailModal from './BookDetailModal.vue'
-import UsersMap from './UsersMap.vue'
+import BooksMap from './BooksMap.vue'
 import AppNavbar from './AppNavbar.vue'
 import AppFooter from './AppFooter.vue'
 import { coverColor } from '../coverColor.js'
@@ -257,7 +257,7 @@ import { coverColor } from '../coverColor.js'
 export default {
   name: 'Home',
 
-  components: { SwapModal, BookDetailModal, AppNavbar, AppFooter, UsersMap },
+  components: { SwapModal, BookDetailModal, AppNavbar, AppFooter, BooksMap },
 
   mixins: [homeMethods, langMixin],
 
