@@ -205,3 +205,26 @@ palaist docker:
 git clone https://github.com/Megniss/BL-PROJ.git
 cd BL-PROJ
 docker compose up -d --build
+
+
+
+
+What to do (Windows, once)
+Download Docker Desktop: https://www.docker.com/products/docker-desktop/ → "Download for Windows".
+Install it. Leave "Use WSL 2" ticked when asked. The installer sets up WSL2 (the Linux support Docker needs) if it isn't there yet. It needs administrator rights.
+Restart the computer if the installer asks.
+Start Docker Desktop from the Start menu and wait until it shows "Engine running" (the whale icon by the clock stops moving). It has to be running every time you use docker.
+Open a new PowerShell window (the old one doesn't know about the new command yet) and check:
+
+docker --version
+Then in your project folder:
+
+cd C:\proj\BL-PROJ
+docker compose up -d --build
+The first time takes a few minutes, because it downloads PHP and Node and builds the project. Then open http://localhost:8080.
+Possible problems
+"Virtualization is not enabled" or WSL errors: virtualization needs to be turned on in the BIOS/UEFI (usually called "Intel VT-x" or "AMD-V/SVM"). On most newer computers it's already on.
+School or work computer without admin rights: you can't install Docker there. You'd need to ask IT, or use your own computer.
+Windows version: Docker Desktop needs Windows 10 (22H2) or Windows 11.
+If port 8080 is busy ("port is already allocated"), something else is using it. Change "8080:80" to e.g. "8090:80" in docker-compose.yml and open localhost:8090.
+Since .env (with your MapTiler key) is also in the repo, the map on that computer will use MapTiler straight away.
