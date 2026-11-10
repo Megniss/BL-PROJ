@@ -65,8 +65,9 @@
     <!-- lietotāji -->
     <div v-show="activeTab === 'users' && !loading[activeTab]" class="admin-card">
       <div class="mt-1">
-        <div class="filter-bar mb-3">
-          <input v-model="filters.users.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.search')" />
+        <div class="filter-bar mb-3" :class="{ 'filters-open': showFilters }">
+          <input v-model="filters.users.search" type="text" class="form-control form-control-sm m-keep" :placeholder="t('admin.filter.search')" />
+          <button class="btn btn-sm btn-outline-secondary m-filter-btn" @click="showFilters = !showFilters">{{ t('admin.filters') }}<span v-if="hasFilters('users')"> •</span></button>
           <select v-model="filters.users.role" class="form-select form-select-sm">
             <option value="">{{ t('admin.filter.allRoles') }}</option>
             <option value="admin">{{ t('admin.role.admin') }}</option>
@@ -80,10 +81,10 @@
           <select v-model="filters.users.sort" class="form-select form-select-sm" :aria-label="t('admin.sort.label')">
             <option v-for="o in sortOptions.users" :key="o[0]" :value="o[0]">{{ t(o[1]) }}</option>
           </select>
-          <button v-if="hasFilters('users')" class="btn btn-sm btn-outline-secondary" @click="resetFilters('users')">{{ t('books.clearFilters') }}</button>
+          <button v-if="hasFilters('users')" class="btn btn-sm btn-outline-secondary m-keep" @click="resetFilters('users')">{{ t('books.clearFilters') }}</button>
         </div>
         <div class="table-responsive">
-        <table class="table table-hover align-middle" :aria-label="t('admin.users')">
+        <table class="table table-hover align-middle m-cards" :aria-label="t('admin.users')">
           <thead>
             <tr>
               <th scope="col">{{ t('admin.col.name') }}</th>
@@ -98,22 +99,22 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="u in pagedUsers" :key="u.id">
-              <td class="fw-semibold">{{ u.name }}</td>
-              <td class="text-muted">{{ u.email }}</td>
-              <td class="text-center">{{ u.books_count }}</td>
-              <td class="text-nowrap">{{ u.joined }}</td>
-              <td>
+            <tr :class="{ open: isOpen('users', u.id) }" v-for="u in pagedUsers" :key="u.id">
+              <td class="m-main fw-semibold">{{ u.name }}</td>
+              <td :data-label="t('admin.col.email')" class="text-muted">{{ u.email }}</td>
+              <td :data-label="t('admin.col.books')" class="text-center">{{ u.books_count }}</td>
+              <td :data-label="t('admin.col.joined')" class="text-nowrap">{{ u.joined }}</td>
+              <td class="m-main">
                 <span class="stag" :class="u.is_admin ? 'stag-purple' : 'stag-gray'" :title="u.is_admin ? t('admin.role.admin') : t('admin.role.user')">
                   {{ u.is_admin ? 'A' : 'U' }}
                 </span>
               </td>
-              <td>
+              <td class="m-main">
                 <span class="stag" :class="u.is_blocked ? 'stag-red' : 'stag-green'" :title="u.is_blocked ? t('admin.status.blocked') : t('admin.status.active')">
                   {{ u.is_blocked ? '✕' : '✓' }}
                 </span>
               </td>
-              <td>
+              <td :data-label="t('location.title')">
                 <button v-if="u.latitude !== null" class="btn btn-sm btn-outline-secondary text-nowrap" @click="mapUser = u">📍 {{ t('admin.showMap') }}</button>
                 <span v-else class="text-muted">—</span>
               </td>
@@ -131,6 +132,7 @@
                 <td class="ab-col"></td>
                 <td class="ab-col"><span class="text-muted small">{{ t('admin.status.you') }}</span></td>
               </template>
+              <td class="m-toggle"><button class="btn btn-link btn-sm p-0" @click="toggleRow('users', u.id)">{{ isOpen('users', u.id) ? t('admin.less') : t('admin.more') }}</button></td>
             </tr>
           </tbody>
         </table>
@@ -142,8 +144,9 @@
     <!-- grāmatas -->
     <div v-show="activeTab === 'books' && !loading[activeTab]" class="admin-card">
       <div class="mt-1">
-        <div class="filter-bar mb-3">
-          <input v-model="filters.books.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.searchBooks')" />
+        <div class="filter-bar mb-3" :class="{ 'filters-open': showFilters }">
+          <input v-model="filters.books.search" type="text" class="form-control form-control-sm m-keep" :placeholder="t('admin.filter.searchBooks')" />
+          <button class="btn btn-sm btn-outline-secondary m-filter-btn" @click="showFilters = !showFilters">{{ t('admin.filters') }}<span v-if="hasFilters('books')"> •</span></button>
           <select v-model="filters.books.status" class="form-select form-select-sm">
             <option value="">{{ t('admin.filter.allStatuses') }}</option>
             <option value="Available">{{ t('books.status.Available') }}</option>
@@ -166,10 +169,10 @@
           <select v-model="filters.books.sort" class="form-select form-select-sm" :aria-label="t('admin.sort.label')">
             <option v-for="o in sortOptions.books" :key="o[0]" :value="o[0]">{{ t(o[1]) }}</option>
           </select>
-          <button v-if="hasFilters('books')" class="btn btn-sm btn-outline-secondary" @click="resetFilters('books')">{{ t('books.clearFilters') }}</button>
+          <button v-if="hasFilters('books')" class="btn btn-sm btn-outline-secondary m-keep" @click="resetFilters('books')">{{ t('books.clearFilters') }}</button>
         </div>
         <div class="table-responsive">
-        <table class="table table-hover align-middle" :aria-label="t('admin.books')">
+        <table class="table table-hover align-middle m-cards" :aria-label="t('admin.books')">
           <thead>
             <tr>
               <th scope="col">{{ t('admin.col.title') }}</th>
@@ -183,12 +186,12 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="b in pagedBooks" :key="b.id">
-              <td class="fw-semibold">{{ b.title }}</td>
-              <td>{{ b.author }}</td>
-              <td>{{ b.genre }}</td>
-              <td>{{ b.owner }}</td>
-              <td>
+            <tr :class="{ open: isOpen('books', b.id) }" v-for="b in pagedBooks" :key="b.id">
+              <td class="m-main fw-semibold">{{ b.title }}</td>
+              <td :data-label="t('admin.col.author')">{{ b.author }}</td>
+              <td :data-label="t('admin.col.genre')">{{ b.genre }}</td>
+              <td :data-label="t('admin.col.owner')">{{ b.owner }}</td>
+              <td class="m-main">
                 <span class="stag" :class="{
                   'stag-green': b.status === 'Available',
                   'stag-yellow': b.status === 'Pending',
@@ -198,7 +201,7 @@
                   {{ { Available: '✓', Pending: '~', Exchanged: '⇄', UnderReview: '!' }[b.status] ?? '?' }}
                 </span>
               </td>
-              <td class="text-nowrap">{{ b.created_at }}</td>
+              <td :data-label="t('admin.col.added')" class="text-nowrap">{{ b.created_at }}</td>
               <td class="ab-col">
                 <button v-if="b.status !== 'UnderReview'" class="ab btn btn-sm btn-outline-info" @click="reviewBook(b)">{{ t('admin.btn.review') }}</button>
                 <button v-if="b.status === 'UnderReview'" class="ab btn btn-sm btn-outline-success" @click="unreviewBook(b)">{{ t('admin.btn.unreview') }}</button>
@@ -206,6 +209,7 @@
               <td class="ab-col">
                 <button class="ab btn btn-sm btn-outline-danger" @click="deleteBook(b)">{{ t('admin.btn.delete') }}</button>
               </td>
+              <td class="m-toggle"><button class="btn btn-link btn-sm p-0" @click="toggleRow('books', b.id)">{{ isOpen('books', b.id) ? t('admin.less') : t('admin.more') }}</button></td>
             </tr>
           </tbody>
         </table>
@@ -217,8 +221,9 @@
     <!-- apmaiņas -->
     <div v-show="activeTab === 'swaps' && !loading[activeTab]" class="admin-card">
       <div class="mt-1">
-        <div class="filter-bar mb-3">
-          <input v-model="filters.swaps.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.searchSwaps')" />
+        <div class="filter-bar mb-3" :class="{ 'filters-open': showFilters }">
+          <input v-model="filters.swaps.search" type="text" class="form-control form-control-sm m-keep" :placeholder="t('admin.filter.searchSwaps')" />
+          <button class="btn btn-sm btn-outline-secondary m-filter-btn" @click="showFilters = !showFilters">{{ t('admin.filters') }}<span v-if="hasFilters('swaps')"> •</span></button>
           <select v-model="filters.swaps.status" class="form-select form-select-sm">
             <option value="">{{ t('admin.filter.allStatuses') }}</option>
             <option value="pending">{{ t('admin.status.pending') }}</option>
@@ -228,10 +233,10 @@
           <select v-model="filters.swaps.sort" class="form-select form-select-sm" :aria-label="t('admin.sort.label')">
             <option v-for="o in sortOptions.swaps" :key="o[0]" :value="o[0]">{{ t(o[1]) }}</option>
           </select>
-          <button v-if="hasFilters('swaps')" class="btn btn-sm btn-outline-secondary" @click="resetFilters('swaps')">{{ t('books.clearFilters') }}</button>
+          <button v-if="hasFilters('swaps')" class="btn btn-sm btn-outline-secondary m-keep" @click="resetFilters('swaps')">{{ t('books.clearFilters') }}</button>
         </div>
         <div class="table-responsive">
-        <table class="table table-hover align-middle" :aria-label="t('admin.swaps')">
+        <table class="table table-hover align-middle m-cards" :aria-label="t('admin.swaps')">
           <thead>
             <tr>
               <th scope="col">{{ t('admin.col.requester') }}</th>
@@ -244,11 +249,11 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="s in pagedSwaps" :key="s.id">
-              <td class="fw-semibold">{{ s.requester?.name }}</td>
-              <td>{{ s.offered_book?.title }}</td>
-              <td>{{ s.wanted_book?.title }}</td>
-              <td>
+            <tr :class="{ open: isOpen('swaps', s.id) }" v-for="s in pagedSwaps" :key="s.id">
+              <td class="m-main fw-semibold">{{ s.requester?.name }}</td>
+              <td :data-label="t('admin.col.offers')">{{ s.offered_book?.title }}</td>
+              <td :data-label="t('admin.col.wants')">{{ s.wanted_book?.title }}</td>
+              <td class="m-main">
                 <span class="stag" :class="{
                   'stag-yellow': s.status === 'pending',
                   'stag-green': s.status === 'accepted',
@@ -257,7 +262,7 @@
                   {{ { pending: '~', accepted: '✓', declined: '✕' }[s.status] ?? '?' }}
                 </span>
               </td>
-              <td class="text-nowrap">{{ s.created_at?.slice(0, 10) }}</td>
+              <td :data-label="t('admin.col.date')" class="text-nowrap">{{ s.created_at?.slice(0, 10) }}</td>
               <td class="ab-col">
                 <button v-if="s.status === 'pending'" class="ab btn btn-sm btn-outline-success" @click="acceptSwap(s)">{{ t('admin.btn.accept') }}</button>
                 <button v-if="s.status === 'pending'" class="ab btn btn-sm btn-outline-warning" @click="declineSwap(s)">{{ t('admin.btn.decline') }}</button>
@@ -265,6 +270,7 @@
               <td class="ab-col">
                 <button class="ab btn btn-sm btn-outline-danger" @click="deleteSwap(s)">{{ t('admin.btn.delete') }}</button>
               </td>
+              <td class="m-toggle"><button class="btn btn-link btn-sm p-0" @click="toggleRow('swaps', s.id)">{{ isOpen('swaps', s.id) ? t('admin.less') : t('admin.more') }}</button></td>
             </tr>
           </tbody>
         </table>
@@ -276,8 +282,9 @@
     <!-- vērtējumi -->
     <div v-show="activeTab === 'ratings' && !loading[activeTab]" class="admin-card">
       <div class="mt-1">
-        <div class="filter-bar mb-3">
-          <input v-model="filters.ratings.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.searchBookRater')" />
+        <div class="filter-bar mb-3" :class="{ 'filters-open': showFilters }">
+          <input v-model="filters.ratings.search" type="text" class="form-control form-control-sm m-keep" :placeholder="t('admin.filter.searchBookRater')" />
+          <button class="btn btn-sm btn-outline-secondary m-filter-btn" @click="showFilters = !showFilters">{{ t('admin.filters') }}<span v-if="hasFilters('ratings')"> •</span></button>
           <select v-model="filters.ratings.stars" class="form-select form-select-sm">
             <option value="">{{ t('admin.filter.allStars') }}</option>
             <option value="1">★</option>
@@ -289,10 +296,10 @@
           <select v-model="filters.ratings.sort" class="form-select form-select-sm" :aria-label="t('admin.sort.label')">
             <option v-for="o in sortOptions.ratings" :key="o[0]" :value="o[0]">{{ t(o[1]) }}</option>
           </select>
-          <button v-if="hasFilters('ratings')" class="btn btn-sm btn-outline-secondary" @click="resetFilters('ratings')">{{ t('books.clearFilters') }}</button>
+          <button v-if="hasFilters('ratings')" class="btn btn-sm btn-outline-secondary m-keep" @click="resetFilters('ratings')">{{ t('books.clearFilters') }}</button>
         </div>
         <div class="table-responsive">
-        <table class="table table-hover align-middle" :aria-label="t('admin.ratings')">
+        <table class="table table-hover align-middle m-cards" :aria-label="t('admin.ratings')">
           <thead>
             <tr>
               <th scope="col">{{ t('admin.col.title') }}</th>
@@ -304,15 +311,16 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="r in pagedRatings" :key="r.id">
-              <td class="fw-semibold">{{ r.book }}</td>
-              <td>{{ r.author }}</td>
-              <td>{{ r.rater }}</td>
-              <td>
+            <tr :class="{ open: isOpen('ratings', r.id) }" v-for="r in pagedRatings" :key="r.id">
+              <td class="m-main fw-semibold">{{ r.book }}</td>
+              <td :data-label="t('admin.col.author')">{{ r.author }}</td>
+              <td :data-label="t('admin.col.ratedBy')">{{ r.rater }}</td>
+              <td class="m-main">
                 <span class="stars-display">{{ '★'.repeat(r.stars) }}{{ '☆'.repeat(5 - r.stars) }}</span>
               </td>
-              <td>{{ r.review || '—' }}</td>
-              <td class="text-nowrap">{{ r.date }}</td>
+              <td :data-label="t('admin.col.review')">{{ r.review || '—' }}</td>
+              <td :data-label="t('admin.col.date')" class="text-nowrap">{{ r.date }}</td>
+              <td class="m-toggle"><button class="btn btn-link btn-sm p-0" @click="toggleRow('ratings', r.id)">{{ isOpen('ratings', r.id) ? t('admin.less') : t('admin.more') }}</button></td>
             </tr>
           </tbody>
         </table>
@@ -429,8 +437,9 @@
     <!-- žurnāls -->
     <div v-show="activeTab === 'logs' && !loading[activeTab]" class="admin-card">
       <div class="mt-1">
-        <div class="filter-bar mb-3">
-          <input v-model="filters.logs.search" type="text" class="form-control form-control-sm" :placeholder="t('admin.filter.search')" />
+        <div class="filter-bar mb-3" :class="{ 'filters-open': showFilters }">
+          <input v-model="filters.logs.search" type="text" class="form-control form-control-sm m-keep" :placeholder="t('admin.filter.search')" />
+          <button class="btn btn-sm btn-outline-secondary m-filter-btn" @click="showFilters = !showFilters">{{ t('admin.filters') }}<span v-if="hasFilters('logs')"> •</span></button>
           <select v-model="filters.logs.action" class="form-select form-select-sm">
             <option value="">{{ t('admin.filter.allActions') }}</option>
             <option value="block_user">{{ t('admin.log.block_user') }}</option>
@@ -457,10 +466,10 @@
           <select v-model="filters.logs.sort" class="form-select form-select-sm" :aria-label="t('admin.sort.label')">
             <option v-for="o in sortOptions.logs" :key="o[0]" :value="o[0]">{{ t(o[1]) }}</option>
           </select>
-          <button v-if="hasFilters('logs')" class="btn btn-sm btn-outline-secondary" @click="resetFilters('logs')">{{ t('books.clearFilters') }}</button>
+          <button v-if="hasFilters('logs')" class="btn btn-sm btn-outline-secondary m-keep" @click="resetFilters('logs')">{{ t('books.clearFilters') }}</button>
         </div>
         <div class="table-responsive">
-          <table class="table table-hover align-middle" :aria-label="t('admin.logs')">
+          <table class="table table-hover align-middle m-cards" :aria-label="t('admin.logs')">
             <thead>
               <tr>
                 <th scope="col">{{ t('admin.col.date') }}</th>
@@ -474,12 +483,13 @@
               <tr v-if="filteredLogs.length === 0">
                 <td colspan="5" class="text-center text-muted py-3">{{ t('admin.logs.empty') }}</td>
               </tr>
-              <tr v-for="l in pagedLogs" :key="l.id">
-                <td class="text-nowrap">{{ l.date }}</td>
-                <td>{{ l.admin }}</td>
-                <td><span class="log-action-badge">{{ t('admin.log.' + l.action) }}</span></td>
-                <td>{{ l.target_name }}</td>
-                <td>{{ l.reason || '—' }}</td>
+              <tr :class="{ open: isOpen('logs', l.id) }" v-for="l in pagedLogs" :key="l.id">
+                <td :data-label="t('admin.col.date')" class="text-nowrap">{{ l.date }}</td>
+                <td :data-label="t('admin.col.admin')">{{ l.admin }}</td>
+                <td class="m-main"><span class="log-action-badge">{{ t('admin.log.' + l.action) }}</span></td>
+                <td class="m-main">{{ l.target_name }}</td>
+                <td :data-label="t('admin.col.reason')">{{ l.reason || '—' }}</td>
+                <td class="m-toggle"><button class="btn btn-link btn-sm p-0" @click="toggleRow('logs', l.id)">{{ isOpen('logs', l.id) ? t('admin.less') : t('admin.more') }}</button></td>
               </tr>
             </tbody>
           </table>
@@ -633,6 +643,8 @@ export default {
       ],
       filters: structuredClone(DEFAULT_FILTERS),
       sortOptions: SORT_OPTIONS,
+      showFilters: false,
+      openRows: {},
       pages: (() => {
         const tab = window.location.pathname.split('/admin/')[1] || 'users'
         const page = Number(new URLSearchParams(window.location.search).get('page')) || 1
@@ -744,6 +756,15 @@ export default {
 
   methods: {
     showToast,
+
+    // telefonā rindā redzams tikai galvenais, pārējais pēc "Skatīt vairāk"
+    isOpen(tab, id) {
+      return !!this.openRows[tab + id]
+    },
+
+    toggleRow(tab, id) {
+      this.openRows[tab + id] = !this.openRows[tab + id]
+    },
 
     hasFilters(tab) {
       return JSON.stringify(this.filters[tab]) !== JSON.stringify(DEFAULT_FILTERS[tab])
@@ -1211,6 +1232,56 @@ export default {
   padding: .15rem .5rem;
   border-radius: 999px;
   white-space: nowrap;
+}
+
+/* telefonā — tikai galvenais, pārējais pēc "Skatīt vairāk" */
+.m-toggle, .m-filter-btn { display: none; }
+
+@media (max-width: 767.98px) {
+  .admin-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .admin-tabs::-webkit-scrollbar { display: none; }
+  .admin-tab-btn { white-space: nowrap; padding: 8px 12px; }
+  .admin-tabs-controls { display: none; }
+
+  .m-filter-btn { display: inline-block; }
+  .filter-bar > :not(.m-keep):not(.m-filter-btn) { display: none; }
+  .filter-bar.filters-open > :not(.m-keep):not(.m-filter-btn) { display: block; }
+  .filter-bar .form-control-sm.m-keep { flex: 1; max-width: none; }
+  .filter-bar.filters-open .form-select-sm { max-width: none; width: 100%; }
+
+  .m-cards thead { display: none; }
+  .m-cards, .m-cards tbody { display: block; width: 100%; }
+  .m-cards tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+  .m-cards td {
+    border: none;
+    padding: 0;
+    text-align: left !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .m-cards td:not(.m-main):not(.m-toggle) { display: none; }
+
+  /* galvenais pirmajā rindā, detaļas zem tā, pogas blakus */
+  .m-cards tr.open td:not(.m-main):not(.m-toggle) { display: flex; gap: 8px; align-items: center; order: 1; width: 100%; }
+  .m-cards tr.open td.ab-col:not(.m-main):not(.m-toggle) { width: auto; }
+  .m-cards tr.open td.ab-col:empty { display: none; }
+  .m-cards td.m-toggle { display: block; order: 2; width: 100%; }
+  .m-cards td[data-label]::before {
+    content: attr(data-label);
+    min-width: 90px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+  }
 }
 </style>
 

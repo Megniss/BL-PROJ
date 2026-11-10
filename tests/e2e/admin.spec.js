@@ -64,3 +64,22 @@ test('admin grāmatas var kārtot un filtrēt ar dropdown', async ({ page }) => 
   await page.getByRole('button', { name: 'Clear filters' }).click()
   await expect(table.locator('tbody tr')).toHaveCount(7)
 })
+
+test('telefonā admin rāda tikai galveno, pārējo pēc "Skatīt vairāk"', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await login(page, 'admin@e2e.test')
+  await page.locator('.modal-card', { hasText: 'Where to?' }).getByRole('button', { name: 'Admin panel' }).click()
+  await page.fill('#admin-unlock-pwd', ADMIN_PASSWORD)
+  await page.getByRole('button', { name: 'Open' }).click()
+  await page.getByRole('button', { name: 'All Books' }).click()
+
+  const card = page.getByRole('table', { name: 'All Books' }).locator('tbody tr').first()
+  await expect(card.getByText('Delete')).toBeHidden()
+  await card.getByRole('button', { name: 'View more ▾' }).click()
+  await expect(card.getByText('Delete')).toBeVisible()
+
+  const genre = page.locator('select').filter({ hasText: 'All Genres' })
+  await expect(genre).toBeHidden()
+  await page.getByRole('button', { name: 'Filters' }).click()
+  await expect(genre).toBeVisible()
+})
