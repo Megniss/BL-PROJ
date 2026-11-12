@@ -19,7 +19,7 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-in
 COPY . .
 RUN composer dump-autoload --optimize --no-dev --no-scripts
 
-# 3. gatavais attēls — PHP 8.4 + Apache
+# 3. gatavais attēls - PHP 8.4 + Apache
 FROM php:8.4-apache
 WORKDIR /var/www/html
 

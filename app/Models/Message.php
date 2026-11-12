@@ -16,7 +16,7 @@ class Message extends Model
     protected $appends = ['image_url'];
 
     protected $casts = [
-        'read_at'   => 'datetime',
+        'read_at' => 'datetime',
         'edited_at' => 'datetime',
         'image_removed' => 'boolean',
     ];

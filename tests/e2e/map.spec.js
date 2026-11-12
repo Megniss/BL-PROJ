@@ -30,7 +30,7 @@ test('kartē redz grāmatas, nevis lietotājus, un dublikāti apvienoti', async 
   await expect(harry).toContainText('×2')
   await expect(popup).not.toContainText('Jānis')
 
-  // pele aiziet prom — logs aizveras
+  // pele aiziet prom - logs aizveras
   await page.mouse.move(5, 5)
   await expect(popup).toHaveCount(0)
 })

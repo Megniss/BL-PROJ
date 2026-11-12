@@ -43,7 +43,7 @@ class ProfileTest extends TestCase
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->patchJson('/api/profile', [
-            'name'  => 'New Name',
+            'name' => 'New Name',
             'email' => 'new@example.com',
         ]);
 
@@ -56,11 +56,11 @@ class ProfileTest extends TestCase
 
     public function test_cannot_use_another_users_email(): void
     {
-        $user  = User::factory()->create();
+        $user = User::factory()->create();
         $other = User::factory()->create(['email' => 'taken@example.com']);
 
         $this->actingAs($user)->patchJson('/api/profile', [
-            'name'  => $user->name,
+            'name' => $user->name,
             'email' => 'taken@example.com',
         ])->assertStatus(422);
     }
@@ -70,10 +70,10 @@ class ProfileTest extends TestCase
         $user = User::factory()->create(['password' => bcrypt('OldPassword1!')]);
 
         $this->actingAs($user)->patchJson('/api/profile', [
-            'name'                     => $user->name,
-            'email'                    => $user->email,
-            'current_password'         => 'OldPassword1!',
-            'new_password'             => 'NewPassword1!',
+            'name' => $user->name,
+            'email' => $user->email,
+            'current_password' => 'OldPassword1!',
+            'new_password' => 'NewPassword1!',
             'new_password_confirmation' => 'NewPassword1!',
         ])->assertOk();
 
@@ -86,28 +86,28 @@ class ProfileTest extends TestCase
         $user = User::factory()->create(['password' => bcrypt('RealPassword1!')]);
 
         $this->actingAs($user)->patchJson('/api/profile', [
-            'name'                     => $user->name,
-            'email'                    => $user->email,
-            'current_password'         => 'wrongpassword',
-            'new_password'             => 'NewPassword1!',
+            'name' => $user->name,
+            'email' => $user->email,
+            'current_password' => 'wrongpassword',
+            'new_password' => 'NewPassword1!',
             'new_password_confirmation' => 'NewPassword1!',
         ])->assertStatus(422);
     }
 
     public function test_can_get_swap_history(): void
     {
-        $user  = User::factory()->create();
+        $user = User::factory()->create();
         $other = User::factory()->create();
 
-        $offered = Book::factory()->create(['user_id' => $user->id,  'status' => 'Available']);
-        $wanted  = Book::factory()->create(['user_id' => $other->id, 'status' => 'Available']);
+        $offered = Book::factory()->create(['user_id' => $user->id, 'status' => 'Available']);
+        $wanted = Book::factory()->create(['user_id' => $other->id, 'status' => 'Available']);
 
         SwapRequest::create([
-            'requester_id'    => $user->id,
-            'owner_id'        => $other->id,
+            'requester_id' => $user->id,
+            'owner_id' => $other->id,
             'offered_book_id' => $offered->id,
-            'wanted_book_id'  => $wanted->id,
-            'status'          => 'accepted',
+            'wanted_book_id' => $wanted->id,
+            'status' => 'accepted',
         ]);
 
         $response = $this->actingAs($user)->getJson('/api/profile/history');
@@ -136,7 +136,7 @@ class ProfileTest extends TestCase
 
         // paziņojums ar roku
         $user->notifications()->create([
-            'id'   => \Illuminate\Support\Str::uuid(),
+            'id' => \Illuminate\Support\Str::uuid(),
             'type' => 'App\\Notifications\\SwapAccepted',
             'data' => json_encode(['message' => 'test']),
         ]);

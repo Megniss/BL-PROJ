@@ -19,18 +19,18 @@ class BookUnderReview extends Notification
     public function toDatabase(object $notifiable): array
     {
         return [
-            'message'  => "Your book \"{$this->book->title}\" has been placed under review. Reason: {$this->reason}",
-            'book_id'  => $this->book->id,
-            'book'     => $this->book->title,
-            'reason'   => $this->reason,
-            'type'     => 'admin_action',
+            'message' => "Your book \"{$this->book->title}\" has been placed under review. Reason: {$this->reason}",
+            'book_id' => $this->book->id,
+            'book' => $this->book->title,
+            'reason' => $this->reason,
+            'type' => 'admin_action',
         ];
     }
 
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('BookLoop — Book Under Review')
+            ->subject('BookLoop - Book Under Review')
             ->greeting("Hi {$notifiable->name}!")
             ->line("Your book **\"{$this->book->title}\"** by {$this->book->author} has been placed under review by an administrator.")
             ->line("**Reason:** {$this->reason}")

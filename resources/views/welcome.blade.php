@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#3a6b3e">
-    <meta name="description" content="BookLoop — grāmatu apmaiņas platforma">
+    <meta name="description" content="BookLoop - grāmatu apmaiņas platforma">
     <title>BookLoop</title>
     <link rel="manifest" href="/manifest.json" crossorigin="use-credentials">
     <link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml">

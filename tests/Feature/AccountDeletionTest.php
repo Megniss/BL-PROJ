@@ -114,7 +114,7 @@ class AccountDeletionTest extends TestCase
         $user = User::factory()->create();
         $other = User::factory()->create();
 
-        // apmaiņa jau notikusi — grāmatas samainītas
+        // apmaiņa jau notikusi - grāmatas samainītas
         $gaveAway = Book::factory()->create(['user_id' => $other->id, 'status' => 'Available']);
         $received = Book::factory()->create(['user_id' => $user->id, 'status' => 'Available']);
 

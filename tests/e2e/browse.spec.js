@@ -12,7 +12,7 @@ test('vienāda grāmata trim lietotājiem ir viena kartīte', async ({ page }) =
   await cards.first().click()
   const rows = page.locator('.copy-row')
   await expect(rows).toHaveCount(3)
-  // tuvākais pirmais — Jelgava ir tuvāk Rīgai par Valmieru
+  // tuvākais pirmais - Jelgava ir tuvāk Rīgai par Valmieru
   await expect(rows.first()).toContainText('Jānis Bērziņš')
 })
 

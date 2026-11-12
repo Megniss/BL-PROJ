@@ -35,7 +35,14 @@ return [
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),
-            'database' => env('DB_DATABASE', database_path('database.sqlite')),
+            // relatīvs ceļš no projekta mapes, citādi artisan serve meklē public/ mapē
+            'database' => (function () {
+                $db = env('DB_DATABASE', 'bookloop');
+                if ($db === ':memory:' || str_starts_with($db, '/') || preg_match('/^[A-Za-z]:[\\\\\/]/', $db)) {
+                    return $db;
+                }
+                return base_path($db);
+            })(),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
             'busy_timeout' => null,

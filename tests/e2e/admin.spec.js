@@ -34,7 +34,7 @@ test('admin kartē redz lietotājus ar atrašanās vietu', async ({ page }) => {
   await page.getByRole('button', { name: 'Locations' }).click()
   await expect(page.getByText('3 of 7 users have set their location')).toBeVisible()
 
-  // trīs punkti — Rīga, Jelgava, Valmiera
+  // trīs punkti - Rīga, Jelgava, Valmiera
   const dots = page.locator('.admin-users-map path.leaflet-interactive')
   await expect(dots).toHaveCount(3)
 

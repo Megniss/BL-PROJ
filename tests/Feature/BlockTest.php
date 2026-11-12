@@ -90,7 +90,7 @@ class BlockTest extends TestCase
         $userA = User::factory()->create();
         $userB = User::factory()->create();
 
-        // A bloķēja B — nedrīkst rakstīt viens otram
+        // A bloķēja B - nedrīkst rakstīt viens otram
         Block::create(['blocker_id' => $userA->id, 'blocked_id' => $userB->id]);
 
         $this->actingAs($userA)->postJson('/api/messages', [

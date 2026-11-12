@@ -5,7 +5,7 @@
       <div class="d-flex align-items-center gap-2 me-auto" role="button" tabindex="0"
         @click="$router.push({ name: admin ? 'admin' : 'home' })"
         @keyup.enter="$router.push({ name: admin ? 'admin' : 'home' })"
-        style="cursor:pointer" aria-label="BookLoop — doties uz sākumlapu">
+        style="cursor:pointer" aria-label="BookLoop - doties uz sākumlapu">
         <span class="brand-icon" aria-hidden="true">⇄</span>
         <span class="brand-name">BookLoop</span>
         <span v-if="admin" class="nav-admin-tag">Admin</span>
@@ -176,7 +176,7 @@ export default {
       this.$emit('admin-password')
     },
 
-    // no profila uz admin paneli — parole jāievada vienmēr no jauna
+    // no profila uz admin paneli - parole jāievada vienmēr no jauna
     async openAdmin() {
       try { await axios.post('/api/admin/lock') } catch { /* ignorē */ }
       this.go('admin')

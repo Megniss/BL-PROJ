@@ -31,7 +31,7 @@
           </div>
         </div>
 
-        <!-- otrais solis — kods no e-pasta -->
+        <!-- otrais solis - kods no e-pasta -->
         <template v-if="challenge">
           <h1 class="auth-title mb-1">{{ t('twofa.title') }}</h1>
           <p class="auth-sub mb-4">{{ t('twofa.sent') }}</p>
@@ -215,7 +215,7 @@ export default {
       } catch (e) {
         const data = e.response?.data
         if (data?.error === 'expired') {
-          // kods novecojis vai par daudz kļūdu — sāk no paroles
+          // kods novecojis vai par daudz kļūdu - sāk no paroles
           this.backToLogin()
           this.errorMsg = this.t('twofa.expired')
         } else if (data?.blocked) {

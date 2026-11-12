@@ -40,7 +40,7 @@
               {{ c.subject }}
               <span v-if="admin" class="text-muted small ms-1">({{ c.user?.name }})</span>
             </div>
-            <div class="convo-last">{{ c.last_msg || '—' }}</div>
+            <div class="convo-last">{{ c.last_msg || '-' }}</div>
           </div>
           <span class="support-status-badge" :class="c.status === 'closed' ? 'badge-closed' : 'badge-open'">
             {{ c.status === 'closed' ? t('support.closed') : t('support.open') }}

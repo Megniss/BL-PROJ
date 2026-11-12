@@ -56,7 +56,7 @@
           </button>
         </div>
 
-        <!-- papildu filtri — mobilajā slēpti līdz pogai -->
+        <!-- papildu filtri - mobilajā slēpti līdz pogai -->
         <div v-if="showMoreFilters || isDesktop" class="d-flex flex-wrap gap-2 mb-2">
           <div class="filter-suggest-wrap" style="min-width:150px;flex:1">
             <div class="filter-suggest-inner">
@@ -239,7 +239,7 @@
               <td>{{ t('genre.' + book.genre) }}</td>
               <td>{{ book.copies_count }}</td>
               <td>
-                <span v-if="book.copies_count > 1" class="text-muted">—</span>
+                <span v-if="book.copies_count > 1" class="text-muted">-</span>
                 <span v-else class="owner-link" @click.stop="$router.push({ name: 'userProfile', params: { id: book.user.id } })">{{ book.user?.name }}</span>
                 <span v-if="book.distance_km !== null && book.distance_km !== undefined" class="book-card-distance d-block">📍 {{ formatDistance(book.distance_km) }}</span>
               </td>
@@ -560,7 +560,7 @@ export default {
     },
     hideLangSugg() { setTimeout(() => { this.showLangSugg = false }, 150) },
 
-    // tas pats stabiņš — apgriež virzienu, citādi no sākuma
+    // tas pats stabiņš - apgriež virzienu, citādi no sākuma
     sortTable(col) {
       if (this.tableSort.col === col) {
         this.tableSort.dir = this.tableSort.dir === 'asc' ? 'desc' : 'asc'

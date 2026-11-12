@@ -141,7 +141,7 @@ class AdminController extends Controller
 
         $this->log($request, 'delete_book', 'book', null, $title, $request->reason);
 
-        // grāmata dzēsta — pazino īpašnieku
+        // grāmata dzēsta - pazino īpašnieku
         if ($owner) {
             try {
                 $owner->notify(new BookDeletedByAdmin($title, $author, $request->reason));

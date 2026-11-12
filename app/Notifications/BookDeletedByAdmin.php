@@ -5,7 +5,7 @@ namespace App\Notifications;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-// grāmata dzēsta — īpašnieks saņem iemeslu
+// grāmata dzēsta - īpašnieks saņem iemeslu
 class BookDeletedByAdmin extends Notification
 {
     public function __construct(
@@ -23,16 +23,16 @@ class BookDeletedByAdmin extends Notification
     {
         return [
             'message' => "Your book \"{$this->bookTitle}\" was removed by an admin. Reason: {$this->reason}",
-            'book'    => $this->bookTitle,
-            'reason'  => $this->reason,
-            'type'    => 'admin_action',
+            'book' => $this->bookTitle,
+            'reason' => $this->reason,
+            'type' => 'admin_action',
         ];
     }
 
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('BookLoop — Book Removed')
+            ->subject('BookLoop - Book Removed')
             ->greeting("Hi {$notifiable->name}!")
             ->line("Your book **\"{$this->bookTitle}\"** by {$this->bookAuthor} has been removed by an administrator.")
             ->line("**Reason:** {$this->reason}")

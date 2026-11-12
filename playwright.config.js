@@ -36,7 +36,7 @@ export default defineConfig({
       APP_URL: `http://localhost:${PORT}`,
       ASSET_URL: '',
       MAIL_MAILER: 'log',
-      // login limiti testos traucē — array kešs neko nesaglabā starp pieprasījumiem
+      // login limiti testos traucē - array kešs neko nesaglabā starp pieprasījumiem
       CACHE_STORE: 'array',
     },
   },

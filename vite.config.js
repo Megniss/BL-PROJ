@@ -22,12 +22,13 @@ export default defineConfig({
         strictPort: true,
         allowedHosts: true,
         cors: true,
+        // lokāli pārlūks nevar atvērt 0.0.0.0, tāpēc localhost
         hmr: codespace
             ? {
                 host: `${codespace}-5173.app.github.dev`,
                 protocol: 'wss',
                 clientPort: 443,
             }
-            : undefined,
+            : { host: 'localhost' },
     },
 });

@@ -18,7 +18,7 @@ class TwoFactorCode extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject("BookLoop — Your code: {$this->code}")
+            ->subject("BookLoop - Your code: {$this->code}")
             ->greeting("Hi {$notifiable->name}!")
             ->line('Your BookLoop verification code is:')
             ->line("**{$this->code}**")

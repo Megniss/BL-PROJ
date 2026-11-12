@@ -173,7 +173,7 @@
               >
                 <template #default="{ item }">
                   <span class="fw-semibold">{{ item.title }}</span>
-                  <span class="text-muted"> — {{ item.author }}</span>
+                  <span class="text-muted"> - {{ item.author }}</span>
                   <span v-if="item.mine" class="autocomplete-note">{{ t('copies.iHaveShort') }}</span>
                 </template>
               </AutocompleteInput>
@@ -218,7 +218,7 @@
             </div>
             <div class="col-12">
               <label for="book-cover" class="form-label fw-semibold">{{ t('modal.cover') }}</label>
-              <!-- esošais vāks rediģējot — slēpj ja noņemts vai jauns fails izvēlēts -->
+              <!-- esošais vāks rediģējot - slēpj ja noņemts vai jauns fails izvēlēts -->
               <div v-if="editingBook && editingBook.cover_image && !coverRemoved && !coverPreview" class="d-flex align-items-center gap-3 mb-2">
                 <img :src="'/storage/' + editingBook.cover_image" class="cover-preview-img" :alt="editingBook.title" />
                 <button type="button" class="btn btn-sm btn-outline-danger" @click="markRemoveCover">{{ t('modal.removeCover') }}</button>
@@ -489,7 +489,7 @@ export default {
       }
     },
 
-    // izvēlēta jau esoša grāmata — nosaukums un autors sakritīs precīzi
+    // izvēlēta jau esoša grāmata - nosaukums un autors sakritīs precīzi
     pickExistingBook(book) {
       this.form.title = book.title
       this.form.author = book.author

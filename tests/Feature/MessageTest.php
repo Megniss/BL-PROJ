@@ -60,9 +60,9 @@ class MessageTest extends TestCase
 
         $msg = Message::create([
             'from_user_id' => $userB->id,
-            'to_user_id'   => $userA->id,
-            'body'         => 'Unread message',
-            'read_at'      => null,
+            'to_user_id' => $userA->id,
+            'body' => 'Unread message',
+            'read_at' => null,
         ]);
 
         $this->actingAs($userA)->getJson("/api/messages/{$userB->id}")->assertOk();
@@ -72,19 +72,19 @@ class MessageTest extends TestCase
 
     public function test_can_send_message(): void
     {
-        $sender    = User::factory()->create();
+        $sender = User::factory()->create();
         $recipient = User::factory()->create();
 
         $response = $this->actingAs($sender)->postJson('/api/messages', [
             'to_user_id' => $recipient->id,
-            'body'       => 'Hello there!',
+            'body' => 'Hello there!',
         ]);
 
         $response->assertStatus(201);
         $this->assertDatabaseHas('messages', [
             'from_user_id' => $sender->id,
-            'to_user_id'   => $recipient->id,
-            'body'         => 'Hello there!',
+            'to_user_id' => $recipient->id,
+            'body' => 'Hello there!',
         ]);
     }
 
@@ -94,29 +94,29 @@ class MessageTest extends TestCase
 
         $this->actingAs($user)->postJson('/api/messages', [
             'to_user_id' => $user->id,
-            'body'       => 'Talking to myself',
+            'body' => 'Talking to myself',
         ])->assertStatus(422);
     }
 
     public function test_message_body_is_required(): void
     {
-        $sender    = User::factory()->create();
+        $sender = User::factory()->create();
         $recipient = User::factory()->create();
 
         $this->actingAs($sender)->postJson('/api/messages', [
             'to_user_id' => $recipient->id,
-            'body'       => '',
+            'body' => '',
         ])->assertStatus(422);
     }
 
     public function test_message_body_max_length(): void
     {
-        $sender    = User::factory()->create();
+        $sender = User::factory()->create();
         $recipient = User::factory()->create();
 
         $this->actingAs($sender)->postJson('/api/messages', [
             'to_user_id' => $recipient->id,
-            'body'       => str_repeat('a', 2001),
+            'body' => str_repeat('a', 2001),
         ])->assertStatus(422);
     }
 

@@ -116,7 +116,7 @@
               </td>
               <td :data-label="t('location.title')">
                 <button v-if="u.latitude !== null" class="btn btn-sm btn-outline-secondary text-nowrap" @click="mapUser = u">📍 {{ t('admin.showMap') }}</button>
-                <span v-else class="text-muted">—</span>
+                <span v-else class="text-muted">-</span>
               </td>
               <template v-if="u.id !== currentUserId">
                 <td class="ab-col">
@@ -318,7 +318,7 @@
               <td class="m-main">
                 <span class="stars-display">{{ '★'.repeat(r.stars) }}{{ '☆'.repeat(5 - r.stars) }}</span>
               </td>
-              <td :data-label="t('admin.col.review')">{{ r.review || '—' }}</td>
+              <td :data-label="t('admin.col.review')">{{ r.review || '-' }}</td>
               <td :data-label="t('admin.col.date')" class="text-nowrap">{{ r.date }}</td>
               <td class="m-toggle"><button class="btn btn-link btn-sm p-0" @click="toggleRow('ratings', r.id)">{{ isOpen('ratings', r.id) ? t('admin.less') : t('admin.more') }}</button></td>
             </tr>
@@ -488,7 +488,7 @@
                 <td :data-label="t('admin.col.admin')">{{ l.admin }}</td>
                 <td class="m-main"><span class="log-action-badge">{{ t('admin.log.' + l.action) }}</span></td>
                 <td class="m-main">{{ l.target_name }}</td>
-                <td :data-label="t('admin.col.reason')">{{ l.reason || '—' }}</td>
+                <td :data-label="t('admin.col.reason')">{{ l.reason || '-' }}</td>
                 <td class="m-toggle"><button class="btn btn-link btn-sm p-0" @click="toggleRow('logs', l.id)">{{ isOpen('logs', l.id) ? t('admin.less') : t('admin.more') }}</button></td>
               </tr>
             </tbody>
@@ -861,7 +861,7 @@ export default {
         this[targets[key]] = data
         this.loaded[key] = true
       } catch (err) {
-        // 8h beigušās — atkal prasa paroli
+        // 8h beigušās - atkal prasa paroli
         if (err.response?.data?.admin_locked) this.gate = 'locked'
         else this.error = this.t('admin.loadError')
       } finally {
@@ -1234,7 +1234,7 @@ export default {
   white-space: nowrap;
 }
 
-/* telefonā — tikai galvenais, pārējais pēc "Skatīt vairāk" */
+/* telefonā - tikai galvenais, pārējais pēc "Skatīt vairāk" */
 .m-toggle, .m-filter-btn { display: none; }
 
 @media (max-width: 767.98px) {
@@ -1286,7 +1286,7 @@ export default {
 </style>
 
 <style>
-/* tumšais režīms — bez scoped, citādi [data-theme] nestrādā */
+/* tumšais režīms - bez scoped, citādi [data-theme] nestrādā */
 [data-theme="dark"] .admin-card {
   background: #211d18;
   box-shadow: 0 2px 8px rgba(0,0,0,.3);

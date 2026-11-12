@@ -9,7 +9,7 @@ import { themeStore } from './themeStore.js'
 
 themeStore.init()
 
-// ja tokens beidzies, serveris atgriež 401 — izlogojas
+// ja tokens beidzies, serveris atgriež 401 - izlogojas
 axios.interceptors.response.use(
   response => response,
   error => {

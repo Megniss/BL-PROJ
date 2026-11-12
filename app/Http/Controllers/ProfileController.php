@@ -129,7 +129,7 @@ class ProfileController extends Controller
         ]);
     }
 
-    // konta dzēšana — lietotājs tiek anonimizēts, vēsture paliek
+    // konta dzēšana - lietotājs tiek anonimizēts, vēsture paliek
     public function destroy(Request $request)
     {
         $user = $request->user();

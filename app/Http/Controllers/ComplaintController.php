@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class ComplaintController extends Controller
 {
-    // lietotāja puse — tikai savas sūdzības
+    // lietotāja puse - tikai savas sūdzības
 
     public function index(Request $request)
     {
@@ -131,7 +131,7 @@ class ComplaintController extends Controller
             'action' => $action,
             'target_type' => 'complaint',
             'target_id' => $complaint->id,
-            'target_name' => $complaint->user->name . ' — ' . $complaint->subject,
+            'target_name' => $complaint->user->name . ' - ' . $complaint->subject,
             'reason' => $reason,
         ]);
     }

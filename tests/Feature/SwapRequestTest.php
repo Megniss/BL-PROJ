@@ -15,7 +15,7 @@ class SwapRequestTest extends TestCase
     private function makeSwap(User $requester, User $owner): array
     {
         $offered = Book::factory()->create(['user_id' => $requester->id, 'status' => 'Available']);
-        $wanted  = Book::factory()->create(['user_id' => $owner->id,     'status' => 'Available']);
+        $wanted = Book::factory()->create(['user_id' => $owner->id, 'status' => 'Available']);
 
         return compact('offered', 'wanted');
     }
@@ -23,67 +23,67 @@ class SwapRequestTest extends TestCase
     public function test_user_can_create_swap_request(): void
     {
         $requester = User::factory()->create();
-        $owner     = User::factory()->create();
+        $owner = User::factory()->create();
         ['offered' => $offered, 'wanted' => $wanted] = $this->makeSwap($requester, $owner);
 
         $response = $this->actingAs($requester)->postJson('/api/swap-requests', [
             'offered_book_id' => $offered->id,
-            'wanted_book_id'  => $wanted->id,
+            'wanted_book_id' => $wanted->id,
         ]);
 
         $response->assertStatus(201);
         $this->assertDatabaseHas('swap_requests', [
-            'requester_id'    => $requester->id,
+            'requester_id' => $requester->id,
             'offered_book_id' => $offered->id,
-            'wanted_book_id'  => $wanted->id,
-            'status'          => 'pending',
+            'wanted_book_id' => $wanted->id,
+            'status' => 'pending',
         ]);
     }
 
     public function test_cannot_swap_own_book(): void
     {
-        $user    = User::factory()->create();
+        $user = User::factory()->create();
         $offered = Book::factory()->create(['user_id' => $user->id, 'status' => 'Available']);
-        $wanted  = Book::factory()->create(['user_id' => $user->id, 'status' => 'Available']);
+        $wanted = Book::factory()->create(['user_id' => $user->id, 'status' => 'Available']);
 
         $this->actingAs($user)->postJson('/api/swap-requests', [
             'offered_book_id' => $offered->id,
-            'wanted_book_id'  => $wanted->id,
+            'wanted_book_id' => $wanted->id,
         ])->assertStatus(422);
     }
 
     public function test_cannot_duplicate_swap_request(): void
     {
         $requester = User::factory()->create();
-        $owner     = User::factory()->create();
+        $owner = User::factory()->create();
         ['offered' => $offered, 'wanted' => $wanted] = $this->makeSwap($requester, $owner);
 
         SwapRequest::create([
-            'requester_id'    => $requester->id,
-            'owner_id'        => $owner->id,
+            'requester_id' => $requester->id,
+            'owner_id' => $owner->id,
             'offered_book_id' => $offered->id,
-            'wanted_book_id'  => $wanted->id,
-            'status'          => 'pending',
+            'wanted_book_id' => $wanted->id,
+            'status' => 'pending',
         ]);
 
         $this->actingAs($requester)->postJson('/api/swap-requests', [
             'offered_book_id' => $offered->id,
-            'wanted_book_id'  => $wanted->id,
+            'wanted_book_id' => $wanted->id,
         ])->assertStatus(422);
     }
 
     public function test_owner_can_accept_swap(): void
     {
         $requester = User::factory()->create();
-        $owner     = User::factory()->create();
+        $owner = User::factory()->create();
         ['offered' => $offered, 'wanted' => $wanted] = $this->makeSwap($requester, $owner);
 
         $swap = SwapRequest::create([
-            'requester_id'    => $requester->id,
-            'owner_id'        => $owner->id,
+            'requester_id' => $requester->id,
+            'owner_id' => $owner->id,
             'offered_book_id' => $offered->id,
-            'wanted_book_id'  => $wanted->id,
-            'status'          => 'pending',
+            'wanted_book_id' => $wanted->id,
+            'status' => 'pending',
         ]);
 
         $this->actingAs($owner)
@@ -94,21 +94,21 @@ class SwapRequestTest extends TestCase
 
         // grāmatas samainījušās
         $this->assertDatabaseHas('books', ['id' => $offered->id, 'user_id' => $owner->id]);
-        $this->assertDatabaseHas('books', ['id' => $wanted->id,  'user_id' => $requester->id]);
+        $this->assertDatabaseHas('books', ['id' => $wanted->id, 'user_id' => $requester->id]);
     }
 
     public function test_owner_can_decline_swap(): void
     {
         $requester = User::factory()->create();
-        $owner     = User::factory()->create();
+        $owner = User::factory()->create();
         ['offered' => $offered, 'wanted' => $wanted] = $this->makeSwap($requester, $owner);
 
         $swap = SwapRequest::create([
-            'requester_id'    => $requester->id,
-            'owner_id'        => $owner->id,
+            'requester_id' => $requester->id,
+            'owner_id' => $owner->id,
             'offered_book_id' => $offered->id,
-            'wanted_book_id'  => $wanted->id,
-            'status'          => 'pending',
+            'wanted_book_id' => $wanted->id,
+            'status' => 'pending',
         ]);
 
         $this->actingAs($owner)
@@ -119,22 +119,22 @@ class SwapRequestTest extends TestCase
 
         // grāmatas atkal pieejamas
         $this->assertDatabaseHas('books', ['id' => $offered->id, 'status' => 'Available']);
-        $this->assertDatabaseHas('books', ['id' => $wanted->id,  'status' => 'Available']);
+        $this->assertDatabaseHas('books', ['id' => $wanted->id, 'status' => 'Available']);
     }
 
     public function test_non_owner_cannot_accept_swap(): void
     {
         $requester = User::factory()->create();
-        $owner     = User::factory()->create();
-        $stranger  = User::factory()->create();
+        $owner = User::factory()->create();
+        $stranger = User::factory()->create();
         ['offered' => $offered, 'wanted' => $wanted] = $this->makeSwap($requester, $owner);
 
         $swap = SwapRequest::create([
-            'requester_id'    => $requester->id,
-            'owner_id'        => $owner->id,
+            'requester_id' => $requester->id,
+            'owner_id' => $owner->id,
             'offered_book_id' => $offered->id,
-            'wanted_book_id'  => $wanted->id,
-            'status'          => 'pending',
+            'wanted_book_id' => $wanted->id,
+            'status' => 'pending',
         ]);
 
         $this->actingAs($stranger)
@@ -145,18 +145,18 @@ class SwapRequestTest extends TestCase
     public function test_requester_can_cancel_pending_swap(): void
     {
         $requester = User::factory()->create();
-        $owner     = User::factory()->create();
+        $owner = User::factory()->create();
         ['offered' => $offered, 'wanted' => $wanted] = $this->makeSwap($requester, $owner);
 
         // caur API, lai abas grāmatas kļūst Pending
         $response = $this->actingAs($requester)->postJson('/api/swap-requests', [
             'offered_book_id' => $offered->id,
-            'wanted_book_id'  => $wanted->id,
+            'wanted_book_id' => $wanted->id,
         ]);
         $response->assertStatus(201);
 
         $this->assertDatabaseHas('books', ['id' => $offered->id, 'status' => 'Pending']);
-        $this->assertDatabaseHas('books', ['id' => $wanted->id,  'status' => 'Pending']);
+        $this->assertDatabaseHas('books', ['id' => $wanted->id, 'status' => 'Pending']);
 
         $swapId = $response->json('id');
 
@@ -166,13 +166,13 @@ class SwapRequestTest extends TestCase
 
         // atcelts pieprasījums netiek dzēsts, bet atzīmēts kā declined
         $this->assertDatabaseHas('swap_requests', [
-            'id'                   => $swapId,
-            'status'               => 'declined',
-            'requester_dismissed'  => true,
+            'id' => $swapId,
+            'status' => 'declined',
+            'requester_dismissed' => true,
         ]);
 
         // abas grāmatas atkal pieejamas
         $this->assertDatabaseHas('books', ['id' => $offered->id, 'status' => 'Available']);
-        $this->assertDatabaseHas('books', ['id' => $wanted->id,  'status' => 'Available']);
+        $this->assertDatabaseHas('books', ['id' => $wanted->id, 'status' => 'Available']);
     }
 }

@@ -10,7 +10,7 @@ class Language extends Model
 {
     // atslēga ir valodas kods, nevis skaitlis
     protected $primaryKey = 'code';
-    protected $keyType    = 'string';
+    protected $keyType = 'string';
     public    $incrementing = false;
 
     protected $casts = ['is_active' => 'boolean'];

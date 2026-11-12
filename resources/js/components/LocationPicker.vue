@@ -79,7 +79,7 @@ export default {
   },
 
   methods: {
-    // tāpat kā serverī — noapaļo līdz ~1 km
+    // tāpat kā serverī - noapaļo līdz ~1 km
     pick(lat, lng) {
       this.error = ''
       this.picked = { lat: Math.round(lat * 100) / 100, lng: Math.round(lng * 100) / 100 }

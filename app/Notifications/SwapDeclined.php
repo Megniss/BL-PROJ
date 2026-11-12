@@ -23,17 +23,17 @@ class SwapDeclined extends Notification implements ShouldQueue
     public function toDatabase(object $notifiable): array
     {
         return [
-            'message'      => "Your swap request was declined. \"{$this->swap->offeredBook->title}\" is available again.",
-            'wanted_book'  => $this->swap->wantedBook->title,
+            'message' => "Your swap request was declined. \"{$this->swap->offeredBook->title}\" is available again.",
+            'wanted_book' => $this->swap->wantedBook->title,
             'offered_book' => $this->swap->offeredBook->title,
-            'swap_id'      => $this->swap->id,
+            'swap_id' => $this->swap->id,
         ];
     }
 
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('BookLoop — Swap Request Declined')
+            ->subject('BookLoop - Swap Request Declined')
             ->greeting("Hi {$notifiable->name}!")
             ->line("Unfortunately your swap request was declined.")
             ->line("You wanted: **{$this->swap->wantedBook->title}** by {$this->swap->wantedBook->author}")

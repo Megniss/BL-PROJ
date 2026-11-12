@@ -1,7 +1,6 @@
 .git
 .github
 .devcontainer
-.planning
 node_modules
 vendor
 .env

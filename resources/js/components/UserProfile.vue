@@ -47,7 +47,7 @@
           </div>
         </div>
 
-        <h2 class="dash-section-title mb-3">{{ profile.name }} — {{ t('up.library') }}</h2>
+        <h2 class="dash-section-title mb-3">{{ profile.name }} - {{ t('up.library') }}</h2>
 
         <div v-if="profile.library.length === 0" class="text-center py-5 text-muted">
           <div class="fs-1">📚</div>
@@ -89,7 +89,7 @@
         </div>
 
         <template v-if="profile.swap_history && profile.swap_history.length">
-          <h2 class="dash-section-title mt-4 mb-3">{{ profile.name }} — {{ t('profile.swapHistory') }}</h2>
+          <h2 class="dash-section-title mt-4 mb-3">{{ profile.name }} - {{ t('profile.swapHistory') }}</h2>
           <div class="d-flex flex-column gap-2 mb-4">
             <div v-for="(swap, i) in profile.swap_history" :key="i" class="card border">
               <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2 p-3">

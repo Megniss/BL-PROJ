@@ -40,7 +40,7 @@
   --bs-link-color: #3a6b3e;
   --bs-link-hover-color: #2d5431;
 
-  /* aliases so older rules still work */
+  /* vecie nosaukumi, lai vecie stili vēl strādā */
   --text: #1a1612;
   --text-muted: #7a7068;
   --bg: #faf6ef;
@@ -63,7 +63,7 @@ body {
   flex: 1;
 }
 
-/* footer pinned to bottom — wrap page content in .page-layout */
+/* footer vienmēr apakšā, lapas saturu liek .page-layout iekšā */
 .page-layout {
   display: flex;
   flex-direction: column;
@@ -518,7 +518,7 @@ body {
   border-radius: inherit;
 }
 
-/* kartiņa ar pending overlay — bez hover efekta */
+/* kartiņa ar pending overlay - bez hover efekta */
 .featured-card:has(.pending-overlay):hover {
   box-shadow: none;
   transform: none;
@@ -851,7 +851,7 @@ body {
 .user-card-arrow { color: var(--muted); font-size: 18px; flex-shrink: 0; transition: transform 0.2s; }
 .user-card:hover .user-card-arrow { transform: translateX(4px); }
 
-/* mini shelf */
+/* mazais plaukts */
 .user-card-shelf {
   display: flex;
   gap: 6px;
@@ -1611,7 +1611,7 @@ body {
   .convo-panel, .thread-panel { width: 100%; border-radius: 10px; }
   .compose-input { max-height: 160px; }
   .featured-scroll { padding-left: 0; padding-right: 0; }
-  .featured-card { flex: 0 0 calc(50% - 8px); } /* 2 cards */
+  .featured-card { flex: 0 0 calc(50% - 8px); } /* 2 kartiņas */
   .featured-scroll-wrap { margin-left: 0; margin-right: 0; }
   .hidden-mobile { display: none !important; }
   .back-btn { display: block; }
@@ -1626,13 +1626,13 @@ body {
 
 /* kartiņu skaits featured scroll pēc ekrāna izmēra */
 @media (min-width: 480px) and (max-width: 768px) {
-  .featured-card { flex: 0 0 calc(33.33% - 11px); } /* 3 cards */
+  .featured-card { flex: 0 0 calc(33.33% - 11px); } /* 3 kartiņas */
 }
 @media (min-width: 768px) and (max-width: 1024px) {
-  .featured-card { flex: 0 0 calc(25% - 12px); } /* 4 cards */
+  .featured-card { flex: 0 0 calc(25% - 12px); } /* 4 kartiņas */
 }
 
-/* scroll progress */
+/* scroll josla augšā */
 .scroll-progress {
   position: fixed;
   top: 0;
@@ -1644,7 +1644,7 @@ body {
   pointer-events: none;
 }
 
-/* back to top */
+/* poga uz augšu */
 .back-to-top {
   position: fixed;
   bottom: 28px;
@@ -1669,7 +1669,7 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* cookie banner */
+/* sīkdatņu paziņojums */
 .cookie-banner {
   position: fixed;
   bottom: 0;
@@ -1729,7 +1729,7 @@ body {
   border-radius: 2px;
 }
 
-/* nav user dropdown */
+/* lietotāja dropdown navbarā */
 .nav-user-wrap {
   position: relative;
 }
@@ -1790,7 +1790,7 @@ body {
 [data-theme="dark"] .nav-dropdown { background: #1e1b16; }
 [data-theme="dark"] .nav-dropdown-item:hover { background: #2a2520; }
 
-/* settings page */
+/* iestatījumu lapa */
 .bookloop-home { min-height: 100vh; display: flex; flex-direction: column; }
 .bookloop-home > footer { margin-top: auto; }
 .settings-page { min-height: 100vh; display: flex; flex-direction: column; background: var(--bg); }
@@ -1851,7 +1851,7 @@ body {
   color: var(--text);
 }
 
-/* block buttons */
+/* bloķēšanas pogas */
 .btn-block-user {
   background: none;
   border: 1px solid var(--border);
@@ -1893,7 +1893,7 @@ body {
   border-color: #4a2020;
 }
 
-/* auth layout (login / register) */
+/* login un register lapas */
 .auth-page {
   display: flex;
   min-height: 100vh;
@@ -2014,13 +2014,13 @@ body {
   cursor: pointer;
 }
 
-/* hide left panel on mobile, stack vertically */
+/* telefonā kreiso pusi slēpj */
 @media (max-width: 991px) {
   .auth-left { display: none; }
   .auth-right { padding: 32px 20px; align-items: flex-start; padding-top: 48px; }
 }
 
-/* ---- pagination ---- */
+/* lapošana */
 .pagination-bar {
   display: flex;
   align-items: center;
@@ -2053,7 +2053,7 @@ body {
 [data-theme="dark"] .pg-btn:disabled { background: #221e1a; color: #5a5048; border-color: #3a3028; }
 [data-theme="dark"] .pg-ellipsis { color: #9a9088; }
 
-/* ---- toasts ---- */
+/* toast paziņojumi */
 .toast-wrap {
   position: fixed;
   bottom: 24px;
@@ -2082,7 +2082,7 @@ body {
 .toast-slide-enter-from { opacity: 0; transform: translateY(12px); }
 .toast-slide-leave-to { opacity: 0; transform: translateY(12px); }
 
-/* ---- skeleton loader ---- */
+/* skeleton ielāde */
 @keyframes shimmer {
   0% { background-position: -400px 0; }
   100% { background-position: 400px 0; }
@@ -2107,7 +2107,7 @@ body {
   background-size: 800px 100%;
 }
 
-/* ---- "NEW" ribbon ---- */
+/* "JAUNS" lente */
 .new-ribbon {
   position: absolute;
   top: 10px;
@@ -2210,7 +2210,7 @@ body {
 /* attālums */
 .book-card-distance { font-size: 12px; color: var(--muted); white-space: nowrap; }
 
-/* viena grāmata — vairāki īpašnieki */
+/* viena grāmata - vairāki īpašnieki */
 .book-copies { border-top: 1px solid var(--border); padding: 16px 20px 4px; margin-top: 4px; }
 .copy-row {
   display: flex;

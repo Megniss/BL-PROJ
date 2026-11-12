@@ -45,7 +45,7 @@ class TwoFactorController extends Controller
         return response()->json(['sent' => true]);
     }
 
-    // ieslēgšana — vispirms jāapstiprina, ka e-pasts pienāk
+    // ieslēgšana - vispirms jāapstiprina, ka e-pasts pienāk
     public function sendEnableCode(Request $request)
     {
         $challenge = $this->send(fn() => TwoFactor::start($request->user(), 'enable'));

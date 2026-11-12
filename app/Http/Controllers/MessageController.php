@@ -125,7 +125,7 @@ class MessageController extends Controller
         return response()->json($message->load('sender:id,name'), 201);
     }
 
-    // rediģēt ziņu — tikai sūtītājs, tikai ja nav izlasīta
+    // rediģēt ziņu - tikai sūtītājs, tikai ja nav izlasīta
     public function update(Request $request, Message $message)
     {
         if ($message->from_user_id !== $request->user()->id) {
@@ -149,7 +149,7 @@ class MessageController extends Controller
         return response()->json($message->load('sender:id,name'));
     }
 
-    // dzēst ziņu — tikai sūtītājs, tikai ja nav izlasīta
+    // dzēst ziņu - tikai sūtītājs, tikai ja nav izlasīta
     public function destroy(Request $request, Message $message)
     {
         if ($message->from_user_id !== $request->user()->id) {

@@ -20,17 +20,17 @@ class RatingTest extends TestCase
         $owner = User::factory()->create();
 
         $offeredBook = Book::factory()->create(['user_id' => $requester->id, 'status' => 'Available']);
-        $wantedBook  = Book::factory()->create(['user_id' => $owner->id, 'status' => 'Available']);
+        $wantedBook = Book::factory()->create(['user_id' => $owner->id, 'status' => 'Available']);
 
         $swap = SwapRequest::create([
-            'requester_id'   => $requester->id,
-            'owner_id'       => $owner->id,
+            'requester_id' => $requester->id,
+            'owner_id' => $owner->id,
             'offered_book_id'=> $offeredBook->id,
             'wanted_book_id' => $wantedBook->id,
-            'status'         => 'accepted',
+            'status' => 'accepted',
         ]);
 
-        // kā pēc accept() — grāmatas samainītas
+        // kā pēc accept() - grāmatas samainītas
         $offeredBook->update(['user_id' => $owner->id, 'status' => 'Swapped']);
         $wantedBook->update(['user_id' => $requester->id, 'status' => 'Swapped']);
 
@@ -51,9 +51,9 @@ class RatingTest extends TestCase
         $response->assertStatus(201);
         $this->assertDatabaseHas('ratings', [
             'swap_request_id' => $swap->id,
-            'book_id'         => $wantedBook->id,
-            'rater_id'        => $requester->id,
-            'stars'           => 4,
+            'book_id' => $wantedBook->id,
+            'rater_id' => $requester->id,
+            'stars' => 4,
         ]);
     }
 
@@ -70,9 +70,9 @@ class RatingTest extends TestCase
         $response->assertStatus(201);
         $this->assertDatabaseHas('ratings', [
             'swap_request_id' => $swap->id,
-            'book_id'         => $offeredBook->id,
-            'rater_id'        => $owner->id,
-            'stars'           => 5,
+            'book_id' => $offeredBook->id,
+            'rater_id' => $owner->id,
+            'stars' => 5,
         ]);
     }
 
@@ -109,14 +109,14 @@ class RatingTest extends TestCase
         $requester = User::factory()->create();
         $owner = User::factory()->create();
         $offered = Book::factory()->create(['user_id' => $requester->id]);
-        $wanted  = Book::factory()->create(['user_id' => $owner->id]);
+        $wanted = Book::factory()->create(['user_id' => $owner->id]);
 
         $swap = SwapRequest::create([
-            'requester_id'    => $requester->id,
-            'owner_id'        => $owner->id,
+            'requester_id' => $requester->id,
+            'owner_id' => $owner->id,
             'offered_book_id' => $offered->id,
-            'wanted_book_id'  => $wanted->id,
-            'status'          => 'pending',
+            'wanted_book_id' => $wanted->id,
+            'status' => 'pending',
         ]);
 
         $this->actingAs($requester)
@@ -152,21 +152,21 @@ class RatingTest extends TestCase
         $rater = User::factory()->create();
         $owner = User::factory()->create();
         $offeredBook = Book::factory()->create(['user_id' => $rater->id, 'status' => 'Available']);
-        $wantedBook  = Book::factory()->create(['user_id' => $owner->id, 'status' => 'Available']);
+        $wantedBook = Book::factory()->create(['user_id' => $owner->id, 'status' => 'Available']);
 
         $swap = SwapRequest::create([
-            'requester_id'    => $rater->id,
-            'owner_id'        => $owner->id,
+            'requester_id' => $rater->id,
+            'owner_id' => $owner->id,
             'offered_book_id' => $offeredBook->id,
-            'wanted_book_id'  => $wantedBook->id,
-            'status'          => 'accepted',
+            'wanted_book_id' => $wantedBook->id,
+            'status' => 'accepted',
         ]);
 
         Rating::create([
             'swap_request_id' => $swap->id,
-            'book_id'         => $wantedBook->id,
-            'rater_id'        => $rater->id,
-            'stars'           => 5,
+            'book_id' => $wantedBook->id,
+            'rater_id' => $rater->id,
+            'stars' => 5,
         ]);
 
         // lai grāmatas redzamas browse

@@ -71,7 +71,7 @@ export const translations = {
     'books.viewAll': 'View all →',
     'books.empty': 'No books match your filters.',
     'books.emptyNoFilters': 'No books listed yet.',
-    'books.emptyNoFiltersSub': 'Be the first to add one — sign up and list a book!',
+    'books.emptyNoFiltersSub': 'Be the first to add one - sign up and list a book!',
     'books.clearFilters': 'Clear filters',
     'books.requestSwap': 'Request Swap',
     'books.status.Available': 'Available',
@@ -181,7 +181,7 @@ export const translations = {
 
     // Reģistrācija
     'register.title': 'Create your account',
-    'register.sub': "Join Latvia's book exchange community — it's free",
+    'register.sub': "Join Latvia's book exchange community - it's free",
     'register.name': 'Full Name',
     'register.namePlaceholder': 'Jānis Bērziņš',
     'register.email': 'Email',
@@ -357,7 +357,7 @@ export const translations = {
     'about.title': 'About BookLoop',
     'about.subtitle': 'A free book exchange platform built for readers in Latvia.',
     'about.what.title': 'What is BookLoop?',
-    'about.what.body': 'BookLoop is a platform that lets readers share and exchange books with each other. Instead of letting your finished books collect dust on the shelf, you can list them and swap with someone who has a book you want to read next. No money, no subscriptions — just books finding new readers.',
+    'about.what.body': 'BookLoop is a platform that lets readers share and exchange books with each other. Instead of letting your finished books collect dust on the shelf, you can list them and swap with someone who has a book you want to read next. No money, no subscriptions - just books finding new readers.',
     // Maiņas pieprasījums
     'swap.sent': 'Request Sent!',
     'swap.sentDesc': 'The owner will review your request and get back to you.',
@@ -392,7 +392,7 @@ export const translations = {
 
     // Par mums
     'about.why.title': 'The Idea',
-    'about.why.body': "Books can be expensive, and libraries don't always have what you're looking for. BookLoop solves this by connecting readers directly — you give a book, you get a book. Simple, free, and community-driven.",
+    'about.why.body': "Books can be expensive, and libraries don't always have what you're looking for. BookLoop solves this by connecting readers directly - you give a book, you get a book. Simple, free, and community-driven.",
     'about.creator.title': 'The Creator',
     'about.creator.body': 'BookLoop was built by Eduards Megnis, a 3rd year student at Riga State Technical school. It was created as a school project to practice full stack web development using Laravel and Vue.js.',
     'about.back': 'Home',
@@ -723,7 +723,7 @@ export const translations = {
     'books.viewAll': 'Skatīt visas →',
     'books.empty': 'Neviena grāmata neatbilst filtriem.',
     'books.emptyNoFilters': 'Vēl nav pievienotu grāmatu.',
-    'books.emptyNoFiltersSub': 'Esi pirmais — reģistrējies un pievieno grāmatu!',
+    'books.emptyNoFiltersSub': 'Esi pirmais - reģistrējies un pievieno grāmatu!',
     'books.clearFilters': 'Notīrīt filtrus',
     'books.requestSwap': 'Pieprasīt Maiņu',
     'books.status.Available': 'Pieejama',
@@ -797,7 +797,7 @@ export const translations = {
     'auth.leftSub': 'Pievienojies Latvijas lasītājiem, kas apmainās ar grāmatām bez maksas.',
     'auth.perk1': 'Pievieno izlasītās grāmatas',
     'auth.perk2': 'Atklāj, kas citiem ir pieejams',
-    'auth.perk3': 'Apmainies tieši — bez maksas',
+    'auth.perk3': 'Apmainies tieši - bez maksas',
 
     // Pieteikšanās
     'login.title': 'Laipni atgriezies',
@@ -833,7 +833,7 @@ export const translations = {
 
     // Reģistrācija
     'register.title': 'Izveido savu kontu',
-    'register.sub': 'Pievienojies Latvijas grāmatu apmaiņas kopienai — tas ir bezmaksas',
+    'register.sub': 'Pievienojies Latvijas grāmatu apmaiņas kopienai - tas ir bezmaksas',
     'register.name': 'Pilns vārds',
     'register.namePlaceholder': 'Jānis Bērziņš',
     'register.email': 'E-pasts',
@@ -1009,7 +1009,7 @@ export const translations = {
     'about.title': 'Par BookLoop',
     'about.subtitle': 'Bezmaksas grāmatu apmaiņas platforma Latvijas lasītājiem.',
     'about.what.title': 'Kas ir BookLoop?',
-    'about.what.body': 'BookLoop ir platforma, kas ļauj lasītājiem dalīties un apmainīties ar grāmatām. Tā vietā, lai izlasītās grāmatas putekļotos uz plaukta, tu vari tās pievienot un apmainīt pret grāmatu, kuru gribi izlasīt tālāk. Bez maksas, bez abonementiem — tikai grāmatas, kas atrod jaunus lasītājus.',
+    'about.what.body': 'BookLoop ir platforma, kas ļauj lasītājiem dalīties un apmainīties ar grāmatām. Tā vietā, lai izlasītās grāmatas putekļotos uz plaukta, tu vari tās pievienot un apmainīt pret grāmatu, kuru gribi izlasīt tālāk. Bez maksas, bez abonementiem - tikai grāmatas, kas atrod jaunus lasītājus.',
     // Maiņas pieprasījums
     'swap.sent': 'Pieprasījums Nosūtīts!',
     'swap.sentDesc': 'Grāmatas īpašnieks izskatīs tavu pieprasījumu un atbildēs.',
@@ -1044,7 +1044,7 @@ export const translations = {
 
     // Par mums
     'about.why.title': 'Ideja',
-    'about.why.body': 'Grāmatas var būt dārgas, un bibliotēkās ne vienmēr ir tas, ko meklē. BookLoop risina šo problēmu, tieši savienojot lasītājus — tu dod grāmatu, tu saņem grāmatu. Vienkārši, bez maksas un uz kopienas principiem.',
+    'about.why.body': 'Grāmatas var būt dārgas, un bibliotēkās ne vienmēr ir tas, ko meklē. BookLoop risina šo problēmu, tieši savienojot lasītājus - tu dod grāmatu, tu saņem grāmatu. Vienkārši, bez maksas un uz kopienas principiem.',
     'about.creator.title': 'Veidotājs',
     'about.creator.body': 'BookLoop izstrādāja Eduards Megnis, 3. kursa Rīgas Valsts tehnikuma students. Tas tika izveidots kā skolas projekts, lai praktizētu tīmekļa izstrādi, izmantojot Laravel un Vue.js.',
     'about.back': 'Sākums',

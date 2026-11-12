@@ -14,12 +14,12 @@ class BookTest extends TestCase
     private function bookData(array $overrides = []): array
     {
         return array_merge([
-            'title'       => 'Test Book',
-            'author'      => 'Test Author',
-            'genre'       => 'Klasika',
-            'language'    => 'English',
-            'condition'   => 'Good',
-            'status'      => 'Available',
+            'title' => 'Test Book',
+            'author' => 'Test Author',
+            'genre' => 'Klasika',
+            'language' => 'English',
+            'condition' => 'Good',
+            'status' => 'Available',
             'description' => 'A great book.',
         ], $overrides);
     }
@@ -54,7 +54,7 @@ class BookTest extends TestCase
 
     public function test_user_can_list_own_books(): void
     {
-        $user  = User::factory()->create();
+        $user = User::factory()->create();
         $other = User::factory()->create();
 
         Book::factory()->count(3)->create(['user_id' => $user->id]);
@@ -81,7 +81,7 @@ class BookTest extends TestCase
     {
         $owner = User::factory()->create();
         $other = User::factory()->create();
-        $book  = Book::factory()->create(['user_id' => $owner->id]);
+        $book = Book::factory()->create(['user_id' => $owner->id]);
 
         $this->actingAs($other)
              ->putJson("/api/books/{$book->id}", $this->bookData())
@@ -114,7 +114,7 @@ class BookTest extends TestCase
     {
         $owner = User::factory()->create();
         $other = User::factory()->create();
-        $book  = Book::factory()->create(['user_id' => $owner->id]);
+        $book = Book::factory()->create(['user_id' => $owner->id]);
 
         $this->actingAs($other)
              ->deleteJson("/api/books/{$book->id}")

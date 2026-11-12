@@ -26,7 +26,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // ierīces, kurās kodu neprasa 3 dienas
+        // ierīces, kurās kodu kādu laiku neprasa (TwoFactor::DEVICE_MINUTES)
         Schema::create('trusted_devices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();

@@ -6,7 +6,7 @@ use App\Models\Book;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
-// dati Playwright testiem — visiem parole Password1!
+// dati Playwright testiem - visiem parole Password1!
 class E2eSeeder extends Seeder
 {
     public function run(): void

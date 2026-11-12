@@ -28,7 +28,7 @@ function escape(text) {
 
 const bookKey = b => (b.title + '|' + b.author).toLowerCase()
 
-// vairāku punktu grāmatas kopā — vienādās vienreiz ar kopējo skaitu
+// vairāku punktu grāmatas kopā - vienādās vienreiz ar kopējo skaitu
 function mergeBooks(points) {
   const all = {}
   for (const p of points) {

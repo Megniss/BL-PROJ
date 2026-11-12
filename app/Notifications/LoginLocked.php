@@ -18,7 +18,7 @@ class LoginLocked extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('BookLoop — Login Attempt Warning')
+            ->subject('BookLoop - Login Attempt Warning')
             ->greeting("Hi {$notifiable->name}!")
             ->line('We detected too many failed login attempts on your account.')
             ->line("For your security, login has been temporarily blocked for **{$this->minutes} minutes**.")

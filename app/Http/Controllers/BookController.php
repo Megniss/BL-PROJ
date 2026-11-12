@@ -11,7 +11,7 @@ use Illuminate\Validation\Rule;
 
 class BookController extends Controller
 {
-    // grāmatas, ko var dabūt apmaiņā — viena kartīte katram nosaukumam + autoram
+    // grāmatas, ko var dabūt apmaiņā - viena kartīte katram nosaukumam + autoram
     public function browse(Request $request)
     {
         $user = auth('sanctum')->user();
@@ -91,7 +91,7 @@ class BookController extends Controller
         return response()->json([...$groups->toArray(), 'has_location' => $hasLocation]);
     }
 
-    // kopējā karte — pieejamās grāmatas pa ~5 km reģioniem, bez lietotāju vārdiem
+    // kopējā karte - pieejamās grāmatas pa ~5 km reģioniem, bez lietotāju vārdiem
     public function map()
     {
         $user = auth('sanctum')->user();
@@ -119,7 +119,7 @@ class BookController extends Controller
 
             $points[$cell] ??= ['lat' => $lat, 'lng' => $lng, 'books' => []];
 
-            // vienāda grāmata vienā reģionā — vienreiz ar skaitu
+            // vienāda grāmata vienā reģionā - vienreiz ar skaitu
             if (isset($points[$cell]['books'][$key])) {
                 $points[$cell]['books'][$key]['copies']++;
                 $points[$cell]['books'][$key]['cover_image'] ??= $book->cover_image;
@@ -138,7 +138,7 @@ class BookController extends Controller
         ], $points)));
     }
 
-    // režģa šūnas centrs — ~5 km Latvijā
+    // režģa šūnas centrs - ~5 km Latvijā
     private function coarse(float $value, float $step): float
     {
         return round(floor($value / $step) * $step + $step / 2, 3);
@@ -182,7 +182,7 @@ class BookController extends Controller
         return response()->json(['i_have' => false, 'copies' => $copies]);
     }
 
-    // ieteikumi pievienojot grāmatu — jau esošie nosaukumi
+    // ieteikumi pievienojot grāmatu - jau esošie nosaukumi
     public function autocomplete(Request $request)
     {
         $q = $this->normalize((string) $request->query('q', ''));
@@ -229,7 +229,7 @@ class BookController extends Controller
         );
     }
 
-    // eksemplāri, ko lietotājs var pieprasīt — bez savām un jau esošām grāmatām
+    // eksemplāri, ko lietotājs var pieprasīt - bez savām un jau esošām grāmatām
     private function swappableCopies(?User $user)
     {
         $query = Book::query()
@@ -268,7 +268,7 @@ class BookController extends Controller
         return mb_strtolower($title) . '|' . mb_strtolower($author);
     }
 
-    // tāpat kā saglabājot — bez atstarpēm
+    // tāpat kā saglabājot - bez atstarpēm
     private function normalize(string $value): string
     {
         return str_replace(' ', '', trim($value));
@@ -399,7 +399,7 @@ class BookController extends Controller
         return response()->json(['message' => 'Cover removed.']);
     }
 
-    // līdzīgas grāmatas — tāds pats žanrs vai valoda, katra grāmata vienreiz
+    // līdzīgas grāmatas - tāds pats žanrs vai valoda, katra grāmata vienreiz
     public function suggestions(Book $book)
     {
         $repIds = $this->swappableCopies(auth('sanctum')->user())

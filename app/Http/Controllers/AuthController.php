@@ -61,7 +61,7 @@ class AuthController extends Controller
         if (!$user || !Hash::check($request->password, $user->password)) {
             RateLimiter::hit($key, self::LOCKOUT_SECONDS);
 
-            // ja tieši šis mēģinājums izsmelj atļautos — sūta e-pastu
+            // ja tieši šis mēģinājums izsmelj atļautos - sūta e-pastu
             if ($user && RateLimiter::tooManyAttempts($key, self::MAX_ATTEMPTS)) {
                 $user->notify(new LoginLocked(self::LOCKOUT_SECONDS / 60));
             }
@@ -78,7 +78,7 @@ class AuthController extends Controller
 
         RateLimiter::clear($key);
 
-        // 2FA — kods uz e-pastu, ja šī ierīce nav atcerēta
+        // 2FA - kods uz e-pastu, ja šī ierīce nav atcerēta
         if ($user->two_factor_enabled && !TwoFactor::isTrusted($user, $request->input('device_token'))) {
             try {
                 $challenge = TwoFactor::start($user, 'login');

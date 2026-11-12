@@ -13,9 +13,9 @@ class AuthTest extends TestCase
     public function test_user_can_register(): void
     {
         $response = $this->postJson('/api/register', [
-            'name'                  => 'Test User',
-            'email'                 => 'test@example.com',
-            'password'              => 'Password123!',
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
         ]);
 
@@ -30,9 +30,9 @@ class AuthTest extends TestCase
         User::factory()->create(['email' => 'taken@example.com']);
 
         $this->postJson('/api/register', [
-            'name'                  => 'Another User',
-            'email'                 => 'taken@example.com',
-            'password'              => 'Password123!',
+            'name' => 'Another User',
+            'email' => 'taken@example.com',
+            'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
         ])->assertStatus(422);
     }
@@ -40,9 +40,9 @@ class AuthTest extends TestCase
     public function test_register_requires_matching_passwords(): void
     {
         $this->postJson('/api/register', [
-            'name'                  => 'Test User',
-            'email'                 => 'test@example.com',
-            'password'              => 'Password123!',
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => 'Password123!',
             'password_confirmation' => 'different',
         ])->assertStatus(422);
     }
@@ -52,7 +52,7 @@ class AuthTest extends TestCase
         $user = User::factory()->create(['password' => bcrypt('secret123')]);
 
         $response = $this->postJson('/api/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'secret123',
         ]);
 
@@ -64,14 +64,14 @@ class AuthTest extends TestCase
         $user = User::factory()->create(['password' => bcrypt('correct')]);
 
         $this->postJson('/api/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'wrong',
         ])->assertStatus(422);
     }
 
     public function test_user_can_logout(): void
     {
-        $user  = User::factory()->create();
+        $user = User::factory()->create();
         $token = $user->createToken('test')->plainTextToken;
 
         $this->withHeader('Authorization', "Bearer {$token}")

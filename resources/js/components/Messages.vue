@@ -450,7 +450,7 @@ export default {
       if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 400) this.scrollToBottom()
     },
 
-    // saite novecojusi — paņem jaunu
+    // saite novecojusi - paņem jaunu
     async refreshImage(msg) {
       if (msg.imageRetried) return
       msg.imageRetried = true

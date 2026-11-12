@@ -74,7 +74,7 @@ class TwoFactorTest extends TestCase
                  ->assertStatus(422)->assertJsonPath('error', 'invalid');
         }
 
-        // piektā kļūda — jāsāk no jauna
+        // piektā kļūda - jāsāk no jauna
         $this->postJson('/api/login/verify', ['challenge' => $challenge, 'code' => '000000x'])
              ->assertJsonPath('error', 'expired');
     }

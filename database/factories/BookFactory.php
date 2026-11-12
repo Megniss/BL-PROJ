@@ -10,13 +10,13 @@ class BookFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id'     => User::factory(),
-            'title'       => fake()->sentence(3),
-            'author'      => fake()->name(),
-            'genre'       => fake()->randomElement(['Klasika', 'Romāns', 'Dzeja', 'Cits']),
-            'language'    => fake()->randomElement(['English', 'Latviešu', 'Русский']),
-            'condition'   => fake()->randomElement(['New', 'Good', 'Fair', 'Worn']),
-            'status'      => 'Available',
+            'user_id' => User::factory(),
+            'title' => fake()->sentence(3),
+            'author' => fake()->name(),
+            'genre' => fake()->randomElement(['Klasika', 'Romāns', 'Dzeja', 'Cits']),
+            'language' => fake()->randomElement(['English', 'Latviešu', 'Русский']),
+            'condition' => fake()->randomElement(['New', 'Good', 'Fair', 'Worn']),
+            'status' => 'Available',
             'description' => fake()->optional()->sentence(),
         ];
     }
