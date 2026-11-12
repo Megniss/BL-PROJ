@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -16,17 +15,12 @@ class PasswordResetController extends Controller
     {
         $request->validate(['email' => ['required', 'email']]);
 
-        $user = User::where('email', $request->email)->first();
+        // saiti sūta tikai uz e-pastu, linku atpakaļ neatgriežam
+        // links uz Vue lapu ir AppServiceProvider
+        Password::sendResetLink($request->only('email'));
 
-        // ja nav tāda lietotāja
-        if (!$user) {
-            return response()->json(['message' => 'Lietotājs ar šādu e-pastu nav atrasts.'], 422);
-        }
-
-        $token = Password::createToken($user);
-        $url = url('/reset-password?token=' . $token . '&email=' . urlencode($user->email));
-
-        return response()->json(['reset_url' => $url]);
+        // vienmēr viena atbilde, lai nevar uzzināt vai e-pasts ir reģistrēts
+        return response()->json(['message' => 'sent']);
     }
 
     public function reset(Request $request)

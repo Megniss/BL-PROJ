@@ -34,12 +34,11 @@
         <h1 class="auth-title mb-1">{{ t('forgot.title') }}</h1>
         <p class="auth-sub mb-4">{{ t('forgot.sub') }}</p>
 
-        <div v-if="resetUrl" class="alert alert-success">
-          {{ t('forgot.success') }}<br>
-          <a :href="resetUrl" class="fw-semibold">{{ t('forgot.clickHere') }}</a>
+        <div v-if="sent" class="alert alert-success">
+          {{ t('forgot.success') }}
         </div>
 
-        <form v-if="!resetUrl" @submit.prevent="handleSubmit">
+        <form v-if="!sent" @submit.prevent="handleSubmit">
           <div class="mb-3">
             <label for="forgot-email" class="form-label fw-semibold">{{ t('login.email') }}</label>
             <input id="forgot-email" v-model="email" type="email" class="form-control" placeholder="you@example.com" required />
@@ -74,7 +73,7 @@ export default {
     return {
       email: '',
       loading: false,
-      resetUrl: '',
+      sent: false,
       errorMsg: '',
     }
   },
@@ -85,8 +84,8 @@ export default {
       this.loading = true
 
       try {
-        const res = await axios.post('/api/forgot-password', { email: this.email })
-        this.resetUrl = res.data.reset_url
+        await axios.post('/api/forgot-password', { email: this.email })
+        this.sent = true
       } catch (err) {
         this.errorMsg = err.response?.data?.message || this.t('register.errorGeneral')
       } finally {

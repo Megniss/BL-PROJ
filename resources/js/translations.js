@@ -167,8 +167,7 @@ export const translations = {
     'forgot.sub': "Enter your email and we'll send you a reset link.",
     'forgot.btn': 'Send Reset Link',
     'forgot.loading': 'Sending…',
-    'forgot.success': 'Reset link generated. Click below to continue:',
-    'forgot.clickHere': 'Reset my password',
+    'forgot.success': 'If an account with this email exists, we sent a reset link to it. Check your inbox.',
     'forgot.backToLogin': '← Back to login',
 
     // Paroles atjaunošana
@@ -819,8 +818,7 @@ export const translations = {
     'forgot.sub': 'Ievadi savu e-pastu un mēs nosūtīsim atjaunošanas saiti.',
     'forgot.btn': 'Nosūtīt atjaunošanas saiti',
     'forgot.loading': 'Sūta…',
-    'forgot.success': 'Saite izveidota. Spied zemāk, lai turpinātu:',
-    'forgot.clickHere': 'Atjaunot paroli',
+    'forgot.success': 'Ja šāds konts eksistē, uz e-pastu nosūtījām atjaunošanas saiti. Pārbaudi savu pastu.',
     'forgot.backToLogin': '← Atpakaļ uz pieteikšanos',
 
     // Paroles atjaunošana
