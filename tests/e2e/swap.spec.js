@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test'
 import { loginAndWait, logout } from './helpers.js'
 
+// skeleton kartītēm arī ir .book-card klase, tāpēc :not(.skeleton-card)
 test('apmaiņas pieprasījums nonāk pie īpašnieka', async ({ page }) => {
   await loginAndWait(page, 'anna@e2e.test')
   await page.goto('/browse?search=Hobits')
-  await page.locator('.book-card').first().click()
+  await page.locator('.book-card:not(.skeleton-card)').first().click()
 
   await page.locator('.copy-row', { hasText: 'Jānis Bērziņš' }).locator('.btn-swap').click()
   await page.locator('.swap-book-option', { hasText: 'Dune' }).click()

@@ -47,3 +47,23 @@ export async function newCode(before) {
   await expect.poll(() => (code = lastCode())).not.toBe(before)
   return code
 }
+
+// pēdējā paroles atjaunošanas saite no laravel.log
+// e-pasts žurnālā ir quoted-printable, tāpēc vispirms jāatkodē
+export function lastResetLink() {
+  try {
+    const log = readFileSync('storage/logs/laravel.log', 'utf8')
+      .replace(/=\r?\n/g, '')
+      .replace(/=3D/g, '=')
+    const found = [...log.matchAll(/\/reset-password\?token=([a-f0-9]+)&(?:amp;)?email=([^\s"<&]+)/g)].at(-1)
+    return found ? `/reset-password?token=${found[1]}&email=${found[2]}` : undefined
+  } catch {
+    return undefined
+  }
+}
+
+export async function newResetLink(before) {
+  let link
+  await expect.poll(() => (link = lastResetLink())).not.toBe(before)
+  return link
+}

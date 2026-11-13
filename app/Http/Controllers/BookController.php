@@ -6,6 +6,7 @@ use App\Models\Book;
 use App\Models\User;
 use App\Support\Distance;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -40,13 +41,20 @@ class BookController extends Controller
             $query->whereRaw("$distance <= " . Distance::limit($km));
         }
 
-        // visu eksemplāru vērtējumi kopā
-        $sameBook = 'lower(rb.title) = lower(books.title) and lower(rb.author) = lower(books.author)';
+        // visu eksemplāru vērtējumi kopā, saskaitīti vienreiz un pievienoti ar join
+        $ratings = DB::table('ratings as r')
+            ->join('books as rb', 'rb.id', '=', 'r.book_id')
+            ->selectRaw('lower(rb.title) as rt, lower(rb.author) as ra, avg(r.stars) as avg_stars, count(*) as cnt')
+            ->groupByRaw('lower(rb.title), lower(rb.author)');
 
-        $query->selectRaw('max(books.id) as rep_id, count(*) as copies_count, max(books.created_at) as newest')
+        $query->leftJoinSub($ratings, 'rs', function ($join) {
+                $join->on('rs.rt', '=', DB::raw('lower(books.title)'))
+                    ->on('rs.ra', '=', DB::raw('lower(books.author)'));
+            })
+            ->selectRaw('max(books.id) as rep_id, count(*) as copies_count, max(books.created_at) as newest')
             ->selectRaw('max(books.cover_image) as any_cover')
-            ->selectRaw("(select avg(r.stars) from ratings r join books rb on rb.id = r.book_id where $sameBook) as ratings_avg_stars")
-            ->selectRaw("(select count(*) from ratings r join books rb on rb.id = r.book_id where $sameBook) as ratings_count")
+            ->selectRaw('max(rs.avg_stars) as ratings_avg_stars')
+            ->selectRaw('coalesce(max(rs.cnt), 0) as ratings_count')
             ->groupByRaw('lower(books.title), lower(books.author)');
 
         if ($distance) {
@@ -237,13 +245,13 @@ class BookController extends Controller
             ->whereHas('user', fn($q) => $q->where('is_blocked', false));
 
         if ($user) {
+            // not in nevis not exists - savas grāmatas nolasa vienreiz, nevis katrai rindai
+            // ar 10 000 grāmatām not exists bija ~5 s (NFP-02)
             $query->where('books.user_id', '!=', $user->id)
-                ->whereNotExists(fn($q) => $q->selectRaw(1)
-                    ->from('books as mine')
-                    ->where('mine.user_id', $user->id)
-                    ->where('mine.status', '!=', 'Removed')
-                    ->whereRaw('lower(mine.title) = lower(books.title)')
-                    ->whereRaw('lower(mine.author) = lower(books.author)'));
+                ->whereRaw(
+                    "(lower(books.title), lower(books.author)) not in (select lower(mine.title), lower(mine.author) from books as mine where mine.user_id = ? and mine.status != 'Removed')",
+                    [$user->id]
+                );
         }
 
         return $query;

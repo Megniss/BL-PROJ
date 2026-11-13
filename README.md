@@ -299,6 +299,20 @@ composer run test       # PHPUnit
 npm run test:e2e        # Playwright (izmanto atsevišķu datubāzi database/e2e.sqlite)
 ```
 
+Ja Playwright chromium neveras (piem. darba datorā bloķē group policy), var izmantot Edge:
+```powershell
+$env:PW_CHANNEL="msedge"; npm run test:e2e
+```
+
+**Veiktspēja (NFP-01, NFP-02):**
+- `PerformanceTest` (iekš `composer run test`) ieliek 10 000 grāmatas un pārbauda, ka meklēšana atbild ātrāk par 3 s.
+- Slodzes tests ar 100 vienlaicīgiem pieprasījumiem jālaiž pret Docker, jo `php artisan serve` apstrādā tikai vienu pieprasījumu vienlaicīgi:
+```bash
+docker compose exec app php artisan db:seed --class=PerformanceSeeder --force
+docker compose exec app php artisan bookloop:load-test http://localhost
+```
+`PerformanceSeeder` pievieno 200 lietotājus (`perf1..perf200@bookloop.test`) un 10 000 grāmatas, tāpēc to nelaid uz īstās datubāzes.
+
 > Datubāze ar demo datiem ir iekļauta repozitorijā (fails `bookloop`) - migrācijas palaist nav nepieciešams.
 
 **Admin parole:**

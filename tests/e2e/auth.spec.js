@@ -54,3 +54,28 @@ test('jaunam lietotājam piedāvā ieslēgt 2FA', async ({ page }) => {
   await page.goto('/settings')
   await expect(page.locator('.settings-card', { hasText: 'Two-step verification' })).toContainText('On')
 })
+
+test('2FA var izslēgt iestatījumos ar paroli', async ({ page }) => {
+  const before = lastCode()
+  await login(page, 'twofaoff@e2e.test')
+  await page.fill('#login-code', await newCode(before))
+  await page.getByRole('button', { name: 'Confirm' }).click()
+  await expect(page).toHaveURL(/\/dashboard/)
+
+  await page.goto('/settings')
+  const card = page.locator('.settings-card', { hasText: 'Two-step verification' })
+  await card.getByRole('button', { name: 'Turn off' }).click()
+
+  await card.locator('input[type=password]').fill('NepareizaParole1!')
+  await card.getByRole('button', { name: 'Turn off' }).click()
+  await expect(card.locator('.invalid-feedback')).toBeVisible()
+
+  await card.locator('input[type=password]').fill('Password1!')
+  await card.getByRole('button', { name: 'Turn off' }).click()
+  await expect(card.getByRole('button', { name: 'Turn on' })).toBeVisible()
+
+  // nākamreiz kodu vairs neprasa
+  await logout(page)
+  await login(page, 'twofaoff@e2e.test')
+  await expect(page).toHaveURL(/\/dashboard/)
+})

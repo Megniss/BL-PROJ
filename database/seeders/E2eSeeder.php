@@ -32,6 +32,15 @@ class E2eSeeder extends Seeder
         $this->book($anna, 'MazaisPrincis', 'SentEkziperi', 'Bērnu grāmatas');
         $this->book($janis, 'Hobits', 'Tolkien', 'Fantāzija');
         $this->book($liga, 'Bille', 'VizmaBelsevica', 'Romāns');
+
+        // atsevišķi lietotāji ziņu, apmaiņas un paroles testiem, bez vietas lai nav kartē
+        $edgars = $this->user('Edgars Kalns', 'edgars@e2e.test');
+        $zane = $this->user('Zane Ozoliņa', 'zane@e2e.test');
+        $this->user('Rūta Lapa', 'reset@e2e.test');
+        $this->user('Oskars Vējš', 'twofaoff@e2e.test', extra: ['two_factor_enabled' => true]);
+
+        $this->book($edgars, 'Kaija', 'Cehovs', 'Detektīvs');
+        $this->book($zane, 'Fausts', 'Gete', 'Detektīvs');
     }
 
     private function user(string $name, string $email, ?array $place = null, array $extra = []): User

@@ -32,7 +32,7 @@ test('admin kartē redz lietotājus ar atrašanās vietu', async ({ page }) => {
   await page.getByRole('button', { name: 'Open' }).click()
 
   await page.getByRole('button', { name: 'Locations' }).click()
-  await expect(page.getByText('3 of 7 users have set their location')).toBeVisible()
+  await expect(page.getByText('3 of 11 users have set their location')).toBeVisible()
 
   // trīs punkti - Rīga, Jelgava, Valmiera
   const dots = page.locator('.admin-users-map path.leaflet-interactive')
@@ -62,7 +62,7 @@ test('admin grāmatas var kārtot un filtrēt ar dropdown', async ({ page }) => 
   await expect(table.locator('tbody tr')).toHaveCount(1)
 
   await page.getByRole('button', { name: 'Clear filters' }).click()
-  await expect(table.locator('tbody tr')).toHaveCount(7)
+  await expect(table.locator('tbody tr')).toHaveCount(9)
 })
 
 test('telefonā admin rāda tikai galveno, pārējo pēc "Skatīt vairāk"', async ({ page }) => {

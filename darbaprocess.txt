@@ -194,8 +194,7 @@ vai caur savu pc vai caur skolas kadu hernu
 
 
 palaist majaslapu:
-php artisan serve --host=0.0.0.0
-npm run dev -- --host 0.0.0.0
+composer run dev
 
 palaist playwright:
 npm run test:e2e

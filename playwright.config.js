@@ -17,7 +17,8 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
 
-  projects: [{ name: 'chromium', use: { browserName: 'chromium' } }],
+  // PW_CHANNEL=msedge ja playwright chromium bloķēts (darba datorā group policy)
+  projects: [{ name: 'chromium', use: { browserName: 'chromium', channel: process.env.PW_CHANNEL || undefined } }],
 
   // atsevišķa datubāze ar testa datiem, nobūvēts frontend, e-pasti žurnālā
   webServer: {
