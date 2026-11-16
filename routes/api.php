@@ -87,7 +87,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/complaints', [ComplaintController::class, 'index']);
     Route::post('/complaints', [ComplaintController::class, 'store']);
     Route::get('/complaints/{complaint}', [ComplaintController::class, 'show']);
-    Route::post('/complaints/{complaint}/messages', [ComplaintController::class, 'addMessage']);
+    Route::post('/complaints/{complaint}/messages', [ComplaintController::class, 'addMessage'])->middleware('throttle:30,1');
 
     // admin paroles ievade
     Route::get('/admin/status', [AdminAuthController::class, 'status']);
@@ -97,6 +97,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('admin')->group(function () {
         Route::get('/admin/complaints', [ComplaintController::class, 'adminIndex']);
+        Route::get('/admin/complaints/unread-count', [ComplaintController::class, 'adminUnreadCount']);
         Route::get('/admin/complaints/{complaint}', [ComplaintController::class, 'adminShow']);
         Route::post('/admin/complaints/{complaint}/messages', [ComplaintController::class, 'adminReply']);
         Route::patch('/admin/complaints/{complaint}/close', [ComplaintController::class, 'close']);

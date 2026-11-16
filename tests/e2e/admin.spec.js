@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { login, ADMIN_PASSWORD } from './helpers.js'
+import { login, loginAndWait, logout, ADMIN_PASSWORD } from './helpers.js'
 
 test('admins pēc login izvēlas paneli un ievada admin paroli', async ({ page }) => {
   await login(page, 'admin@e2e.test')
@@ -82,4 +82,34 @@ test('telefonā admin rāda tikai galveno, pārējo pēc "Skatīt vairāk"', asy
   await expect(genre).toBeHidden()
   await page.getByRole('button', { name: 'Filters' }).click()
   await expect(genre).toBeVisible()
+})
+
+test('jauns atbalsta pieteikums parādās admin paneļa cilnēs', async ({ page }) => {
+  await loginAndWait(page, 'peteris@e2e.test')
+  await page.goto('/support')
+  await page.getByRole('button', { name: '+ New Complaint' }).click()
+  await page.getByPlaceholder('Subject').fill('Pazudusi grāmata')
+  await page.getByPlaceholder('Describe your issue').fill('Mana grāmata pazuda no saraksta')
+  await page.getByRole('button', { name: 'Send', exact: true }).click()
+  await expect(page.locator('.thread-user-link')).toHaveText('Pazudusi grāmata')
+
+  await logout(page)
+  await login(page, 'admin@e2e.test')
+  await page.locator('.modal-card', { hasText: 'Where to?' }).getByRole('button', { name: 'Admin panel' }).click()
+  await page.fill('#admin-unlock-pwd', ADMIN_PASSWORD)
+  await page.getByRole('button', { name: 'Open' }).click()
+
+  // skaitlis pie Support cilnes un paziņojums
+  const tab = page.locator('.admin-tab-btn', { hasText: 'Support' })
+  await expect(tab.locator('.admin-tab-badge')).toHaveText('1')
+  await expect(page.locator('.admin-support-alert')).toContainText('New support messages: 1')
+
+  await page.locator('.admin-support-alert').getByRole('button', { name: 'Open support' }).click()
+  const item = page.locator('.convo-item', { hasText: 'Pazudusi grāmata' })
+  await expect(item.locator('.support-new-badge')).toBeVisible()
+
+  // atver - vairs nav jauns
+  await item.click()
+  await expect(tab.locator('.admin-tab-badge')).toHaveCount(0)
+  await expect(item.locator('.support-new-badge')).toHaveCount(0)
 })

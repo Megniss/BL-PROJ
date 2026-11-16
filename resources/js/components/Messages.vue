@@ -10,8 +10,9 @@
           <h2 class="convo-title">{{ t('messages.title') }}</h2>
         </div>
 
-        <!-- atbalsts vienmēr pirmais -->
+        <!-- atbalsts vienmēr pirmais, adminam nav (viņš atbild admin panelī) -->
         <div
+          v-if="!authStore.user?.is_admin"
           class="convo-item convo-support"
           role="button"
           tabindex="0"
@@ -24,7 +25,7 @@
             <div class="convo-last">{{ t('messages.supportSub') }}</div>
           </div>
         </div>
-        <div class="convo-divider"></div>
+        <div v-if="!authStore.user?.is_admin" class="convo-divider"></div>
 
         <div v-if="loadingConvos" class="convo-empty">{{ t('messages.loading') }}</div>
 

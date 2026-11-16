@@ -85,6 +85,10 @@ router.beforeEach((to) => {
   if (to.meta.requiresAdmin && (!isLoggedIn() || !authStore.user?.is_admin)) {
     return { name: 'home' }
   }
+  // admins atbalstu redz tikai admin panelī, citādi sarakstās pats ar sevi
+  if (to.name === 'support' && authStore.user?.is_admin) {
+    return { name: 'admin', params: { tab: 'support' } }
+  }
 })
 
 export default router

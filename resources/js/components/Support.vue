@@ -28,7 +28,7 @@
           v-for="c in complaints"
           :key="c.id"
           class="convo-item"
-          :class="{ active: active?.id === c.id }"
+          :class="{ active: active?.id === c.id, 'support-unread': admin && c.unread }"
           role="button"
           tabindex="0"
           @click="open(c)"
@@ -40,8 +40,9 @@
               {{ c.subject }}
               <span v-if="admin" class="text-muted small ms-1">({{ c.user?.name }})</span>
             </div>
-            <div class="convo-last">{{ c.last_msg || '-' }}</div>
+            <div class="convo-last">{{ c.last_msg || (c.last_image ? '📷 ' + t('messages.photo') : '-') }}</div>
           </div>
+          <span v-if="admin && c.unread" class="support-new-badge">{{ t('support.new') }}</span>
           <span class="support-status-badge" :class="c.status === 'closed' ? 'badge-closed' : 'badge-open'">
             {{ c.status === 'closed' ? t('support.closed') : t('support.open') }}
           </span>
@@ -83,7 +84,18 @@
               :class="{ 'msg-mine': admin === msg.from_admin }"
             >
               <div class="msg-bubble" :class="{ 'msg-bubble-sent': admin === msg.from_admin }">
-                <p class="msg-body">{{ msg.body }}</p>
+                <img
+                  v-if="msg.image_url"
+                  :src="msg.image_url"
+                  class="msg-image"
+                  :alt="t('messages.photo')"
+                  loading="lazy"
+                  @click="lightbox = msg.image_url"
+                  @load="scrollBottom"
+                  @error="refreshImage(msg)"
+                />
+                <p v-else-if="msg.image_removed" class="msg-image-removed">{{ t('messages.photoRemoved') }}</p>
+                <p v-if="msg.body" class="msg-body">{{ msg.body }}</p>
                 <div class="msg-meta">
                   <template v-if="msg.from_admin">
                     <span class="support-admin-tag" :data-name="msg.sender.name">{{ t('support.adminTag') }}</span>
@@ -98,26 +110,53 @@
           <div v-if="active.status === 'closed'" class="thread-blocked-notice">
             {{ t('support.closedNotice') }}
           </div>
-          <div v-else class="thread-compose">
-            <textarea
-              v-model="compose"
-              class="compose-input"
-              :placeholder="t('messages.placeholder')"
-              rows="1"
-              @keydown.enter.exact.prevent="sendMessage"
-              @input="autoResize"
-              ref="composeInput"
-            ></textarea>
-            <button
-              class="compose-send-btn"
-              :disabled="!compose.trim() || sending"
-              :class="{ active: compose.trim() }"
-              @click="sendMessage"
-            >{{ sending ? '…' : '➤' }}</button>
-          </div>
+          <template v-else>
+            <!-- bilde pirms sūtīšanas -->
+            <div v-if="pendingPreview || imageError" class="compose-image-preview">
+              <div v-if="pendingPreview" class="compose-image-thumb">
+                <img :src="pendingPreview" :alt="t('messages.photo')" />
+                <button class="compose-image-remove" @click="clearImage" :aria-label="t('messages.removePhoto')">✕</button>
+              </div>
+              <span v-if="imageError" class="text-danger small">{{ imageError }}</span>
+            </div>
+
+            <div class="thread-compose">
+              <input ref="imageInput" type="file" accept="image/*" class="d-none" @change="onImagePicked" />
+              <button
+                class="compose-attach-btn"
+                :disabled="sending || preparingImage"
+                @click="$refs.imageInput.click()"
+                :aria-label="t('messages.addPhoto')"
+                :title="t('messages.addPhoto')"
+              >📎</button>
+              <textarea
+                v-model="compose"
+                class="compose-input"
+                :placeholder="t('messages.placeholder')"
+                rows="1"
+                @keydown.enter.exact.prevent="sendMessage"
+                @input="autoResize"
+                @paste="onPaste"
+                ref="composeInput"
+              ></textarea>
+              <button
+                class="compose-send-btn"
+                :disabled="!canSend"
+                :class="{ active: canSend }"
+                @click="sendMessage"
+                aria-label="Send"
+              >{{ sending || preparingImage ? '…' : '➤' }}</button>
+            </div>
+          </template>
         </template>
       </main>
     </div>
+
+    <Teleport to="body">
+      <div v-if="lightbox" class="msg-lightbox" @click="lightbox = null">
+        <img :src="lightbox" :alt="t('messages.photo')" />
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -126,12 +165,15 @@ import axios from 'axios'
 import { authStore } from '../authStore.js'
 import AppNavbar from './AppNavbar.vue'
 import langMixin from '../langMixin.js'
+import { resizeImage } from '../imageResize.js'
 
 export default {
   name: 'Support',
   components: { AppNavbar },
   mixins: [langMixin],
   props: { admin: Boolean },
+  // admin panelim - lai atjauno nelasīto skaitu
+  emits: ['read'],
 
   data() {
     return {
@@ -149,6 +191,11 @@ export default {
       compose: '',
       sending: false,
       pollTimer: null,
+      pendingImage: null,
+      pendingPreview: null,
+      preparingImage: false,
+      imageError: '',
+      lightbox: null,
     }
   },
 
@@ -165,10 +212,14 @@ export default {
     api() {
       return this.admin ? '/api/admin/complaints' : '/api/complaints'
     },
+    canSend() {
+      return (this.compose.trim() || this.pendingImage) && !this.sending && !this.preparingImage
+    },
   },
 
   beforeUnmount() {
     clearInterval(this.pollTimer)
+    this.clearImage()
   },
 
   methods: {
@@ -187,12 +238,21 @@ export default {
       this.showThread = true
       this.loadingThread = true
       this.active = { ...c, messages: [] }
+      this.clearImage()
+      this.imageError = ''
       try {
         const { data } = await axios.get(`${this.api}/${c.id}`)
         this.active = data
         // atsvaidzina priekšskatījuma tekstu sānbārā
         const idx = this.complaints.findIndex(x => x.id === c.id)
-        if (idx !== -1) this.complaints[idx].last_msg = data.messages?.at(-1)?.body ?? this.complaints[idx].last_msg
+        if (idx !== -1) {
+          this.complaints[idx].last_msg = data.messages?.at(-1)?.body ?? this.complaints[idx].last_msg
+          // admins atvēra - vairs nav jauns
+          if (this.admin && this.complaints[idx].unread) {
+            this.complaints[idx].unread = false
+            this.$emit('read')
+          }
+        }
         this.$nextTick(() => this.scrollBottom())
       } finally {
         this.loadingThread = false
@@ -212,7 +272,10 @@ export default {
         if (fresh.length) {
           this.active.messages.push(...fresh)
           const idx = this.complaints.findIndex(x => x.id === this.active.id)
-          if (idx !== -1) this.complaints[idx].last_msg = fresh.at(-1).body
+          if (idx !== -1) {
+            this.complaints[idx].last_msg = fresh.at(-1).body
+            this.complaints[idx].last_image = !!fresh.at(-1).image_url
+          }
           this.$nextTick(() => this.scrollBottom())
         }
         // sinhronizē statusu ja admins aizvēra
@@ -245,22 +308,83 @@ export default {
     },
 
     async sendMessage() {
-      if (!this.compose.trim() || this.sending) return
+      if (!this.canSend) return
       this.sending = true
       const body = this.compose.trim()
+      const image = this.pendingImage
       this.compose = ''
+
+      // bilde iet kā FormData, tāpat kā parastajā čatā
+      const form = new FormData()
+      if (body) form.append('body', body)
+      if (image) form.append('image', image)
+
       try {
-        const { data } = await axios.post(`${this.api}/${this.active.id}/messages`, { body })
+        const { data } = await axios.post(`${this.api}/${this.active.id}/messages`, form)
         this.active.messages.push(data)
+        this.clearImage()
         // sānbāra priekšskatījums sinhronā
         const idx = this.complaints.findIndex(x => x.id === this.active.id)
-        if (idx !== -1) this.complaints[idx].last_msg = body
+        if (idx !== -1) {
+          this.complaints[idx].last_msg = body
+          this.complaints[idx].last_image = !!image
+        }
         this.$nextTick(() => this.scrollBottom())
-      } catch {
+      } catch (err) {
         this.compose = body // atdod atpakaļ lai lietotājs nezaudē ziņu
+        if (image) this.imageError = err.response?.data?.message || this.t('messages.photoError')
       } finally {
         this.sending = false
       }
+    },
+
+    async attachImage(file) {
+      this.imageError = ''
+      if (!file.type.startsWith('image/')) return
+
+      this.preparingImage = true
+      try {
+        const resized = await resizeImage(file)
+        if (resized.size > 5 * 1024 * 1024) throw new Error('too big')
+        this.clearImage()
+        this.pendingImage = resized
+        this.pendingPreview = URL.createObjectURL(resized)
+      } catch {
+        this.imageError = this.t('messages.photoError')
+      } finally {
+        this.preparingImage = false
+      }
+    },
+
+    onImagePicked(e) {
+      const file = e.target.files?.[0]
+      e.target.value = ''
+      if (file) this.attachImage(file)
+    },
+
+    // Ctrl+V ar bildi
+    onPaste(e) {
+      const item = [...(e.clipboardData?.items ?? [])].find(i => i.type.startsWith('image/'))
+      if (!item) return
+      e.preventDefault()
+      this.attachImage(item.getAsFile())
+    },
+
+    clearImage() {
+      if (this.pendingPreview) URL.revokeObjectURL(this.pendingPreview)
+      this.pendingImage = null
+      this.pendingPreview = null
+    },
+
+    // saite novecojusi - paņem jaunu
+    async refreshImage(msg) {
+      if (msg.imageRetried || !this.active) return
+      msg.imageRetried = true
+      try {
+        const { data } = await axios.get(`${this.api}/${this.active.id}`)
+        const fresh = data.messages?.find(m => m.id === msg.id)
+        if (fresh?.image_url) msg.image_url = fresh.image_url
+      } catch { /* ignorē */ }
     },
 
     async closeComplaint() {
@@ -308,6 +432,19 @@ export default {
   flex-shrink: 0;
 }
 .badge-open   { background: #d1fae5; color: #065f46; }
+
+/* jauns pieteikums, ko admins vēl nav atvēris */
+.support-new-badge {
+  font-size: .65rem;
+  font-weight: 700;
+  padding: .15rem .45rem;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #fff;
+  margin-right: .3rem;
+  flex-shrink: 0;
+}
+.support-unread .convo-name { font-weight: 700; }
 .badge-closed { background: #f3f4f6; color: #6b7280; }
 
 .support-admin-tag {

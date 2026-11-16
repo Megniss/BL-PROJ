@@ -38,6 +38,7 @@
           :class="{ active: activeTab === tab.key }"
           @click="setTab(tab.key)">
           {{ t(tab.label) }}
+          <span v-if="tab.key === 'support' && supportUnread > 0" class="admin-tab-badge">{{ supportUnread }}</span>
         </button>
       </div>
       <div class="admin-tabs-controls">
@@ -51,7 +52,13 @@
       </div>
     </div>
 
-    <Support v-if="activeTab === 'support'" admin />
+    <!-- paziņojums par jauniem atbalsta pieteikumiem -->
+    <div v-if="supportUnread > 0 && activeTab !== 'support'" class="alert alert-warning d-flex align-items-center justify-content-between flex-wrap gap-2 admin-support-alert" role="alert">
+      <span>🛟 {{ t('admin.newComplaints').replace('{n}', supportUnread) }}</span>
+      <button class="btn btn-sm btn-primary" @click="setTab('support')">{{ t('admin.openSupport') }}</button>
+    </div>
+
+    <Support v-if="activeTab === 'support'" ref="support" admin @read="fetchSupportUnread" />
 
     <!-- lietotāji kartē -->
     <div v-if="activeTab === 'map' && !loading[activeTab]" class="admin-card">
@@ -631,6 +638,8 @@ export default {
       loaded: {},
       loading: {},
       activeTab: this.$route?.params?.tab || 'users',
+      supportUnread: 0,
+      supportTimer: null,
       tabs: [
         { key: 'users', label: 'admin.users' },
         { key: 'books', label: 'admin.books' },
@@ -754,8 +763,24 @@ export default {
     await this.checkStatus()
   },
 
+  beforeUnmount() {
+    clearInterval(this.supportTimer)
+  },
+
   methods: {
     showToast,
+
+    // cik atbalsta pieteikumos ir jaunas lietotāju ziņas
+    async fetchSupportUnread() {
+      try {
+        const { data } = await axios.get('/api/admin/complaints/unread-count')
+        // ja atnāk jauns kamēr atvērts support, atjauno sarakstu
+        if (data.count > this.supportUnread && this.activeTab === 'support') {
+          this.$refs.support?.loadList()
+        }
+        this.supportUnread = data.count
+      } catch { /* klusums */ }
+    },
 
     // telefonā rindā redzams tikai galvenais, pārējais pēc "Skatīt vairāk"
     isOpen(tab, id) {
@@ -802,6 +827,12 @@ export default {
       }
       this.gate = 'ready'
       this.loaded = {}
+
+      // pārbauda jaunus pieteikumus uzreiz un tad reizi 30 sekundēs
+      this.fetchSupportUnread()
+      clearInterval(this.supportTimer)
+      this.supportTimer = setInterval(this.fetchSupportUnread, 30000)
+
       await this.loadTab(this.activeTab)
     },
 
@@ -1086,6 +1117,20 @@ export default {
 }
 .admin-tab-btn:hover { color: #1a1612; }
 .admin-tab-btn.active { color: #3a6b3e; border-bottom-color: #3a6b3e; font-weight: 600; }
+/* jauno atbalsta pieteikumu skaits */
+.admin-tab-badge {
+  display: inline-block;
+  min-width: 18px;
+  padding: 0 5px;
+  margin-left: 4px;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
 
 .filter-bar {
   display: flex;

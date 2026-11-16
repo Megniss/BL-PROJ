@@ -71,7 +71,7 @@
               <button class="nav-dropdown-item" @click="go('dashboard')">{{ t('nav.myLibrary') }}</button>
               <button class="nav-dropdown-item" @click="go('browse')">{{ t('nav.browse') }}</button>
               <button class="nav-dropdown-item" @click="go('messages')">{{ t('nav.messages') }}</button>
-              <button class="nav-dropdown-item" @click="go('support')">{{ t('nav.support') }}</button>
+              <button v-if="!authStore.user?.is_admin" class="nav-dropdown-item" @click="go('support')">{{ t('nav.support') }}</button>
               <button class="nav-dropdown-item" @click="go('settings')">{{ t('nav.settings') }}</button>
               <template v-if="authStore.user?.is_admin">
                 <div class="nav-dropdown-divider"></div>
@@ -104,7 +104,7 @@
           <button class="nav-mob-link" @click="go('dashboard')">{{ t('nav.myLibrary') }}</button>
           <button class="nav-mob-link" @click="go('browse')">{{ t('nav.browse') }}</button>
           <button class="nav-mob-link" @click="go('messages')">{{ t('nav.messages') }}</button>
-          <button class="nav-mob-link" @click="go('support')">{{ t('nav.support') }}</button>
+          <button v-if="!authStore.user?.is_admin" class="nav-mob-link" @click="go('support')">{{ t('nav.support') }}</button>
           <button class="nav-mob-link" @click="go('settings')">{{ t('nav.settings') }}</button>
           <button v-if="authStore.user?.is_admin" class="nav-mob-link nav-mob-admin" @click="openAdmin">{{ t('adminAuth.panel') }}</button>
         </template>

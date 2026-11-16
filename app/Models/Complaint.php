@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['user_id', 'subject', 'status'])]
+#[Fillable(['user_id', 'subject', 'status', 'admin_read_at'])]
 class Complaint extends Model
 {
     public function user(): BelongsTo

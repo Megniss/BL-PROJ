@@ -23,11 +23,17 @@ class ComplaintController extends Controller
 
     public function store(Request $request)
     {
+        // admins atbild admin panelī, pats sev pieteikumu nerakstīs
+        if ($request->user()->is_admin) {
+            return response()->json(['message' => 'Admins use the admin panel for support.'], 403);
+        }
+
         $request->validate([
             'subject' => ['required', 'string', 'max:200'],
             'body' => ['required', 'string', 'max:2000'],
         ]);
 
+        // admin_read_at paliek null - adminam rādās kā jauns
         $complaint = Complaint::create([
             'user_id' => $request->user()->id,
             'subject' => $request->subject,
@@ -66,12 +72,14 @@ class ComplaintController extends Controller
             return response()->json(['message' => 'This complaint is closed.'], 422);
         }
 
-        $request->validate(['body' => ['required', 'string', 'max:2000']]);
+        if ($request->user()->is_admin) {
+            return response()->json(['message' => 'Admins use the admin panel for support.'], 403);
+        }
 
-        $msg = $complaint->messages()->create([
-            'sender_id' => $request->user()->id,
-            'body' => $request->body,
-        ]);
+        $msg = $this->createMessage($request, $complaint);
+
+        // jauna lietotāja ziņa - adminam atkal nelasīts
+        $complaint->update(['admin_read_at' => null]);
         $complaint->touch();
 
         return response()->json($this->formatMessage($msg, $complaint), 201);
@@ -81,13 +89,26 @@ class ComplaintController extends Controller
 
     public function adminIndex()
     {
-        $complaints = Complaint::with(['user:id,name', 'latestMessage'])->latest()->get();
+        $complaints = Complaint::with(['user:id,name', 'latestMessage'])->latest('updated_at')->get();
 
         return response()->json($complaints->map(fn($c) => $this->formatListItem($c)));
     }
 
+    // admin panelim - cik pieteikumos ir neizlasītas lietotāju ziņas
+    public function adminUnreadCount()
+    {
+        return response()->json(['count' => Complaint::whereNull('admin_read_at')->count()]);
+    }
+
     public function adminShow(Complaint $complaint)
     {
+        // atverot skaitās izlasīts, updated_at nemaina
+        if (!$complaint->admin_read_at) {
+            $complaint->timestamps = false;
+            $complaint->update(['admin_read_at' => now()]);
+            $complaint->timestamps = true;
+        }
+
         $complaint->load(['user:id,name', 'messages.sender:id,name']);
 
         return response()->json($this->formatComplaint($complaint));
@@ -95,12 +116,7 @@ class ComplaintController extends Controller
 
     public function adminReply(Request $request, Complaint $complaint)
     {
-        $request->validate(['body' => ['required', 'string', 'max:2000']]);
-
-        $msg = $complaint->messages()->create([
-            'sender_id' => $request->user()->id,
-            'body' => $request->body,
-        ]);
+        $msg = $this->createMessage($request, $complaint);
 
         // atbilde slēgtai sūdzībai to atver atpakaļ
         if ($complaint->status === 'closed') {
@@ -109,7 +125,7 @@ class ComplaintController extends Controller
             $complaint->touch();
         }
 
-        $this->log($request, 'support_reply', $complaint, $request->body);
+        $this->log($request, 'support_reply', $complaint, $request->body ?: '[bilde]');
 
         return response()->json($this->formatMessage($msg, $complaint), 201);
     }
@@ -136,14 +152,33 @@ class ComplaintController extends Controller
         ]);
     }
 
+    // teksts un/vai bilde, tādi paši ierobežojumi kā parastajām ziņām
+    private function createMessage(Request $request, Complaint $complaint): ComplaintMessage
+    {
+        $request->validate([
+            'body' => ['nullable', 'string', 'max:2000', 'required_without:image'],
+            'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ]);
+
+        return $complaint->messages()->create([
+            'sender_id' => $request->user()->id,
+            'body' => $request->body ?? '',
+            'image_path' => $request->file('image')?->store('support', 'local'),
+        ]);
+    }
+
     private function formatListItem(Complaint $complaint): array
     {
+        $last = $complaint->latestMessage->first();
+
         return [
             'id' => $complaint->id,
             'subject' => $complaint->subject,
             'status' => $complaint->status,
             'user' => $complaint->relationLoaded('user') ? $complaint->user : null,
-            'last_msg' => $complaint->latestMessage->first()?->body,
+            'last_msg' => $last?->body,
+            'last_image' => (bool) ($last?->image_path || $last?->image_removed),
+            'unread' => $complaint->admin_read_at === null,
             'updated_at' => $complaint->updated_at,
         ];
     }
@@ -171,6 +206,8 @@ class ComplaintController extends Controller
             'sender' => $msg->sender,
             'from_admin' => $msg->sender_id !== $complaint->user_id,
             'body' => $msg->body,
+            'image_url' => $msg->image_url,
+            'image_removed' => $msg->image_removed,
             'created_at' => $msg->created_at,
         ];
     }
