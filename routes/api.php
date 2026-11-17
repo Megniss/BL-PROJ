@@ -13,6 +13,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\SwapRequestController;
 use App\Http\Controllers\TwoFactorController;
+use App\Http\Controllers\TypingController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -65,6 +66,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // unread-count jābūt pirms {user}, citādi Laravel to uztver kā id
     Route::get('/messages/unread-count', [MessageController::class, 'unreadCount']);
+
+    // raksta... abiem čatiem
+    Route::get('/typing', [TypingController::class, 'show']);
+    Route::post('/typing', [TypingController::class, 'store'])->middleware('throttle:60,1');
     Route::get('/messages', [MessageController::class, 'index']);
     Route::get('/messages/{user}', [MessageController::class, 'show']);
     Route::post('/messages', [MessageController::class, 'store'])->middleware('throttle:30,1');

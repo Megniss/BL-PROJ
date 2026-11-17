@@ -73,103 +73,33 @@
               @click="closeComplaint">{{ t('support.closeBtn') }}</button>
           </div>
 
-          <div class="thread-messages" ref="msgList">
-            <div v-if="loadingThread" class="thread-status">{{ t('support.loading') }}</div>
-            <div v-else-if="active.messages?.length === 0" class="thread-status">{{ t('support.noMessages') }}</div>
-
-            <div
-              v-for="msg in active.messages"
-              :key="msg.id"
-              class="msg-row"
-              :class="{ 'msg-mine': admin === msg.from_admin }"
-            >
-              <div class="msg-bubble" :class="{ 'msg-bubble-sent': admin === msg.from_admin }">
-                <img
-                  v-if="msg.image_url"
-                  :src="msg.image_url"
-                  class="msg-image"
-                  :alt="t('messages.photo')"
-                  loading="lazy"
-                  @click="lightbox = msg.image_url"
-                  @load="scrollBottom"
-                  @error="refreshImage(msg)"
-                />
-                <p v-else-if="msg.image_removed" class="msg-image-removed">{{ t('messages.photoRemoved') }}</p>
-                <p v-if="msg.body" class="msg-body">{{ msg.body }}</p>
-                <div class="msg-meta">
-                  <template v-if="msg.from_admin">
-                    <span class="support-admin-tag" :data-name="msg.sender.name">{{ t('support.adminTag') }}</span>
-                    <span v-if="admin" class="support-admin-name">{{ msg.sender.name }}</span>
-                  </template>
-                  <span class="msg-time">{{ formatTime(msg.created_at) }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div v-if="active.status === 'closed'" class="thread-blocked-notice">
-            {{ t('support.closedNotice') }}
-          </div>
-          <template v-else>
-            <!-- bilde pirms sūtīšanas -->
-            <div v-if="pendingPreview || imageError" class="compose-image-preview">
-              <div v-if="pendingPreview" class="compose-image-thumb">
-                <img :src="pendingPreview" :alt="t('messages.photo')" />
-                <button class="compose-image-remove" @click="clearImage" :aria-label="t('messages.removePhoto')">✕</button>
-              </div>
-              <span v-if="imageError" class="text-danger small">{{ imageError }}</span>
-            </div>
-
-            <div class="thread-compose">
-              <input ref="imageInput" type="file" accept="image/*" class="d-none" @change="onImagePicked" />
-              <button
-                class="compose-attach-btn"
-                :disabled="sending || preparingImage"
-                @click="$refs.imageInput.click()"
-                :aria-label="t('messages.addPhoto')"
-                :title="t('messages.addPhoto')"
-              >📎</button>
-              <textarea
-                v-model="compose"
-                class="compose-input"
-                :placeholder="t('messages.placeholder')"
-                rows="1"
-                @keydown.enter.exact.prevent="sendMessage"
-                @input="autoResize"
-                @paste="onPaste"
-                ref="composeInput"
-              ></textarea>
-              <button
-                class="compose-send-btn"
-                :disabled="!canSend"
-                :class="{ active: canSend }"
-                @click="sendMessage"
-                aria-label="Send"
-              >{{ sending || preparingImage ? '…' : '➤' }}</button>
-            </div>
-          </template>
+          <ChatThread
+            ref="thread"
+            :messages="threadMessages"
+            :loading="loadingThread"
+            :empty-text="t('support.noMessages')"
+            :notice="active.status === 'closed' ? t('support.closedNotice') : ''"
+            :typing="otherTyping"
+            :send="sendMessage"
+            :refresh-image="refreshImage"
+            @typing="onTyping"
+          />
         </template>
       </main>
     </div>
-
-    <Teleport to="body">
-      <div v-if="lightbox" class="msg-lightbox" @click="lightbox = null">
-        <img :src="lightbox" :alt="t('messages.photo')" />
-      </div>
-    </Teleport>
   </div>
 </template>
-
 <script>
 import axios from 'axios'
 import { authStore } from '../authStore.js'
 import AppNavbar from './AppNavbar.vue'
+import ChatThread from './ChatThread.vue'
 import langMixin from '../langMixin.js'
-import { resizeImage } from '../imageResize.js'
+import { messageForm, sendTyping, fetchTyping, addNew, POLL_MS } from '../chat.js'
 
 export default {
   name: 'Support',
-  components: { AppNavbar },
+  components: { AppNavbar, ChatThread },
   mixins: [langMixin],
   props: { admin: Boolean },
   // admin panelim - lai atjauno nelasīto skaitu
@@ -188,14 +118,9 @@ export default {
       newBody: '',
       creating: false,
       formError: '',
-      compose: '',
-      sending: false,
       pollTimer: null,
-      pendingImage: null,
-      pendingPreview: null,
-      preparingImage: false,
-      imageError: '',
-      lightbox: null,
+      otherTyping: false,
+      retried: new Set(),
     }
   },
 
@@ -212,14 +137,21 @@ export default {
     api() {
       return this.admin ? '/api/admin/complaints' : '/api/complaints'
     },
-    canSend() {
-      return (this.compose.trim() || this.pendingImage) && !this.sending && !this.preparingImage
+    // ChatThread vajag vienādu formu abiem čatiem
+    threadMessages() {
+      return (this.active?.messages ?? []).map(m => ({
+        ...m,
+        mine: this.admin === m.from_admin,
+        read: false,
+        tag: m.from_admin ? this.t('support.adminTag') : null,
+        tagTitle: m.sender?.name,
+        tagName: this.admin && m.from_admin ? m.sender?.name : null,
+      }))
     },
   },
 
   beforeUnmount() {
     clearInterval(this.pollTimer)
-    this.clearImage()
   },
 
   methods: {
@@ -233,58 +165,73 @@ export default {
       }
     },
 
+    listItem(id) {
+      return this.complaints.find(x => x.id === id)
+    },
+
     async open(c) {
       clearInterval(this.pollTimer)
       this.showThread = true
       this.loadingThread = true
+      this.otherTyping = false
       this.active = { ...c, messages: [] }
-      this.clearImage()
-      this.imageError = ''
+      this.$refs.thread?.reset()
       try {
         const { data } = await axios.get(`${this.api}/${c.id}`)
         this.active = data
         // atsvaidzina priekšskatījuma tekstu sānbārā
-        const idx = this.complaints.findIndex(x => x.id === c.id)
-        if (idx !== -1) {
-          this.complaints[idx].last_msg = data.messages?.at(-1)?.body ?? this.complaints[idx].last_msg
+        const item = this.listItem(c.id)
+        if (item) {
+          item.last_msg = data.messages?.at(-1)?.body ?? item.last_msg
           // admins atvēra - vairs nav jauns
-          if (this.admin && this.complaints[idx].unread) {
-            this.complaints[idx].unread = false
+          if (this.admin && item.unread) {
+            item.unread = false
             this.$emit('read')
           }
         }
-        this.$nextTick(() => this.scrollBottom())
       } finally {
         this.loadingThread = false
       }
 
-      // reizi 4 sekundēs pārbauda jaunas ziņas
+      // reizi 3 sekundēs jaunas ziņas un vai otrs raksta
       this.pollTimer = setInterval(() => {
-        if (this.active) this.pollMessages()
-      }, 4000)
+        if (this.active) this.poll()
+      }, POLL_MS)
     },
 
-    async pollMessages() {
+    async poll() {
+      const id = this.active.id
       const lastId = this.active.messages?.at(-1)?.id ?? 0
       try {
-        const { data } = await axios.get(`${this.api}/${this.active.id}`)
+        const [{ data }, typing] = await Promise.all([
+          axios.get(`${this.api}/${id}`),
+          this.active.status === 'closed' ? false : fetchTyping(`support:${id}`),
+        ])
+        if (this.active?.id !== id) return
+
+        this.otherTyping = typing
+
         const fresh = (data.messages ?? []).filter(m => m.id > lastId)
         if (fresh.length) {
-          this.active.messages.push(...fresh)
-          const idx = this.complaints.findIndex(x => x.id === this.active.id)
-          if (idx !== -1) {
-            this.complaints[idx].last_msg = fresh.at(-1).body
-            this.complaints[idx].last_image = !!fresh.at(-1).image_url
+          addNew(this.active.messages, fresh)
+          this.otherTyping = false
+          const item = this.listItem(id)
+          if (item) {
+            item.last_msg = fresh.at(-1).body
+            item.last_image = !!fresh.at(-1).image_url
           }
-          this.$nextTick(() => this.scrollBottom())
         }
         // sinhronizē statusu ja admins aizvēra
         if (data.status !== this.active.status) {
           this.active.status = data.status
-          const idx = this.complaints.findIndex(x => x.id === this.active.id)
-          if (idx !== -1) this.complaints[idx].status = data.status
+          const item = this.listItem(id)
+          if (item) item.status = data.status
         }
       } catch { /* klusums */ }
+    },
+
+    onTyping() {
+      if (this.active && this.active.status !== 'closed') sendTyping(`support:${this.active.id}`)
     },
 
     async createComplaint() {
@@ -307,107 +254,36 @@ export default {
       }
     },
 
-    async sendMessage() {
-      if (!this.canSend) return
-      this.sending = true
-      const body = this.compose.trim()
-      const image = this.pendingImage
-      this.compose = ''
-
-      // bilde iet kā FormData, tāpat kā parastajā čatā
-      const form = new FormData()
-      if (body) form.append('body', body)
-      if (image) form.append('image', image)
-
-      try {
-        const { data } = await axios.post(`${this.api}/${this.active.id}/messages`, form)
-        this.active.messages.push(data)
-        this.clearImage()
-        // sānbāra priekšskatījums sinhronā
-        const idx = this.complaints.findIndex(x => x.id === this.active.id)
-        if (idx !== -1) {
-          this.complaints[idx].last_msg = body
-          this.complaints[idx].last_image = !!image
-        }
-        this.$nextTick(() => this.scrollBottom())
-      } catch (err) {
-        this.compose = body // atdod atpakaļ lai lietotājs nezaudē ziņu
-        if (image) this.imageError = err.response?.data?.message || this.t('messages.photoError')
-      } finally {
-        this.sending = false
+    // ChatThread izsauc, kļūda tiek parādīta tur
+    async sendMessage(body, image) {
+      const { data } = await axios.post(`${this.api}/${this.active.id}/messages`, messageForm(body, image))
+      addNew(this.active.messages, [data])
+      // sānbāra priekšskatījums sinhronā
+      const item = this.listItem(this.active.id)
+      if (item) {
+        item.last_msg = body
+        item.last_image = !!image
       }
     },
 
-    async attachImage(file) {
-      this.imageError = ''
-      if (!file.type.startsWith('image/')) return
-
-      this.preparingImage = true
-      try {
-        const resized = await resizeImage(file)
-        if (resized.size > 5 * 1024 * 1024) throw new Error('too big')
-        this.clearImage()
-        this.pendingImage = resized
-        this.pendingPreview = URL.createObjectURL(resized)
-      } catch {
-        this.imageError = this.t('messages.photoError')
-      } finally {
-        this.preparingImage = false
-      }
-    },
-
-    onImagePicked(e) {
-      const file = e.target.files?.[0]
-      e.target.value = ''
-      if (file) this.attachImage(file)
-    },
-
-    // Ctrl+V ar bildi
-    onPaste(e) {
-      const item = [...(e.clipboardData?.items ?? [])].find(i => i.type.startsWith('image/'))
-      if (!item) return
-      e.preventDefault()
-      this.attachImage(item.getAsFile())
-    },
-
-    clearImage() {
-      if (this.pendingPreview) URL.revokeObjectURL(this.pendingPreview)
-      this.pendingImage = null
-      this.pendingPreview = null
-    },
-
-    // saite novecojusi - paņem jaunu
+    // saite novecojusi - paņem jaunu, katrai ziņai tikai vienreiz
     async refreshImage(msg) {
-      if (msg.imageRetried || !this.active) return
-      msg.imageRetried = true
+      if (this.retried.has(msg.id) || !this.active) return
+      this.retried.add(msg.id)
       try {
         const { data } = await axios.get(`${this.api}/${this.active.id}`)
         const fresh = data.messages?.find(m => m.id === msg.id)
-        if (fresh?.image_url) msg.image_url = fresh.image_url
+        const orig = this.active.messages.find(m => m.id === msg.id)
+        if (fresh?.image_url && orig) orig.image_url = fresh.image_url
       } catch { /* ignorē */ }
     },
 
     async closeComplaint() {
       await axios.patch(`${this.api}/${this.active.id}/close`)
       this.active.status = 'closed'
-      const idx = this.complaints.findIndex(x => x.id === this.active.id)
-      if (idx !== -1) this.complaints[idx].status = 'closed'
-    },
-
-    scrollBottom() {
-      const el = this.$refs.msgList
-      if (el) el.scrollTop = el.scrollHeight
-    },
-
-    autoResize(e) {
-      e.target.style.height = 'auto'
-      e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
-    },
-
-    formatTime(ts) {
-      if (!ts) return ''
-      const d = new Date(ts)
-      return d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+      this.otherTyping = false
+      const item = this.listItem(this.active.id)
+      if (item) item.status = 'closed'
     },
 
     subjectInitial(subject) {
@@ -416,6 +292,7 @@ export default {
   }
 }
 </script>
+
 
 <style scoped>
 .support-new-form {
@@ -447,43 +324,7 @@ export default {
 .support-unread .convo-name { font-weight: 700; }
 .badge-closed { background: #f3f4f6; color: #6b7280; }
 
-.support-admin-tag {
-  font-size: .65rem;
-  font-weight: 700;
-  color: var(--color-primary, #3a6b3e);
-  text-transform: uppercase;
-  letter-spacing: .04em;
-  margin-right: .3rem;
-  position: relative;
-  cursor: default;
-}
-/* uzbraucot rāda admina vārdu */
-.support-admin-tag[data-name]:hover::after {
-  content: attr(data-name);
-  position: absolute;
-  bottom: calc(100% + 4px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: #1f2937;
-  color: #fff;
-  font-size: .7rem;
-  font-weight: 500;
-  padding: .2rem .5rem;
-  border-radius: 5px;
-  white-space: nowrap;
-  pointer-events: none;
-  text-transform: none;
-  letter-spacing: 0;
-}
-.support-admin-name {
-  font-size: .65rem;
-  font-weight: 600;
-  background: var(--color-primary, #3a6b3e);
-  color: #fff;
-  border-radius: 4px;
-  padding: .05rem .35rem;
-  margin-right: .3rem;
-}
+/* admina birka tagad app.css, jo to rāda ChatThread */
 .support-user-link {
   font-size: .8rem;
   font-weight: 600;

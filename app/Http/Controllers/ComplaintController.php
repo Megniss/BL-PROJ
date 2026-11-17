@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AdminLog;
 use App\Models\Complaint;
 use App\Models\ComplaintMessage;
+use App\Support\Chat;
 use Illuminate\Http\Request;
 
 class ComplaintController extends Controller
@@ -152,19 +153,19 @@ class ComplaintController extends Controller
         ]);
     }
 
-    // teksts un/vai bilde, tādi paši ierobežojumi kā parastajām ziņām
+    // validācija un bilde nāk no kopīgā Chat, tāpat kā parastajām ziņām
     private function createMessage(Request $request, Complaint $complaint): ComplaintMessage
     {
-        $request->validate([
-            'body' => ['nullable', 'string', 'max:2000', 'required_without:image'],
-            'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-        ]);
+        $data = Chat::validateMessage($request, 'support');
 
-        return $complaint->messages()->create([
+        $msg = $complaint->messages()->create([
             'sender_id' => $request->user()->id,
-            'body' => $request->body ?? '',
-            'image_path' => $request->file('image')?->store('support', 'local'),
+            'body' => $data['body'],
+            'image_path' => $data['image_path'],
         ]);
+        Chat::stopTyping($request->user(), "support:{$complaint->id}");
+
+        return $msg;
     }
 
     private function formatListItem(Complaint $complaint): array

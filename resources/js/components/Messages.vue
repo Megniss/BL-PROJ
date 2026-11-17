@@ -80,122 +80,24 @@
             </button>
           </div>
 
-          <div class="thread-messages" ref="messageList" role="log" aria-live="polite" aria-label="Ziņojumi">
-            <div v-if="loadingThread" class="thread-status">{{ t('messages.loading') }}</div>
-            <div v-if="threadError" class="text-center text-danger p-3">{{ threadError }}</div>
-            <div v-else-if="messages.length === 0" class="thread-status">
-              {{ t('messages.noMessages') }}
-            </div>
-
-            <div
-              v-for="msg in messages"
-              :key="msg.id"
-              class="msg-row"
-              :class="{ 'msg-mine': msg.from_user_id === authStore.user.id }"
-            >
-              <div
-                class="msg-bubble"
-                :class="{ 'msg-bubble-read': msg.from_user_id === authStore.user.id && msg.read_at, 'msg-bubble-sent': msg.from_user_id === authStore.user.id && !msg.read_at }"
-                @contextmenu.prevent="msg.from_user_id === authStore.user.id && !msg.read_at && editingId !== msg.id ? openCtxMenu(msg, $event) : null"
-                @touchstart="msg.from_user_id === authStore.user.id && !msg.read_at && editingId !== msg.id ? startLongPress(msg, $event) : null"
-                @touchend="cancelLongPress"
-                @touchcancel="cancelLongPress"
-              >
-                <template v-if="editingId === msg.id">
-                  <textarea
-                    v-model="editBody"
-                    class="msg-edit-input"
-                    rows="2"
-                    @keydown.enter.exact.prevent="saveEdit(msg)"
-                    @keydown.escape="cancelEdit"
-                  ></textarea>
-                  <div class="msg-edit-actions">
-                    <button class="msg-edit-save" @click="saveEdit(msg)" :disabled="editSaving">{{ editSaving ? '…' : t('messages.save') }}</button>
-                    <button class="msg-edit-cancel" @click="cancelEdit">{{ t('messages.cancel') }}</button>
-                  </div>
-                </template>
-
-                <template v-else>
-                  <img
-                    v-if="msg.image_url"
-                    :src="msg.image_url"
-                    class="msg-image"
-                    :alt="t('messages.photo')"
-                    loading="lazy"
-                    @click="lightbox = msg.image_url"
-                    @load="onImageLoad"
-                    @error="refreshImage(msg)"
-                  />
-                  <p v-else-if="msg.image_removed" class="msg-image-removed">{{ t('messages.photoRemoved') }}</p>
-                  <p v-if="msg.body" class="msg-body">{{ msg.body }}</p>
-                  <div class="msg-meta">
-                    <span v-if="msg.edited_at" class="msg-edited">{{ t('messages.edited') }}</span>
-                    <span class="msg-time">{{ formatTime(msg.created_at) }}</span>
-                  </div>
-                </template>
-              </div>
-            </div>
-
-            <!-- labā poga / garš pieskāriens -->
-            <div v-if="ctxMenu.visible" class="msg-ctx-menu" :style="{ top: ctxMenu.y + 'px', left: ctxMenu.x + 'px' }">
-              <button @click="startEdit(ctxMenu.msg); ctxMenu.visible = false">{{ t('messages.editBtn') }}</button>
-              <button @click="unsendMessage(ctxMenu.msg); ctxMenu.visible = false" class="msg-ctx-danger">{{ t('messages.unsendBtn') }}</button>
-            </div>
-          </div>
-
-          <div v-if="activeUser.deleted" class="thread-blocked-notice">{{ t('msg.deletedUser') }}</div>
-
-          <div v-else-if="activeUserBlocked" class="thread-blocked-notice">{{ t('msg.blocked') }}</div>
-
-          <template v-else>
-            <!-- bilde pirms sūtīšanas -->
-            <div v-if="pendingPreview || imageError" class="compose-image-preview">
-              <div v-if="pendingPreview" class="compose-image-thumb">
-                <img :src="pendingPreview" :alt="t('messages.photo')" />
-                <button class="compose-image-remove" @click="clearImage" :aria-label="t('messages.removePhoto')">✕</button>
-              </div>
-              <span v-if="imageError" class="text-danger small">{{ imageError }}</span>
-            </div>
-
-            <div class="thread-compose">
-              <input ref="imageInput" type="file" accept="image/*" class="d-none" @change="onImagePicked" />
-              <button
-                class="compose-attach-btn"
-                :disabled="sending || preparingImage"
-                @click="$refs.imageInput.click()"
-                :aria-label="t('messages.addPhoto')"
-                :title="t('messages.addPhoto')"
-              >📎</button>
-              <textarea
-                v-model="compose"
-                class="compose-input"
-                :placeholder="t('messages.placeholder')"
-                aria-label="Rakstīt ziņu"
-                rows="1"
-                @keydown.enter.exact.prevent="sendMessage"
-                @input="autoResize"
-                @paste="onPaste"
-                ref="composeInput"
-              ></textarea>
-              <button
-                class="compose-send-btn"
-                :disabled="!canSend"
-                :class="{ active: canSend }"
-                @click="sendMessage"
-                aria-label="Send"
-              >{{ sending || preparingImage ? '…' : '➤' }}</button>
-            </div>
-          </template>
+          <ChatThread
+            ref="thread"
+            :messages="threadMessages"
+            :loading="loadingThread"
+            :error="threadError"
+            :notice="activeUser.deleted ? t('msg.deletedUser') : (activeUserBlocked ? t('msg.blocked') : '')"
+            :typing="otherTyping"
+            editable
+            :send="sendMessage"
+            :edit="editMessage"
+            :unsend="unsendMessage"
+            :refresh-image="refreshImage"
+            @typing="onTyping"
+          />
         </template>
 
       </main>
     </div>
-
-    <Teleport to="body">
-      <div v-if="lightbox" class="msg-lightbox" @click="lightbox = null">
-        <img :src="lightbox" :alt="t('messages.photo')" />
-      </div>
-    </Teleport>
 
   </div>
 </template>
@@ -205,12 +107,13 @@ import axios from 'axios'
 import { authStore } from '../authStore.js'
 import langMixin from '../langMixin.js'
 import AppNavbar from './AppNavbar.vue'
-import { resizeImage } from '../imageResize.js'
+import ChatThread from './ChatThread.vue'
+import { messageForm, sendTyping, fetchTyping, addNew, POLL_MS } from '../chat.js'
 
 export default {
   name: 'Messages',
 
-  components: { AppNavbar },
+  components: { AppNavbar, ChatThread },
 
   mixins: [langMixin],
 
@@ -220,31 +123,30 @@ export default {
       conversations: [],
       activeUser: null,
       messages: [],
-      compose: '',
-      pendingImage: null,
-      pendingPreview: null,
-      preparingImage: false,
-      imageError: '',
-      lightbox: null,
       loadingConvos: true,
       loadingThread: false,
-      sending: false,
       showThread: false,
       pollTimer: null,
       convosError: null,
       threadError: null,
       activeUserBlocked: false,
-      editingId: null,
-      editBody: '',
-      editSaving: false,
-      ctxMenu: { visible: false, x: 0, y: 0, msg: null },
-      longPressTimer: null,
+      otherTyping: false,
+      retried: new Set(),
     }
   },
 
+  computed: {
+    // ChatThread vajag vienādu formu abiem čatiem
+    threadMessages() {
+      const me = this.authStore.user.id
+      return this.messages.map(m => ({ ...m, mine: m.from_user_id === me, read: !!m.read_at }))
+    },
+    chatKey() {
+      return this.activeUser ? `user:${this.activeUser.id}` : null
+    },
+  },
+
   async mounted() {
-    document.addEventListener('click', this.closeCtxMenu)
-    document.addEventListener('keydown', this.onKeydown)
     await this.fetchConversations()
 
     // ja atnācām no grāmatas kartītes vai profila, uzreiz atver sarunu
@@ -257,15 +159,6 @@ export default {
 
   beforeUnmount() {
     clearInterval(this.pollTimer)
-    document.removeEventListener('click', this.closeCtxMenu)
-    document.removeEventListener('keydown', this.onKeydown)
-    this.clearImage()
-  },
-
-  computed: {
-    canSend() {
-      return (this.compose.trim() || this.pendingImage) && !this.sending && !this.preparingImage
-    },
   },
 
   methods: {
@@ -285,8 +178,10 @@ export default {
     async openConversation(user) {
       this.activeUser = user
       this.activeUserBlocked = false
+      this.otherTyping = false
       this.showThread = true
       clearInterval(this.pollTimer)
+      this.$refs.thread?.reset()
 
       // pārbauda bloķēšanu pirms rāda sarunu
       try {
@@ -296,10 +191,10 @@ export default {
 
       await this.fetchThread()
 
-      // reizi 3 sekundēs pārbauda jaunas ziņas
+      // reizi 3 sekundēs jaunas ziņas un vai otrs raksta
       this.pollTimer = setInterval(() => {
-        if (this.activeUser) this.pollNewMessages()
-      }, 3000)
+        if (this.activeUser) this.poll()
+      }, POLL_MS)
     },
 
     async toggleBlock() {
@@ -310,6 +205,7 @@ export default {
         } else {
           await axios.post(`/api/blocks/${this.activeUser.id}`)
           this.activeUserBlocked = true
+          this.otherTyping = false
         }
         // atjaunina bloķēšanas tagu sānbārā arī
         const convo = this.conversations.find(c => c.user.id === this.activeUser.id)
@@ -320,15 +216,13 @@ export default {
     async fetchThread() {
       this.loadingThread = true
       this.threadError = null
+      this.messages = []
       try {
         const { data } = await axios.get(`/api/messages/${this.activeUser.id}`)
         this.messages = data
 
         const convo = this.conversations.find(c => c.user.id === this.activeUser.id)
         if (convo) convo.unread = 0
-
-        await this.$nextTick()
-        this.scrollToBottom()
       } catch (err) {
         this.threadError = err.response?.data?.message || this.t('messages.loadError')
       } finally {
@@ -336,231 +230,80 @@ export default {
       }
     },
 
-    async pollNewMessages() {
-      if (!this.activeUser) return
+    async poll() {
+      const user = this.activeUser
       const lastId = this.messages.at(-1)?.id ?? 0
       try {
-        const { data } = await axios.get(`/api/messages/${this.activeUser.id}`)
+        const [{ data }, typing] = await Promise.all([
+          axios.get(`/api/messages/${user.id}`),
+          this.activeUserBlocked ? false : fetchTyping(`user:${user.id}`),
+        ])
+        // kamēr gaidīja, varēja atvērt citu sarunu
+        if (this.activeUser?.id !== user.id) return
+
+        this.otherTyping = typing
+
+        // izlasīts statuss manām ziņām mainās arī vecajām
+        for (const m of data) {
+          const mine = this.messages.find(x => x.id === m.id)
+          if (mine && !mine.read_at && m.read_at) mine.read_at = m.read_at
+        }
+
         const fresh = data.filter(m => m.id > lastId)
         if (fresh.length === 0) return
-        this.addMessages(fresh)
-        const convo = this.conversations.find(c => c.user.id === this.activeUser.id)
+        addNew(this.messages, fresh)
+        // ziņa atnāca - vairs neraksta
+        this.otherTyping = false
+
+        const convo = this.conversations.find(c => c.user.id === user.id)
         if (convo) {
           convo.last_message = { body: fresh.at(-1).body, image: !!fresh.at(-1).image_url }
           convo.unread = 0
         }
-        await this.$nextTick()
-        this.scrollToBottom()
       } catch { /* klusums */ }
     },
 
-    async sendMessage() {
-      if (!this.canSend) return
-      const body = this.compose.trim()
-      const image = !!this.pendingImage
-
-      const form = new FormData()
-      form.append('to_user_id', this.activeUser.id)
-      form.append('body', body)
-      if (this.pendingImage) form.append('image', this.pendingImage)
-
-      this.sending = true
-      try {
-        const { data } = await axios.post('/api/messages', form)
-        this.addMessages([data])
-        this.compose = ''
-        this.clearImage()
-        this.$nextTick(() => {
-          if (this.$refs.composeInput) {
-            this.$refs.composeInput.style.height = 'auto'
-          }
-        })
-
-        // atjaunina vai izveido ierakstu sānbārā
-        const convo = this.conversations.find(c => c.user.id === this.activeUser.id)
-        if (convo) {
-          convo.last_message = { body, image, created_at: data.created_at }
-        } else {
-          this.conversations.unshift({
-            user:         this.activeUser,
-            last_message: { body, image, created_at: data.created_at },
-            unread:       0,
-          })
-        }
-
-        await this.$nextTick()
-        this.scrollToBottom()
-      } catch (err) {
-        alert(err.response?.data?.message || this.t('messages.sendError'))
-      } finally {
-        this.sending = false
-      }
+    onTyping() {
+      if (this.chatKey && !this.activeUserBlocked) sendTyping(this.chatKey)
     },
 
-    // pārbaude ik pēc 3s var atrast ziņu ātrāk par sūtīšanas atbildi
-    addMessages(list) {
-      const ids = new Set(this.messages.map(m => m.id))
-      this.messages.push(...list.filter(m => !ids.has(m.id)))
-    },
+    // ChatThread izsauc, kļūda tiek parādīta tur
+    async sendMessage(body, image) {
+      const { data } = await axios.post('/api/messages', messageForm(body, image, { to_user_id: this.activeUser.id }))
+      addNew(this.messages, [data])
 
-    async attachImage(file) {
-      this.imageError = ''
-      if (!file.type.startsWith('image/')) return
-
-      this.preparingImage = true
-      try {
-        const resized = await resizeImage(file)
-        if (resized.size > 5 * 1024 * 1024) throw new Error('too big')
-        this.clearImage()
-        this.pendingImage = resized
-        this.pendingPreview = URL.createObjectURL(resized)
-      } catch {
-        this.imageError = this.t('messages.photoError')
-      } finally {
-        this.preparingImage = false
-      }
-    },
-
-    onImagePicked(e) {
-      const file = e.target.files?.[0]
-      e.target.value = ''
-      if (file) this.attachImage(file)
-    },
-
-    // Ctrl+V ar bildi
-    onPaste(e) {
-      const item = [...(e.clipboardData?.items ?? [])].find(i => i.type.startsWith('image/'))
-      if (!item) return
-      e.preventDefault()
-      this.attachImage(item.getAsFile())
-    },
-
-    clearImage() {
-      if (this.pendingPreview) URL.revokeObjectURL(this.pendingPreview)
-      this.pendingImage = null
-      this.pendingPreview = null
-    },
-
-    onKeydown(e) {
-      if (e.key === 'Escape') this.lightbox = null
-    },
-
-    // bilde ielādējas vēlāk par tekstu, tāpēc vēlreiz noritina uz leju
-    onImageLoad() {
-      const el = this.$refs.messageList
-      if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 400) this.scrollToBottom()
-    },
-
-    // saite novecojusi - paņem jaunu
-    async refreshImage(msg) {
-      if (msg.imageRetried) return
-      msg.imageRetried = true
-      try {
-        const { data } = await axios.get(`/api/messages/${this.activeUser.id}`)
-        const fresh = data.find(m => m.id === msg.id)
-        if (fresh?.image_url) msg.image_url = fresh.image_url
-      } catch { /* ignorē */ }
-    },
-
-    scrollToBottom() {
-      const el = this.$refs.messageList
-      if (el) el.scrollTop = el.scrollHeight
-    },
-
-    autoResize(e) {
-      const el = e.target
-      el.style.height = 'auto'
-      el.style.height = Math.min(el.scrollHeight, 120) + 'px'
-    },
-
-    openCtxMenu(msg, e) {
-      this.positionCtxMenu(msg, e.currentTarget)
-    },
-
-    positionCtxMenu(msg, bubble) {
-      const r = bubble.getBoundingClientRect()
-      const menuW = 140
-      const menuH = 88
-      const gap = 6
-
-      // savas ziņas ir labajā pusē, mēģina izvietot kreisajā
-      let x, y
-
-      if (r.left - menuW - gap >= 0) {
-        x = r.left - menuW - gap
-        y = r.top
-      } else if (r.right + menuW + gap <= window.innerWidth) {
-        // pa kreisi nav vietas, liek pa labi
-        x = r.right + gap
-        y = r.top
+      // atjaunina vai izveido ierakstu sānbārā
+      const last = { body, image: !!image, created_at: data.created_at }
+      const convo = this.conversations.find(c => c.user.id === this.activeUser.id)
+      if (convo) {
+        convo.last_message = last
       } else {
-        // pēdējā iespēja: zem burbuļa
-        x = Math.max(8, r.right - menuW)
-        y = r.bottom + gap
+        this.conversations.unshift({ user: this.activeUser, last_message: last, unread: 0 })
       }
-
-      // nedrīkst iziet ārpus ekrāna apakšas
-      if (y + menuH > window.innerHeight) y = r.top - menuH - gap
-
-      this.ctxMenu = { visible: true, x, y, msg }
     },
 
-    closeCtxMenu() {
-      this.ctxMenu.visible = false
-    },
-
-    startLongPress(msg, e) {
-      this.longPressTimer = setTimeout(() => {
-        this.positionCtxMenu(msg, e.currentTarget)
-      }, 500)
-    },
-
-    cancelLongPress() {
-      clearTimeout(this.longPressTimer)
-    },
-
-    startEdit(msg) {
-      this.editingId = msg.id
-      this.editBody = msg.body
-    },
-
-    cancelEdit() {
-      this.editingId = null
-      this.editBody = ''
-    },
-
-    async saveEdit(msg) {
-      const body = this.editBody.trim()
-      if ((!body && !msg.image_url) || this.editSaving) return
-      this.editSaving = true
-      try {
-        const { data } = await axios.put(`/api/messages/${msg.id}`, { body })
-        const idx = this.messages.findIndex(m => m.id === msg.id)
-        if (idx !== -1) this.messages[idx] = data
-        this.cancelEdit()
-      } catch (err) {
-        alert(err.response?.data?.message || this.t('messages.editError'))
-      } finally {
-        this.editSaving = false
-      }
+    async editMessage(msg, body) {
+      const { data } = await axios.put(`/api/messages/${msg.id}`, { body })
+      const idx = this.messages.findIndex(m => m.id === msg.id)
+      if (idx !== -1) this.messages[idx] = data
     },
 
     async unsendMessage(msg) {
-      if (!confirm(this.t('messages.unsendConfirm'))) return
+      await axios.delete(`/api/messages/${msg.id}`)
+      this.messages = this.messages.filter(m => m.id !== msg.id)
+    },
+
+    // saite novecojusi - paņem jaunu, katrai ziņai tikai vienreiz
+    async refreshImage(msg) {
+      if (this.retried.has(msg.id)) return
+      this.retried.add(msg.id)
       try {
-        await axios.delete(`/api/messages/${msg.id}`)
-        this.messages = this.messages.filter(m => m.id !== msg.id)
-      } catch (err) {
-        alert(err.response?.data?.message || this.t('messages.unsendError'))
-      }
+        const { data } = await axios.get(`/api/messages/${this.activeUser.id}`)
+        const fresh = data.find(m => m.id === msg.id)
+        const orig = this.messages.find(m => m.id === msg.id)
+        if (fresh?.image_url && orig) orig.image_url = fresh.image_url
+      } catch { /* ignorē */ }
     },
-
-    formatTime(dateStr) {
-      return new Date(dateStr).toLocaleString('en-GB', {
-        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
-      })
-    },
-
   },
 }
 </script>

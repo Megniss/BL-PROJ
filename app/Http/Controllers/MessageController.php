@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Message;
 use App\Models\User;
 use App\Notifications\NewMessage;
+use App\Support\Chat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -79,29 +80,29 @@ class MessageController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'to_user_id' => ['required', 'integer', 'exists:users,id'],
-            'body' => ['nullable', 'string', 'max:2000', 'required_without:image'],
-            'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-        ]);
-        $body = trim($data['body'] ?? '');
+        $request->validate(['to_user_id' => ['required', 'integer', 'exists:users,id']]);
+        $toId = (int) $request->to_user_id;
 
-        if ((int) $data['to_user_id'] === $request->user()->id) {
+        if ($toId === $request->user()->id) {
             return response()->json(['message' => 'You cannot message yourself.'], 422);
         }
 
         // bloķētie nevar rakstīt
-        $blocked = $request->user()->blockedUserIds()->contains((int) $data['to_user_id']);
+        $blocked = $request->user()->blockedUserIds()->contains($toId);
         if ($blocked) {
             return response()->json(['message' => 'You cannot message this user.'], 422);
         }
 
         $sender = $request->user();
-        $recipient = User::find($data['to_user_id']);
+        $recipient = User::find($toId);
 
         if ($recipient->deleted_at) {
             return response()->json(['message' => 'This user has deleted their account.'], 422);
         }
+
+        // bilde saglabājas tikai pēc visām pārbaudēm
+        $data = Chat::validateMessage($request, 'chat');
+        $body = $data['body'];
 
         // nesūta notifikāciju ja jau ir nelasīta
         $hasUnread = Message::where('from_user_id', $sender->id)
@@ -113,8 +114,9 @@ class MessageController extends Controller
             'from_user_id' => $sender->id,
             'to_user_id' => $recipient->id,
             'body' => $body,
-            'image_path' => $request->file('image')?->store('chat', 'local'),
+            'image_path' => $data['image_path'],
         ]);
+        Chat::stopTyping($sender, "user:{$recipient->id}");
 
         if (!$hasUnread) {
             try {
