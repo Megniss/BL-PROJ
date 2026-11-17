@@ -334,10 +334,7 @@ Lapa atveras **http://localhost:8080**. Pirmā būve aizņem dažas minūtes.
 
 - Datubāze pirmajā palaišanā ir kopija no faila `bookloop`, tāpēc lietotāji un grāmatas ir tie paši.
 - Datubāze un augšupielādētās bildes glabājas Docker "volume" un saglabājas arī pēc restarta.
-- E-pasti (arī 2FA kodi) netiek sūtīti, tie redzami žurnālā:
-  ```bash
-  docker compose logs app | grep "Your code"
-  ```
+- E-pasti (arī 2FA kodi) tiek sūtīti uz Mailtrap sandbox iesūtni (iestatījumi `.env.docker`), tāpat kā lokāli.
 - Ja `.env` ir `VITE_MAPTILER_KEY`, karte izmanto MapTiler, citādi OpenStreetMap.
 
 ```bash
