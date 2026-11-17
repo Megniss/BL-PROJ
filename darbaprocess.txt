@@ -205,3 +205,4 @@ git clone https://github.com/Megniss/BL-PROJ.git
 cd BL-PROJ
 docker compose up -d --build
 apstadinat: docker compose down
+atver: http://localhost:8080
