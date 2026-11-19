@@ -13,8 +13,8 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     serviceWorkers: 'block',
-    screenshot: 'only-on-failure',
-    trace: 'retain-on-failure',
+    screenshot: 'on',
+    trace: 'on',
   },
 
   // PW_CHANNEL=msedge ja playwright chromium bloķēts (darba datorā group policy)

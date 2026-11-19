@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class ProfileController extends Controller
 {
@@ -86,18 +87,34 @@ class ProfileController extends Controller
             'new_password_confirmation' => ['nullable', 'string'],
         ]);
 
-        if (!empty($data['new_password'])) {
+        $oldEmail = $user->email;
+        $emailChanged = mb_strtolower($data['email']) !== mb_strtolower($oldEmail);
+        $passwordChanged = !empty($data['new_password']);
+
+        // e-pastu un paroli var mainīt tikai ar pašreizējo paroli
+        // citādi ar nozagtu tokenu var nomainīt e-pastu un tad paroli caur reset
+        if ($emailChanged || $passwordChanged) {
             if (empty($data['current_password']) || !Hash::check($data['current_password'], $user->password)) {
                 return response()->json([
                     'errors' => ['current_password' => ['Current password is incorrect.']],
                 ], 422);
             }
+        }
+
+        if ($passwordChanged) {
             $user->password = Hash::make($data['new_password']);
         }
 
         $user->name = $data['name'];
         $user->email = $data['email'];
         $user->save();
+
+        if ($emailChanged || $passwordChanged) {
+            // vecā e-pasta reset saite vairs neder
+            DB::table('password_reset_tokens')->where('email', $oldEmail)->delete();
+            // izlogo visas citas ierīces, šī paliek
+            $this->logoutOtherDevices($request);
+        }
 
         return response()->json([
             'id' => $user->id,
@@ -271,6 +288,19 @@ class ProfileController extends Controller
         $notification = $request->user()->notifications()->findOrFail($id);
         $notification->markAsRead();
         return response()->json(['message' => 'Marked as read.']);
+    }
+
+    // dzēš visus citus tokenus un atcerētās 2FA ierīces, pašreizējais paliek
+    private function logoutOtherDevices(Request $request): void
+    {
+        $user = $request->user();
+        $current = $user->currentAccessToken();
+
+        $user->tokens()
+            ->when($current instanceof PersonalAccessToken, fn($q) => $q->where('id', '!=', $current->id))
+            ->delete();
+
+        TwoFactor::forget($user);
     }
 
     public function markAllRead(Request $request)

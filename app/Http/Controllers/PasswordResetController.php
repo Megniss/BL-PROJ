@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\TwoFactor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -37,6 +38,11 @@ class PasswordResetController extends Controller
                 $user->forceFill(['password' => Hash::make($password)])
                     ->setRememberToken(Str::random(60));
                 $user->save();
+
+                // jaunā parole izlogo visur, arī to, kurš varbūt nozaga sesiju
+                $user->tokens()->delete();
+                TwoFactor::forget($user);
+
                 event(new PasswordReset($user));
             }
         );

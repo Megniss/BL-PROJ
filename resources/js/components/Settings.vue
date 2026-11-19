@@ -17,13 +17,14 @@
           <div class="mb-3">
             <label for="settings-email" class="form-label fw-semibold">{{ t('profile.fieldEmail') }}</label>
             <input id="settings-email" v-model="profileForm.email" class="form-control" type="email" required />
+            <small v-if="emailChanged" class="text-warning-emphasis">{{ t('profile.emailNeedsPwd') }}</small>
           </div>
 
           <div class="settings-divider mb-3">{{ t('profile.changePwd') }} <span>{{ t('profile.changePwdHint') }}</span></div>
 
           <div class="mb-3">
             <label for="settings-current-pwd" class="form-label fw-semibold">{{ t('profile.currentPwd') }}</label>
-            <input id="settings-current-pwd" v-model="profileForm.current_password" class="form-control" type="password" autocomplete="current-password" />
+            <input id="settings-current-pwd" v-model="profileForm.current_password" class="form-control" type="password" autocomplete="current-password" :required="emailChanged || !!profileForm.new_password" />
           </div>
           <div class="row g-3 mb-3">
             <div class="col-12 col-sm-6">
@@ -202,6 +203,8 @@ export default {
         new_password_confirmation: '',
       },
       profileSaving: false,
+      // e-pasts no servera, lai zina vai lietotājs to maina
+      savedEmail: '',
 
       privacyForm: { show_joined: true, show_swaps: true, show_swap_history: true, show_on_map: true },
 
@@ -228,6 +231,7 @@ export default {
     ])
     this.profileForm.name = profile.data.name
     this.profileForm.email = profile.data.email
+    this.savedEmail = profile.data.email
     this.privacyForm.show_joined = profile.data.show_joined
     this.privacyForm.show_swaps = profile.data.show_swaps
     this.privacyForm.show_swap_history = profile.data.show_swap_history
@@ -239,6 +243,13 @@ export default {
     this.profileLoaded = true
   },
 
+  computed: {
+    // e-pasta maiņai vajag pašreizējo paroli
+    emailChanged() {
+      return !!this.savedEmail && this.profileForm.email.trim().toLowerCase() !== this.savedEmail.toLowerCase()
+    },
+  },
+
   methods: {
     async saveProfile() {
       this.profileSaving = true
@@ -247,6 +258,7 @@ export default {
         updateUser(data)
         this.profileForm.name = data.name
         this.profileForm.email = data.email
+        this.savedEmail = data.email
         this.profileForm.current_password = ''
         this.profileForm.new_password = ''
         this.profileForm.new_password_confirmation = ''

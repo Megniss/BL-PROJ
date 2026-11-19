@@ -42,9 +42,11 @@ class ProfileTest extends TestCase
     {
         $user = User::factory()->create();
 
+        // e-pasta maiņai vajag pašreizējo paroli (factory parole ir "password")
         $response = $this->actingAs($user)->patchJson('/api/profile', [
             'name' => 'New Name',
             'email' => 'new@example.com',
+            'current_password' => 'password',
         ]);
 
         $response->assertOk()

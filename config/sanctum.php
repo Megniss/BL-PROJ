@@ -47,7 +47,8 @@ return [
     |
     */
 
-    'expiration' => null,
+    // login tokens der 30 dienas, pēc tam jāielogojas no jauna
+    'expiration' => (int) env('SANCTUM_EXPIRATION', 60 * 24 * 30),
 
     /*
     |--------------------------------------------------------------------------
