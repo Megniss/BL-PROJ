@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Support\Md;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -19,7 +20,7 @@ class TwoFactorCode extends Notification
     {
         return (new MailMessage)
             ->subject("BookLoop - Your code: {$this->code}")
-            ->greeting("Hi {$notifiable->name}!")
+            ->greeting("Hi " . Md::escape($notifiable->name) . "!")
             ->line('Your BookLoop verification code is:')
             ->line("**{$this->code}**")
             ->line("It is valid for {$this->minutes} minutes. If you did not try to sign in, change your password.")

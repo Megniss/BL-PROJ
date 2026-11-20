@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -37,3 +38,9 @@ Artisan::command('admin:password {email}', function (string $email) {
 
     $this->info("Admin parole uzstādīta: {$user->name}");
 })->purpose('Uzstāda lietotājam admin paroli');
+
+// iknedēļas apkopojums pirmdienās 9:00 (vajag php artisan schedule:work vai cron)
+Schedule::command('bookloop:weekly-digest')
+    ->weeklyOn(1, '9:00')
+    ->timezone('Europe/Riga')
+    ->withoutOverlapping();

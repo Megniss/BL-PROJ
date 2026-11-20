@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Book;
+use App\Support\Md;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -31,9 +32,9 @@ class BookUnderReview extends Notification
     {
         return (new MailMessage)
             ->subject('BookLoop - Book Under Review')
-            ->greeting("Hi {$notifiable->name}!")
-            ->line("Your book **\"{$this->book->title}\"** by {$this->book->author} has been placed under review by an administrator.")
-            ->line("**Reason:** {$this->reason}")
+            ->greeting("Hi " . Md::escape($notifiable->name) . "!")
+            ->line("Your book **\"" . Md::escape($this->book->title) . "\"** by " . Md::escape($this->book->author) . " has been placed under review by an administrator.")
+            ->line("**Reason:** " . Md::escape($this->reason))
             ->line('It is temporarily hidden from the catalog while under review. You will be notified once the review is complete.')
             ->action('Go to BookLoop', url('/dashboard'))
             ->line('If you have questions, please contact support.');

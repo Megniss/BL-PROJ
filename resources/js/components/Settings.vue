@@ -72,6 +72,17 @@
         </div>
       </div>
 
+      <!-- e-pasti (iknedēļas apkopojums, pēc noklusējuma izslēgts) -->
+      <div class="settings-card mb-4">
+        <h2 class="settings-section-title">📬 {{ t('settings.emails') }}</h2>
+        <p class="text-muted small mb-3">{{ t('settings.digestText') }}</p>
+        <label class="privacy-toggle">
+          <span class="privacy-toggle-label">{{ t('settings.digest') }}</span>
+          <input type="checkbox" v-model="privacyForm.digest_opt_in" @change="savePrivacy" data-testid="digest-toggle" />
+          <span class="privacy-toggle-switch"></span>
+        </label>
+      </div>
+
       <!-- divpakāpju verifikācija -->
       <div class="settings-card mb-4">
         <h2 class="settings-section-title">🔐 {{ t('twofa.promptTitle') }}</h2>
@@ -206,7 +217,7 @@ export default {
       // e-pasts no servera, lai zina vai lietotājs to maina
       savedEmail: '',
 
-      privacyForm: { show_joined: true, show_swaps: true, show_swap_history: true, show_on_map: true },
+      privacyForm: { show_joined: true, show_swaps: true, show_swap_history: true, show_on_map: true, digest_opt_in: false },
 
       blockedUsers: [],
       blockedLoading: true,
@@ -236,6 +247,7 @@ export default {
     this.privacyForm.show_swaps = profile.data.show_swaps
     this.privacyForm.show_swap_history = profile.data.show_swap_history
     this.privacyForm.show_on_map = profile.data.show_on_map
+    this.privacyForm.digest_opt_in = profile.data.digest_opt_in
     this.isAdmin = profile.data.is_admin
     this.isOnlyAdmin = profile.data.is_only_admin
     this.location = { latitude: profile.data.latitude, longitude: profile.data.longitude }

@@ -1,0 +1,368 @@
+/* BookLoop e-pastu tēma, krāsas tādas pašas kā lapā (app.css) */
+/* šo failu laravel ieliek inline pie katra elementa, tāpēc strādā arī gmail */
+
+/* Base */
+
+body,
+body *:not(html):not(style):not(br):not(tr):not(code) {
+    box-sizing: border-box;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+    position: relative;
+}
+
+body {
+    -webkit-text-size-adjust: none;
+    background-color: #faf6ef;
+    color: #3d3630;
+    height: 100%;
+    line-height: 1.4;
+    margin: 0;
+    padding: 0;
+    width: 100% !important;
+}
+
+p,
+ul,
+ol,
+blockquote {
+    line-height: 1.4;
+    text-align: start;
+}
+
+a {
+    color: #3a6b3e;
+}
+
+a img {
+    border: none;
+}
+
+/* Typography */
+
+h1 {
+    color: #1a1612;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 22px;
+    font-weight: bold;
+    margin-top: 0;
+    text-align: start;
+}
+
+h2 {
+    color: #1a1612;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    text-align: start;
+}
+
+h3 {
+    font-size: 14px;
+    font-weight: bold;
+    margin-top: 0;
+    text-align: left;
+}
+
+p {
+    font-size: 16px;
+    line-height: 1.5em;
+    margin-top: 0;
+    text-align: left;
+}
+
+p.sub {
+    font-size: 12px;
+}
+
+img {
+    max-width: 100%;
+}
+
+blockquote {
+    border-left: 3px solid #e5ddd0;
+    color: #7a7068;
+    margin: 0 0 16px;
+    padding-left: 12px;
+}
+
+/* Layout */
+
+.wrapper {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    background-color: #faf6ef;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.content {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+/* Header */
+
+.header {
+    padding: 25px 0;
+    text-align: center;
+}
+
+.header a {
+    color: #3a6b3e;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 24px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+/* Logo */
+
+.logo {
+    height: 75px;
+    margin-top: 15px;
+    margin-bottom: 10px;
+    max-height: 75px;
+    width: 75px;
+}
+
+/* Body */
+
+.body {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    background-color: #faf6ef;
+    border-bottom: 1px solid #faf6ef;
+    border-top: 1px solid #faf6ef;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.inner-body {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 570px;
+    background-color: #ffffff;
+    border: 1px solid #e5ddd0;
+    border-radius: 8px;
+    margin: 0 auto;
+    padding: 0;
+    width: 570px;
+}
+
+.inner-body a {
+    word-break: break-word;
+}
+
+/* Subcopy */
+
+.subcopy {
+    border-top: 1px solid #e5ddd0;
+    margin-top: 25px;
+    padding-top: 25px;
+}
+
+.subcopy p {
+    font-size: 14px;
+}
+
+/* Footer */
+
+.footer {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 570px;
+    margin: 0 auto;
+    padding: 0;
+    text-align: center;
+    width: 570px;
+}
+
+.footer p {
+    color: #7a7068;
+    font-size: 12px;
+    text-align: center;
+}
+
+.footer a {
+    color: #7a7068;
+    text-decoration: underline;
+}
+
+/* Tables */
+
+.table table {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 30px auto;
+    width: 100%;
+}
+
+.table th {
+    border-bottom: 1px solid #e5ddd0;
+    margin: 0;
+    padding-bottom: 8px;
+}
+
+.table td {
+    color: #3d3630;
+    font-size: 15px;
+    line-height: 18px;
+    margin: 0;
+    padding: 10px 0;
+}
+
+.content-cell {
+    max-width: 100vw;
+    padding: 32px;
+}
+
+/* Buttons */
+
+.action {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 30px auto;
+    padding: 0;
+    text-align: center;
+    width: 100%;
+    float: unset;
+}
+
+.button {
+    -webkit-text-size-adjust: none;
+    border-radius: 6px;
+    color: #ffffff;
+    display: inline-block;
+    font-weight: bold;
+    overflow: hidden;
+    text-decoration: none;
+}
+
+.button-blue,
+.button-primary {
+    background-color: #3a6b3e;
+    border-bottom: 10px solid #3a6b3e;
+    border-left: 22px solid #3a6b3e;
+    border-right: 22px solid #3a6b3e;
+    border-top: 10px solid #3a6b3e;
+}
+
+.button-green,
+.button-success {
+    background-color: #3a6b3e;
+    border-bottom: 10px solid #3a6b3e;
+    border-left: 22px solid #3a6b3e;
+    border-right: 22px solid #3a6b3e;
+    border-top: 10px solid #3a6b3e;
+}
+
+.button-red,
+.button-error {
+    background-color: #b3261e;
+    border-bottom: 10px solid #b3261e;
+    border-left: 22px solid #b3261e;
+    border-right: 22px solid #b3261e;
+    border-top: 10px solid #b3261e;
+}
+
+/* Panels */
+
+.panel {
+    border-left: #3a6b3e solid 4px;
+    margin: 21px 0;
+}
+
+.panel-content {
+    background-color: #e8f0e9;
+    color: #3d3630;
+    padding: 16px;
+}
+
+.panel-content p {
+    color: #3d3630;
+}
+
+.panel-item {
+    padding: 0;
+}
+
+.panel-item p:last-of-type {
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* Grāmatu saraksts (iknedēļas apkopojums) */
+
+.book-list {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 0 0 24px;
+    width: 100%;
+}
+
+.book-row td {
+    border-bottom: 1px solid #e5ddd0;
+    padding: 10px 0;
+    vertical-align: middle;
+}
+
+.book-rank {
+    color: #c47c28;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 18px;
+    font-weight: bold;
+    width: 32px;
+}
+
+.book-cover {
+    width: 52px;
+}
+
+.book-cover img {
+    border-radius: 3px;
+    display: block;
+}
+
+.book-title {
+    color: #1a1612;
+    font-size: 15px;
+    font-weight: bold;
+    line-height: 1.3;
+    margin: 0;
+}
+
+.book-meta {
+    color: #7a7068;
+    font-size: 13px;
+    line-height: 1.3;
+    margin: 2px 0 0;
+}
+
+.book-badge {
+    color: #3a6b3e;
+    font-size: 13px;
+    font-weight: bold;
+    padding-left: 8px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* Utilities */
+
+.break-all {
+    word-break: break-all;
+}

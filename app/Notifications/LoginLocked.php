@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Support\Md;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -19,7 +20,7 @@ class LoginLocked extends Notification
     {
         return (new MailMessage)
             ->subject('BookLoop - Login Attempt Warning')
-            ->greeting("Hi {$notifiable->name}!")
+            ->greeting("Hi " . Md::escape($notifiable->name) . "!")
             ->line('We detected too many failed login attempts on your account.')
             ->line("For your security, login has been temporarily blocked for **{$this->minutes} minutes**.")
             ->line('If this was you, simply wait and try again. If it was not you, consider changing your password after you regain access.')

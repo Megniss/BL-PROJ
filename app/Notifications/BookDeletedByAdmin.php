@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Support\Md;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -33,9 +34,9 @@ class BookDeletedByAdmin extends Notification
     {
         return (new MailMessage)
             ->subject('BookLoop - Book Removed')
-            ->greeting("Hi {$notifiable->name}!")
-            ->line("Your book **\"{$this->bookTitle}\"** by {$this->bookAuthor} has been removed by an administrator.")
-            ->line("**Reason:** {$this->reason}")
+            ->greeting("Hi " . Md::escape($notifiable->name) . "!")
+            ->line("Your book **\"" . Md::escape($this->bookTitle) . "\"** by " . Md::escape($this->bookAuthor) . " has been removed by an administrator.")
+            ->line("**Reason:** " . Md::escape($this->reason))
             ->line('If you believe this was a mistake, please contact support.')
             ->action('Go to BookLoop', url('/dashboard'));
     }

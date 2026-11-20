@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\User;
+use App\Support\Md;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -34,9 +35,9 @@ class NewMessage extends Notification implements ShouldQueue
     {
         return (new MailMessage)
             ->subject("BookLoop - New message from {$this->sender->name}")
-            ->greeting("Hi {$notifiable->name}!")
-            ->line("{$this->sender->name} sent you a message:")
-            ->line("> " . mb_strimwidth($this->preview, 0, 120, '…'))
+            ->greeting("Hi " . Md::escape($notifiable->name) . "!")
+            ->line(Md::escape($this->sender->name) . " sent you a message:")
+            ->line("\"" . Md::escape(mb_strimwidth($this->preview, 0, 120, "…")) . "\"")
             ->action('Reply on BookLoop', url('/messages'))
             ->line('Thanks for using BookLoop!');
     }

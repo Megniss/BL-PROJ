@@ -38,6 +38,7 @@ class E2eSeeder extends Seeder
         $zane = $this->user('Zane Ozoliņa', 'zane@e2e.test');
         $this->user('Rūta Lapa', 'reset@e2e.test');
         $this->user('Oskars Vējš', 'twofaoff@e2e.test', extra: ['two_factor_enabled' => true]);
+        $this->user('Marta Egle', 'digest@e2e.test');
 
         $this->book($edgars, 'Kaija', 'Cehovs', 'Detektīvs');
         $this->book($zane, 'Fausts', 'Gete', 'Detektīvs');

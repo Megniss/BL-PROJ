@@ -73,6 +73,8 @@ class User extends Authenticatable
             'two_factor_enabled' => 'boolean',
             'two_factor_prompted' => 'boolean',
             'show_on_map' => 'boolean',
+            'digest_opt_in' => 'boolean',
+            'digest_sent_at' => 'datetime',
             'latitude' => 'float',
             'longitude' => 'float',
         ];

@@ -43,6 +43,7 @@ class ProfileController extends Controller
             'show_swaps' => $user->show_swaps,
             'show_swap_history' => $user->show_swap_history,
             'show_on_map' => $user->show_on_map,
+            'digest_opt_in' => (bool) $user->digest_opt_in,
             'is_admin' => $user->is_admin,
             'is_only_admin' => $user->is_admin && !$this->hasOtherAdmins($user),
             'latitude' => $user->latitude,
@@ -131,19 +132,28 @@ class ProfileController extends Controller
             'show_swaps' => ['required', 'boolean'],
             'show_swap_history' => ['required', 'boolean'],
             'show_on_map' => ['sometimes', 'boolean'],
+            'digest_opt_in' => ['sometimes', 'boolean'],
         ]);
 
         $user->show_joined = $data['show_joined'];
         $user->show_swaps = $data['show_swaps'];
         $user->show_swap_history = $data['show_swap_history'];
-        $user->show_on_map = $data['show_on_map'] ?? $user->show_on_map;
+        // šos maina tikai ja atsūtīti, citādi paliek kā bija
+        if (array_key_exists('show_on_map', $data)) {
+            $user->show_on_map = $data['show_on_map'];
+        }
+        if (array_key_exists('digest_opt_in', $data)) {
+            $user->digest_opt_in = $data['digest_opt_in'];
+        }
         $user->save();
+        $user->refresh();
 
         return response()->json([
             'show_joined' => $user->show_joined,
             'show_swaps' => $user->show_swaps,
             'show_swap_history' => $user->show_swap_history,
             'show_on_map' => $user->show_on_map,
+            'digest_opt_in' => $user->digest_opt_in,
         ]);
     }
 

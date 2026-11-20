@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\SwapRequest;
+use App\Support\Md;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -34,10 +35,10 @@ class SwapDeclined extends Notification implements ShouldQueue
     {
         return (new MailMessage)
             ->subject('BookLoop - Swap Request Declined')
-            ->greeting("Hi {$notifiable->name}!")
+            ->greeting("Hi " . Md::escape($notifiable->name) . "!")
             ->line("Unfortunately your swap request was declined.")
-            ->line("You wanted: **{$this->swap->wantedBook->title}** by {$this->swap->wantedBook->author}")
-            ->line("Your book **{$this->swap->offeredBook->title}** is available again.")
+            ->line("You wanted: **" . Md::escape($this->swap->wantedBook->title) . "** by " . Md::escape($this->swap->wantedBook->author))
+            ->line("Your book **" . Md::escape($this->swap->offeredBook->title) . "** is available again.")
             ->action('Browse Other Books', url('/browse'))
             ->line('Thanks for using BookLoop!');
     }
