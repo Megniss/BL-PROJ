@@ -7,14 +7,17 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
-// iknedēļas apkopojuma dati
+// dati e-pastiem (katrs veids ir atsevišķs e-pasts, sk. TYPES)
 // kopējie saraksti ir vienādi visiem, tāpēc tos rēķina vienreiz (global),
 // "tuvumā" katram lietotājam savs (nearby)
 class Digest
 {
     public const DAYS = 30;
     public const NEARBY_KM = 25;
-    public const LIMIT = 5;
+    public const LIMIT = 6;
+
+    // e-pastu veidi: jaunas grāmatas tuvumā, visvairāk samainītās, populārākie autori, labāk novērtētās
+    public const TYPES = ['nearby', 'popular', 'authors', 'rated'];
 
     // šīs grāmatas nerādām (admins dzēsa vai pārbauda)
     private const HIDDEN = ['Removed', 'UnderReview'];
@@ -147,10 +150,10 @@ class Digest
             ->all();
     }
 
-    // vai vispār ir ko sūtīt
-    public static function isEmpty(array $global, array $nearby): bool
+    // saraksts vienam e-pasta veidam, tukšs = nesūtām
+    public static function items(string $type, User $user, array $global): array
     {
-        return $global['popular'] === [] && $global['authors'] === [] && $global['rated'] === [] && $nearby === [];
+        return $type === 'nearby' ? self::nearby($user) : $global[$type];
     }
 
     // vākiem vajag pilnu adresi, citādi e-pastā bilde neatvērsies

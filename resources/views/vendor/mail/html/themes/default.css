@@ -338,67 +338,62 @@ blockquote {
     text-align: center;
 }
 
-/* Grāmatu sadaļas (iknedēļas apkopojums) - 2 kolonnas, telefonā viena zem otras */
+/* Grāmatu kartītes - datorā 3 blakus, telefonā viena zem otras (book-grid) */
 
-.col h2 {
-    font-size: 17px;
-    margin: 0 0 4px;
+.cards {
+    margin: 20px 0 8px;
 }
 
-.book-list {
-    -premailer-cellpadding: 0;
-    -premailer-cellspacing: 0;
-    -premailer-width: 100%;
-    margin: 0 0 24px;
-    width: 100%;
+.card-img {
+    border-radius: 4px;
 }
 
-.book-row td {
-    border-bottom: 1px solid #e5ddd0;
-    padding: 9px 0;
-    vertical-align: top;
+.card-ph {
+    background-color: #e8f0e9;
+    border-radius: 4px;
 }
 
-.book-rank {
+.card-body {
+    padding-top: 8px;
+    text-align: center;
+}
+
+.card-rank {
     color: #c47c28;
     font-family: Georgia, 'Times New Roman', serif;
-    font-size: 16px;
+    font-size: 13px;
     font-weight: bold;
-    width: 26px;
+    line-height: 1.2;
+    margin: 0 0 2px;
+    text-align: center;
 }
 
-.book-cover {
-    width: 48px;
-}
-
-.book-cover img {
-    border-radius: 3px;
-    display: block;
-}
-
-.book-title {
+.card-title {
     color: #1a1612;
     font-size: 14px;
     font-weight: bold;
     line-height: 1.3;
     margin: 0;
+    text-align: center;
     word-break: break-word;
 }
 
-.book-meta {
+.card-meta {
     color: #7a7068;
     font-size: 12px;
     line-height: 1.3;
     margin: 2px 0 0;
+    text-align: center;
     word-break: break-word;
 }
 
-.book-badge {
+.card-badge {
     color: #3a6b3e;
     font-size: 12px;
     font-weight: bold;
     line-height: 1.3;
     margin: 3px 0 0;
+    text-align: center;
 }
 
 /* Utilities */

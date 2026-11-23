@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\DigestController;
+use App\Support\Digest;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlockController;
@@ -38,8 +39,9 @@ Route::post('/forgot-password', [PasswordResetController::class, 'sendLink'])->m
 Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:5,1');
 
 // gmail/outlook "unsubscribe" poga (one-click POST), saite parakstīta
-Route::post('/email/unsubscribe/{user}', [DigestController::class, 'unsubscribeOneClick'])
+Route::post('/email/unsubscribe/{user}/{type}', [DigestController::class, 'unsubscribeOneClick'])
     ->middleware(['signed', 'throttle:20,1'])
+    ->whereIn('type', Digest::TYPES)
     ->name('digest.unsubscribe.oneclick');
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -50,6 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update']);
     Route::delete('/profile', [ProfileController::class, 'destroy'])->middleware('throttle:5,1');
     Route::patch('/profile/privacy', [ProfileController::class, 'updatePrivacy']);
+    Route::patch('/profile/emails', [ProfileController::class, 'updateEmails']);
     Route::post('/two-factor/send', [TwoFactorController::class, 'sendEnableCode'])->middleware('throttle:3,1');
     Route::post('/two-factor/enable', [TwoFactorController::class, 'enable'])->middleware('throttle:10,1');
     Route::post('/two-factor/disable', [TwoFactorController::class, 'disable']);

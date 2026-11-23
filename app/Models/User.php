@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Digest;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -46,6 +47,24 @@ class User extends Authenticatable
         return $this->latitude !== null && $this->longitude !== null;
     }
 
+    public function emailSubscriptions(): HasMany
+    {
+        return $this->hasMany(EmailSubscription::class);
+    }
+
+    // kuri e-pasti ieslēgti, piem. ['nearby' => true, 'popular' => false, ...]
+    public function emailSettings(): array
+    {
+        $on = $this->emailSubscriptions()->pluck('type')->all();
+
+        $out = [];
+        foreach (Digest::TYPES as $type) {
+            $out[$type] = in_array($type, $on);
+        }
+
+        return $out;
+    }
+
     // vai ar pašreizējo tokenu ir ievadīta admin parole
     public function adminUnlocked(): bool
     {
@@ -73,8 +92,6 @@ class User extends Authenticatable
             'two_factor_enabled' => 'boolean',
             'two_factor_prompted' => 'boolean',
             'show_on_map' => 'boolean',
-            'digest_opt_in' => 'boolean',
-            'digest_sent_at' => 'datetime',
             'latitude' => 'float',
             'longitude' => 'float',
         ];

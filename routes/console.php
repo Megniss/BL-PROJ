@@ -39,8 +39,12 @@ Artisan::command('admin:password {email}', function (string $email) {
     $this->info("Admin parole uzstādīta: {$user->name}");
 })->purpose('Uzstāda lietotājam admin paroli');
 
-// iknedēļas apkopojums pirmdienās 9:00 (vajag php artisan schedule:work vai cron)
-Schedule::command('bookloop:weekly-digest')
-    ->weeklyOn(1, '9:00')
-    ->timezone('Europe/Riga')
-    ->withoutOverlapping();
+// katrs e-pasts savā dienā, lai nesanāk 4 vienā rītā (vajag php artisan schedule:work vai cron)
+// 1 = pirmdiena, 3 = trešdiena, 5 = piektdiena, 6 = sestdiena
+$emailDays = ['nearby' => 1, 'popular' => 3, 'authors' => 5, 'rated' => 6];
+foreach ($emailDays as $type => $day) {
+    Schedule::command("bookloop:emails $type")
+        ->weeklyOn($day, '9:00')
+        ->timezone('Europe/Riga')
+        ->withoutOverlapping();
+}

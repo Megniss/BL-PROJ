@@ -72,15 +72,21 @@
         </div>
       </div>
 
-      <!-- e-pasti (iknedēļas apkopojums, pēc noklusējuma izslēgts) -->
+      <!-- e-pasti, katrs veids atsevišķi, pēc noklusējuma viss izslēgts -->
       <div class="settings-card mb-4">
         <h2 class="settings-section-title">📬 {{ t('settings.emails') }}</h2>
-        <p class="text-muted small mb-3">{{ t('settings.digestText') }}</p>
-        <label class="privacy-toggle">
-          <span class="privacy-toggle-label">{{ t('settings.digest') }}</span>
-          <input type="checkbox" v-model="privacyForm.digest_opt_in" @change="savePrivacy" data-testid="digest-toggle" />
-          <span class="privacy-toggle-switch"></span>
-        </label>
+        <p class="text-muted small mb-3">{{ t('settings.emailsText') }}</p>
+        <div class="d-flex flex-column gap-2">
+          <label v-for="type in emailTypes" :key="type" class="privacy-toggle">
+            <span class="privacy-toggle-label">
+              {{ t('settings.email.' + type) }}
+              <span class="d-block text-muted small">{{ t('settings.email.' + type + 'Text') }}</span>
+              <span v-if="type === 'nearby' && !location.latitude" class="d-block small" style="color: var(--amber)">{{ t('settings.email.needsLocation') }}</span>
+            </span>
+            <input type="checkbox" v-model="emails[type]" @change="saveEmails(type)" :data-testid="'email-toggle-' + type" />
+            <span class="privacy-toggle-switch"></span>
+          </label>
+        </div>
       </div>
 
       <!-- divpakāpju verifikācija -->
@@ -217,7 +223,11 @@ export default {
       // e-pasts no servera, lai zina vai lietotājs to maina
       savedEmail: '',
 
-      privacyForm: { show_joined: true, show_swaps: true, show_swap_history: true, show_on_map: true, digest_opt_in: false },
+      privacyForm: { show_joined: true, show_swaps: true, show_swap_history: true, show_on_map: true },
+
+      // tādā pašā secībā kā App\Support\Digest::TYPES
+      emailTypes: ['nearby', 'popular', 'authors', 'rated'],
+      emails: { nearby: false, popular: false, authors: false, rated: false },
 
       blockedUsers: [],
       blockedLoading: true,
@@ -247,7 +257,7 @@ export default {
     this.privacyForm.show_swaps = profile.data.show_swaps
     this.privacyForm.show_swap_history = profile.data.show_swap_history
     this.privacyForm.show_on_map = profile.data.show_on_map
-    this.privacyForm.digest_opt_in = profile.data.digest_opt_in
+    this.emails = { ...this.emails, ...profile.data.emails }
     this.isAdmin = profile.data.is_admin
     this.isOnlyAdmin = profile.data.is_only_admin
     this.location = { latitude: profile.data.latitude, longitude: profile.data.longitude }
@@ -288,6 +298,17 @@ export default {
       try {
         await axios.patch('/api/profile/privacy', this.privacyForm)
       } catch { /* ignore */ }
+    },
+
+    // sūta tikai to vienu slēdzi, ko nospieda
+    async saveEmails(type) {
+      try {
+        const { data } = await axios.patch('/api/profile/emails', { [type]: this.emails[type] })
+        this.emails = data
+      } catch {
+        this.emails[type] = !this.emails[type]
+        showToast(this.t('dash.genericError'), 'error')
+      }
     },
 
     async fetchBlocked() {

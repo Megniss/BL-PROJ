@@ -118,7 +118,7 @@ Laravel apstrādā REST API loģiku, Vue veido lietotāja saskarni un komunicē 
 ### 11. Iestatījumu lapa
 - Vārda, e-pasta un paroles maiņa (e-pastu un paroli var mainīt tikai ar pašreizējo paroli, pēc tam citas ierīces tiek izlogotas)
 - Privātuma iestatījumi: vai rādīt pievienošanās datumu, apmaiņu skaitu, apmaiņu vēsturi un grāmatas kartē
-- **E-pasti:** iknedēļas grāmatu apkopojuma ieslēgšana/izslēgšana (pēc noklusējuma izslēgts, sk. sadaļu 15)
+- **E-pasti:** 4 atsevišķi slēdži - jaunas grāmatas tuvumā, visvairāk samainītās, populārākie autori, labāk novērtētās (pēc noklusējuma viss izslēgts, sk. sadaļu 15)
 - Divpakāpju pieteikšanās ieslēgšana/izslēgšana
 - Atrašanās vietas izvēle kartē
 - Bloķēto lietotāju pārvaldība
@@ -187,21 +187,21 @@ Pilns LV/EN tulkojums, tumšā režīma atbalsts.
   - `SwapUnavailable` - otrs lietotājs izdzēsa kontu, apmaiņa vairs nav iespējama (tikai paziņojums)
   - `LoginLocked` - 5 neveiksmīgi pieteikšanās mēģinājumi, konts bloķēts 15 min (tikai e-pasts)
   - `TwoFactorCode` - 2FA kods (tikai e-pasts)
-  - `WeeklyDigest` - iknedēļas apkopojums, tikai tiem, kas to ieslēguši (sk. zemāk)
+  - `DigestEmail` - 4 atsevišķi grāmatu e-pasti, katrs tikai tiem, kas to ieslēguši (sk. zemāk)
 
 #### E-pastu veidnes
 Visi e-pasti izmanto Laravel Markdown mail veidnes, kas pārveidotas BookLoop stilā (`resources/views/vendor/mail/`):
 - **Tēma** `html/themes/default.css` - tās pašas krāsas kā lapā (zaļš `#3a6b3e`, krēmīgs fons, Georgia virsraksti)
 - **Izkārtojums ar tabulām**, nevis flex/grid - tā strādā arī Outlook Classic, kas e-pastus zīmē ar Word
 - **CSS inline** - Laravel pirms sūtīšanas ieliek stilus pie katra elementa, jo Gmail izmet `<style>` bloku
-- **Responsīvs režģis** (max 640px) - uz datora apkopojuma sadaļas ir 2 blakus (2×2), telefonā viena zem otras pa visu platumu
-  - kolonnas ir `inline-block` div ar `max-width: 284px` - ja nav vietas, tās pašas pāriet nākamajā rindā (strādā arī Gmail bez media query)
-  - Outlook Classic neprot inline-block, tam ir slēpta tabula `<!--[if mso]>...<![endif]-->`, ko citi klienti neredz
-  - media query (`max-width: 620px`) telefonā izstiepj kolonnas pa visu platumu, poga kļūst pilna platuma
-  - augšā 3 statistikas kartītes vienā rindā (jaunas grāmatas, apmaiņas, pieejamās) - parasta tabula, paliek blakus arī telefonā
+- **Responsīvs režģis** (max 640px) - uz datora grāmatu kartītes ir 3 blakus (vāks augšā), telefonā viena zem otras (vāks pa kreisi, teksts pa labi)
+  - kartītes ir `inline-block` div ar `max-width: 190px` - ja nav vietas, tās pašas pāriet nākamajā rindā (strādā arī Gmail bez media query)
+  - Outlook Classic neprot inline-block, tam ir slēpta tabula `<!--[if mso]>...<![endif]-->` ar 3 šūnām rindā, ko citi klienti neredz
+  - media query (`max-width: 620px`) telefonā izstiepj kartītes pa visu platumu, poga kļūst pilna platuma
+  - "Most swapped" e-pastā augšā 3 nedēļas skaitļi vienā rindā (jaunas grāmatas, apmaiņas, pieejamās) - parasta tabula, paliek blakus arī telefonā
 - **Dark mode** - `color-scheme: light dark` un `@media (prefers-color-scheme: dark)` krāsas (Apple Mail, iOS, Outlook.com). Gmail šo ignorē un krāsas apgriež pats
 - **Logo kā teksts** (📚 BookLoop), nevis bilde - nav jāielādē no servera un tumšajā režīmā neizskatās dīvaini
-- `html/book-columns.blade.php` - sadaļu režģis ar grāmatu sarakstiem (numurs, vāks, autors, "badge")
+- `html/book-grid.blade.php` - grāmatu kartītes (vāks vai 📖, numurs, nosaukums, autors, "badge")
 - `html/stats.blade.php` - statistikas kartītes
 - Katrai komponentei ir arī `text/` versija vienkāršajam teksta e-pastam
 - Lietotāja teksts (vārds, grāmatas nosaukums, ziņa) e-pastos tiek escapots ar `App\Support\Md`, lai `[teksts](saite)` nekļūst par īstu saiti
@@ -209,40 +209,51 @@ Visi e-pasti izmanto Laravel Markdown mail veidnes, kas pārveidotas BookLoop st
 | Klients | Atbalsts |
 |---|---|
 | Mailtrap sandbox | ✅ ķer visus e-pastus, tab **HTML Check** rāda atbalstu pa klientiem |
-| Gmail (web + app) | ✅ apkopojums ~41 KB (Gmail apgriež virs ~102 KB) |
+| Gmail (web + app) | ✅ katrs e-pasts krietni zem ~102 KB (virs tā Gmail apgriež) |
 | Outlook Classic | ✅ tabulas; stūri nav noapaļoti |
 | New Outlook / Outlook.com | ✅ |
 | Apple Mail / iOS | ✅ ar dark mode |
 
 > Mailtrap **sandbox** īstiem adresātiem neko nesūta. Lai redzētu e-pastu īstā Gmail/Outlook, uz brīdi jāsūta caur īstu SMTP (piem. Mailtrap Email Sending ar savu domēnu). Vāku bildes no `localhost` īstā e-pasta klientā neielādēsies - vajag publisku `APP_URL`.
 
-**Priekšskatījums pārlūkā** (tikai `APP_ENV=local`, neko nesūta):
-- http://localhost:8000/dev/mail/digest - apkopojums (`?user=ID` konkrētam lietotājam)
+**Priekšskatījums pārlūkā** (tikai `APP_ENV=local`, neko nesūta, `?user=ID` konkrētam lietotājam):
+- http://localhost:8000/dev/mail/digest/nearby - jaunas grāmatas tuvumā
+- http://localhost:8000/dev/mail/digest/popular - visvairāk samainītās
+- http://localhost:8000/dev/mail/digest/authors - populārākie autori
+- http://localhost:8000/dev/mail/digest/rated - labāk novērtētās
 - http://localhost:8000/dev/mail/notification - parasts paziņojums (jauna ziņa)
 
-#### Iknedēļas apkopojums (`WeeklyDigest`)
-Saturs:
-- 📍 **Jaunas grāmatas tuvumā** - pēdējās 7 dienās pievienotas, 25 km rādiusā (bez savām un bloķēto lietotāju grāmatām). Ja lietotājam nav atrašanās vietas, aicina to pievienot
-- 🔁 **Visvairāk samainītās grāmatas** - pēdējās 30 dienās (ja nav, tad visu laiku)
-- ✍️ **Populārākie autori** - pēc apmaiņu skaita
-- ⭐ **Labāk novērtētās** - vidējais vērtējums, vismaz 2 vērtējumi
+#### Grāmatu e-pasti (`DigestEmail`)
+Katra tēma ir **atsevišķs e-pasts** ar savu tēmu (subject), savu dienu un savu ieslēgšanas slēdzi:
+
+| Veids | E-pasts | Kad | Saturs |
+|---|---|---|---|
+| `nearby` | 📍 New books near you | pirmdienās | pēdējās 7 dienās pievienotas, 25 km rādiusā (bez savām un bloķēto lietotāju grāmatām) |
+| `popular` | 🔁 Most swapped books | trešdienās | pēdējās 30 dienās (ja nav, tad visu laiku) + nedēļas skaitļi |
+| `authors` | ✍️ Popular authors | piektdienās | autori pēc apmaiņu skaita |
+| `rated` | ⭐ Top rated books | sestdienās | vidējais vērtējums, vismaz 2 vērtējumi |
+
+- Katrā e-pastā līdz 6 grāmatām (datorā 3×2)
 - Admina dzēstās vai pārbaudāmās grāmatas netiek rādītas
+- Visiem veidiem viens skats `resources/views/mail/digest.blade.php`, teksti ir `DigestEmail::COPY`
 
 GDPR prasības:
-- Sūta **tikai** tiem, kas to ieslēguši iestatījumos (`users.digest_opt_in`, pēc noklusējuma `false`)
-- Katrā e-pastā ir saite **"Unsubscribe"** - parakstīta saite (`/email/unsubscribe/{id}?signature=...`), strādā bez ielogošanās
-- `List-Unsubscribe` + `List-Unsubscribe-Post` headeri - Gmail un Outlook rāda pogu "Unsubscribe" pie e-pasta (one-click POST uz `/api/email/unsubscribe/{id}`)
+- Sūta **tikai** tiem, kas konkrēto e-pastu ieslēguši iestatījumos (tabula `email_subscriptions`, pēc noklusējuma nekas nav ieslēgts)
+- Katrā e-pastā ir saite **"Unsubscribe from these"** - atrakstās tikai no šī veida, pārējie paliek. Parakstīta saite (`/email/unsubscribe/{id}/{veids}?signature=...`), strādā bez ielogošanās
+- `List-Unsubscribe` + `List-Unsubscribe-Post` headeri - Gmail un Outlook rāda pogu "Unsubscribe" pie e-pasta (one-click POST uz `/api/email/unsubscribe/{id}/{veids}`)
+- Dzēšot kontu, visas piekrišanas tiek dzēstas
 
 Sūtīšana:
 ```bash
-php artisan bookloop:weekly-digest                       # visiem, kas ieslēguši
-php artisan bookloop:weekly-digest --user=epasts@x.lv    # tikai vienam
-php artisan bookloop:weekly-digest --force               # arī ja šonedēļ jau sūtīts
+php artisan bookloop:emails                              # visi veidi, katrs kā atsevišķs e-pasts
+php artisan bookloop:emails popular                      # tikai viens veids (nearby, popular, authors, rated)
+php artisan bookloop:emails popular --user=epasts@x.lv   # tikai vienam lietotājam
+php artisan bookloop:emails --force                      # arī ja šonedēļ jau sūtīts
 php artisan schedule:work                                # palaiž scheduler lokāli
 ```
-- Scheduler (`routes/console.php`) to palaiž **pirmdienās 9:00** (Rīgas laiks). Serverī vajag cron ar `php artisan schedule:run` katru minūti
-- Vienam lietotājam ne biežāk kā reizi 6 dienās (`users.digest_sent_at`), ja vien nav `--force`
-- Ja nav ko rādīt (nav apmaiņu, vērtējumu un jaunumu tuvumā), e-pasts netiek sūtīts
+- Scheduler (`routes/console.php`) katru veidu palaiž **savā dienā 9:00** (Rīgas laiks), lai lietotājs nedabū 4 e-pastus vienā rītā. Serverī vajag cron ar `php artisan schedule:run` katru minūti
+- Katru veidu vienam lietotājam ne biežāk kā reizi 6 dienās (`email_subscriptions.sent_at`), ja vien nav `--force`
+- Ja konkrētajā e-pastā nav ko rādīt (piem. nav atrašanās vietas vai jaunu grāmatu tuvumā), tas netiek sūtīts
 - Kopējie saraksti tiek aprēķināti vienreiz, "tuvumā" katram lietotājam atsevišķi
 
 ---
@@ -250,7 +261,8 @@ php artisan schedule:work                                # palaiž scheduler lok
 ## Datubāzes struktūra
 
 ```
-users                   - lietotāju konti (is_admin, is_blocked, admin_password, atrašanās vieta, 2FA, digest_opt_in)
+users                   - lietotāju konti (is_admin, is_blocked, admin_password, atrašanās vieta, 2FA)
+email_subscriptions     - kurus e-pastus lietotājs ieslēdzis (type: nearby/popular/authors/rated, sent_at)
 books                   - grāmatu katalogs
 swap_requests           - apmaiņas pieprasījumi
 messages                - ziņojumi starp lietotājiem (arī bildes)
@@ -321,13 +333,13 @@ Lietotne ir instalējama kā progresīvā tīmekļa lietotne (PWA):
 ```
 app/Http/Controllers/   ← 14 API kontrolieri (ieskaitot AdminController, AdminAuthController, TwoFactorController)
 app/Http/Middleware/    ← AdminMiddleware, SecurityHeaders
-app/Models/             ← 11 modeļi (User, Book, SwapRequest, Message, Rating, Block, Complaint, ComplaintMessage, AdminLog, Language, TranslationOverride)
+app/Models/             ← 12 modeļi (User, Book, SwapRequest, Message, Rating, Block, Complaint, ComplaintMessage, AdminLog, Language, TranslationOverride, EmailSubscription)
 app/Notifications/      ← 8 paziņojumi (sk. sadaļu 15)
-app/Mail/               ← WeeklyDigest (iknedēļas apkopojums)
-app/Console/Commands/   ← bookloop:weekly-digest, bookloop:load-test
-app/Support/            ← TwoFactor (2FA), Distance (attālums), Chat (čats), Digest (apkopojuma dati), Md (markdown escape)
+app/Mail/               ← DigestEmail (grāmatu e-pasti, viens veids = viens e-pasts)
+app/Console/Commands/   ← bookloop:emails, bookloop:load-test
+app/Support/            ← TwoFactor (2FA), Distance (attālums), Chat (čats), Digest (e-pastu dati), Md (markdown escape)
 resources/views/vendor/mail/ ← e-pastu veidnes un tēma (BookLoop stils)
-resources/views/mail/   ← apkopojuma e-pasta saturs
+resources/views/mail/   ← grāmatu e-pastu saturs (digest.blade.php, kopīgs visiem veidiem)
 resources/js/
   components/           ← 31 Vue komponente (ieskaitot Admin.vue, BooksMap.vue, Messages.vue)
   router/router.js      ← Vue Router (ar admin maršrutu un sardzi)
@@ -401,7 +413,7 @@ Lapa atveras **http://localhost:8080**. Pirmā būve aizņem dažas minūtes.
 - Datubāze un augšupielādētās bildes glabājas Docker "volume" un saglabājas arī pēc restarta.
 - E-pasti (arī 2FA kodi) tiek sūtīti uz Mailtrap sandbox iesūtni (iestatījumi `.env.docker`), tāpat kā lokāli.
 - Ja `.env` ir `VITE_MAPTILER_KEY`, karte izmanto MapTiler, citādi OpenStreetMap.
-- Docker konteinerī scheduler nestrādā, apkopojumu var nosūtīt ar roku: `docker compose exec app php artisan bookloop:weekly-digest`
+- Docker konteinerī scheduler nestrādā, grāmatu e-pastus var nosūtīt ar roku: `docker compose exec app php artisan bookloop:emails`
 
 ```bash
 docker compose down      # apturēt

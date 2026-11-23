@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\WeeklyDigest;
+use App\Mail\DigestEmail;
 use App\Models\User;
 use App\Support\Digest;
 use Illuminate\Http\Request;
@@ -10,28 +10,32 @@ use Illuminate\Http\Request;
 class DigestController extends Controller
 {
     // saite no e-pasta apakšas - strādā bez ielogošanās, jo saite ir parakstīta
-    public function unsubscribe(User $user)
+    // atrakstās tikai no šī veida, pārējie e-pasti paliek kā bija
+    public function unsubscribe(User $user, string $type)
     {
-        $user->forceFill(['digest_opt_in' => false])->save();
+        $user->emailSubscriptions()->where('type', $type)->delete();
 
-        return view('digest-unsubscribed');
+        return view('digest-unsubscribed', ['title' => DigestEmail::COPY[$type]['title']]);
     }
 
     // gmail/outlook "unsubscribe" poga sūta POST (RFC 8058)
-    public function unsubscribeOneClick(User $user)
+    public function unsubscribeOneClick(User $user, string $type)
     {
-        $user->forceFill(['digest_opt_in' => false])->save();
+        $user->emailSubscriptions()->where('type', $type)->delete();
 
         return response()->noContent();
     }
 
     // tikai lokāli: apskatīt e-pastu pārlūkā, neko nesūtot
-    public function preview(Request $request)
+    // /dev/mail/digest/popular, ?user=ID konkrētam lietotājam
+    public function preview(Request $request, string $type = 'popular')
     {
         $user = $request->query('user')
             ? User::findOrFail($request->query('user'))
             : (User::whereNotNull('latitude')->whereNull('deleted_at')->first() ?? User::firstOrFail());
 
-        return new WeeklyDigest($user, Digest::global(), Digest::nearby($user));
+        $global = Digest::global();
+
+        return new DigestEmail($user, $type, Digest::items($type, $user, $global), $global['week']);
     }
 }

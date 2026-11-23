@@ -22,16 +22,32 @@ padding: 20px !important;
 }
 }
 
-/* telefonā sadaļas pa visu platumu viena zem otras */
-/* bez media query tās arī pāriet uz leju, tikai paliek 284px platas */
+/* telefonā kartītes pa visu platumu viena zem otras, vāks pa kreisi, teksts pa labi */
+/* bez media query tās arī pāriet uz leju, tikai paliek 190px platas un centrā */
 @media only screen and (max-width: 620px) {
-.col {
+.card {
 display: block !important;
 max-width: 100% !important;
 }
 
-.col-pad {
-padding: 0 !important;
+.card-pad {
+padding: 12px 0 !important;
+border-bottom: 1px solid #e5ddd0 !important;
+overflow: hidden !important;
+}
+
+.card-cover {
+float: left !important;
+margin-right: 14px !important;
+}
+
+.card-body {
+padding-top: 4px !important;
+overflow: hidden !important;
+}
+
+.card-body p {
+text-align: left !important;
 }
 }
 
@@ -57,27 +73,27 @@ background-color: #262019 !important;
 border-color: #3d3630 !important;
 }
 
-p, td, li, .book-meta, .stat-label, .panel-content, .panel-content p {
+p, td, li, .card-meta, .stat-label, .panel-content, .panel-content p {
 color: #e5ddd0 !important;
 }
 
-h1, h2, .book-title {
+h1, h2, .card-title {
 color: #faf6ef !important;
 }
 
-a, .header a, .book-badge, .stat-value {
+a, .header a, .card-badge, .stat-value {
 color: #8fc493 !important;
 }
 
-.book-rank {
+.card-rank {
 color: #e0a256 !important;
 }
 
-.stat {
+.stat, .card-ph {
 background-color: #2d3a2e !important;
 }
 
-.book-row td {
+.card-pad {
 border-color: #3d3630 !important;
 }
 

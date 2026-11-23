@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Mail\WeeklyDigest;
+use App\Mail\DigestEmail;
 use App\Models\Block;
 use App\Models\Book;
 use App\Models\SwapRequest;
@@ -13,20 +13,25 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
-// iknedēļas apkopojums: piekrišana, saturs, atrakstīšanās
+// e-pasti pa veidiem: piekrišana katram atsevišķi, saturs, atrakstīšanās
 class DigestTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function subscriber(array $extra = []): User
+    private function subscriber(array $types, array $extra = []): User
     {
         $user = User::factory()->create();
-        $user->forceFill(['digest_opt_in' => true, ...$extra])->save();
+        if ($extra) {
+            $user->forceFill($extra)->save();
+        }
+        foreach ($types as $type) {
+            $user->emailSubscriptions()->create(['type' => $type]);
+        }
 
         return $user;
     }
 
-    // viena pieņemta maiņa, lai apkopojumā ir ko rādīt
+    // viena pieņemta maiņa, lai e-pastā ir ko rādīt
     private function makeSwap(string $title = 'Kaija', string $author = 'Čehovs'): void
     {
         $owner = User::factory()->create();
@@ -43,66 +48,107 @@ class DigestTest extends TestCase
         ]);
     }
 
-    public function test_digest_is_off_by_default_and_can_be_turned_on(): void
+    private function mail(User $user, string $type): DigestEmail
+    {
+        $global = Digest::global();
+
+        return new DigestEmail($user, $type, Digest::items($type, $user, $global), $global['week']);
+    }
+
+    public function test_all_emails_are_off_by_default_and_each_can_be_turned_on(): void
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->getJson('/api/profile')->assertJsonPath('digest_opt_in', false);
+        $this->actingAs($user)->getJson('/api/profile')
+            ->assertJsonPath('emails', ['nearby' => false, 'popular' => false, 'authors' => false, 'rated' => false]);
 
-        $this->actingAs($user)->patchJson('/api/profile/privacy', [
-            'show_joined' => true,
-            'show_swaps' => true,
-            'show_swap_history' => true,
-            'digest_opt_in' => true,
-        ])->assertOk()->assertJsonPath('digest_opt_in', true);
+        $this->actingAs($user)->patchJson('/api/profile/emails', ['popular' => true, 'rated' => true])
+            ->assertOk()
+            ->assertJson(['nearby' => false, 'popular' => true, 'authors' => false, 'rated' => true]);
 
-        $this->assertTrue($user->fresh()->digest_opt_in);
+        // izslēdz vienu, otrs paliek
+        $this->actingAs($user)->patchJson('/api/profile/emails', ['popular' => false])
+            ->assertJson(['popular' => false, 'rated' => true]);
+
+        $this->assertSame(['rated'], $user->emailSubscriptions()->pluck('type')->all());
     }
 
-    public function test_sends_only_to_users_who_opted_in(): void
+    public function test_unknown_email_type_is_ignored(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->patchJson('/api/profile/emails', ['spam' => true])->assertOk();
+
+        $this->assertSame(0, $user->emailSubscriptions()->count());
+    }
+
+    public function test_each_type_is_sent_only_to_its_subscribers(): void
     {
         Mail::fake();
         $this->makeSwap();
 
-        $yes = $this->subscriber();
-        $no = User::factory()->create();
-        $blocked = $this->subscriber(['is_blocked' => true]);
-        $deleted = $this->subscriber(['deleted_at' => now()]);
+        $popular = $this->subscriber(['popular']);
+        $authors = $this->subscriber(['authors']);
+        $none = User::factory()->create();
+        $blocked = $this->subscriber(['popular'], ['is_blocked' => true]);
+        $deleted = $this->subscriber(['popular'], ['deleted_at' => now()]);
 
-        $this->artisan('bookloop:weekly-digest')->assertSuccessful();
+        $this->artisan('bookloop:emails popular')->assertSuccessful();
 
-        Mail::assertSent(WeeklyDigest::class, 1);
-        Mail::assertSent(WeeklyDigest::class, fn($m) => $m->hasTo($yes->email));
-        Mail::assertNotSent(WeeklyDigest::class, fn($m) => $m->hasTo($no->email) || $m->hasTo($blocked->email) || $m->hasTo($deleted->email));
-        $this->assertNotNull($yes->fresh()->digest_sent_at);
+        Mail::assertSent(DigestEmail::class, 1);
+        Mail::assertSent(DigestEmail::class, fn($m) => $m->hasTo($popular->email) && $m->type === 'popular');
+        foreach ([$authors, $none, $blocked, $deleted] as $u) {
+            Mail::assertNotSent(DigestEmail::class, fn($m) => $m->hasTo($u->email));
+        }
+    }
+
+    public function test_without_type_every_type_goes_as_separate_email(): void
+    {
+        Mail::fake();
+        $this->makeSwap();
+        $user = $this->subscriber(['popular', 'authors']);
+
+        $this->artisan('bookloop:emails')->assertSuccessful();
+
+        // divi atsevišķi e-pasti, nevis viens kopā
+        Mail::assertSent(DigestEmail::class, 2);
+        Mail::assertSent(DigestEmail::class, fn($m) => $m->type === 'popular' && str_contains($m->envelope()->subject, 'Most swapped'));
+        Mail::assertSent(DigestEmail::class, fn($m) => $m->type === 'authors' && str_contains($m->envelope()->subject, 'authors'));
+        $this->assertSame(2, $user->emailSubscriptions()->whereNotNull('sent_at')->count());
     }
 
     public function test_not_sent_twice_in_one_week(): void
     {
         Mail::fake();
         $this->makeSwap();
-        $this->subscriber();
+        $this->subscriber(['popular']);
 
-        $this->artisan('bookloop:weekly-digest');
-        $this->artisan('bookloop:weekly-digest');
-        Mail::assertSent(WeeklyDigest::class, 1);
+        $this->artisan('bookloop:emails popular');
+        $this->artisan('bookloop:emails popular');
+        Mail::assertSent(DigestEmail::class, 1);
 
         // --force sūta vēlreiz
-        $this->artisan('bookloop:weekly-digest --force');
-        Mail::assertSent(WeeklyDigest::class, 2);
+        $this->artisan('bookloop:emails popular --force');
+        Mail::assertSent(DigestEmail::class, 2);
     }
 
-    public function test_nothing_sent_when_there_is_nothing_to_show(): void
+    public function test_wrong_type_fails(): void
+    {
+        $this->artisan('bookloop:emails spam')->assertFailed();
+    }
+
+    public function test_empty_email_is_not_sent(): void
     {
         Mail::fake();
-        $this->subscriber();
+        // nav ne maiņu, ne vērtējumu, nav atrašanās vietas
+        $this->subscriber(['nearby', 'popular', 'authors', 'rated']);
 
-        $this->artisan('bookloop:weekly-digest')->assertSuccessful();
+        $this->artisan('bookloop:emails')->assertSuccessful();
 
         Mail::assertNothingSent();
     }
 
-    public function test_digest_contains_popular_books_and_authors(): void
+    public function test_popular_books_and_authors(): void
     {
         $this->makeSwap('Kaija', 'Čehovs');
         $this->makeSwap('Kaija', 'Čehovs');
@@ -126,7 +172,7 @@ class DigestTest extends TestCase
     public function test_nearby_shows_new_books_close_by_but_not_far_own_or_blocked(): void
     {
         // Rīga
-        $user = $this->subscriber(['latitude' => 56.95, 'longitude' => 24.11]);
+        $user = $this->subscriber(['nearby'], ['latitude' => 56.95, 'longitude' => 24.11]);
         $near = User::factory()->create();
         $near->forceFill(['latitude' => 56.97, 'longitude' => 24.15])->save();
         $far = User::factory()->create();
@@ -150,69 +196,83 @@ class DigestTest extends TestCase
     public function test_email_has_unsubscribe_link_and_headers(): void
     {
         $this->makeSwap();
-        $user = $this->subscriber();
-        $mail = new WeeklyDigest($user, Digest::global(), Digest::nearby($user));
+        $user = $this->subscriber(['popular']);
+        $mail = $this->mail($user, 'popular');
 
         $html = $mail->render();
-        $this->assertStringContainsString('/email/unsubscribe/' . $user->id . '?signature=', $html);
+        $this->assertStringContainsString('/email/unsubscribe/' . $user->id . '/popular?signature=', $html);
         $this->assertStringContainsString('Kaija', $html);
         // gmail apgriež e-pastus virs ~102 KB
         $this->assertLessThan(102 * 1024, strlen($html));
 
         $headers = $mail->headers()->text;
-        $this->assertStringContainsString('/api/email/unsubscribe/' . $user->id, $headers['List-Unsubscribe']);
+        $this->assertStringContainsString('/api/email/unsubscribe/' . $user->id . '/popular', $headers['List-Unsubscribe']);
         $this->assertSame('List-Unsubscribe=One-Click', $headers['List-Unsubscribe-Post']);
     }
 
-    // sadaļas kā kolonnas (2 blakus uz datora), outlook classic ar slēptu tabulu
-    public function test_sections_are_columns_with_outlook_fallback(): void
+    // kartītes (3 blakus uz datora), outlook classic ar slēptu tabulu
+    public function test_books_are_cards_with_outlook_fallback(): void
     {
         $this->makeSwap();
-        $user = $this->subscriber();
+        $user = $this->subscriber(['popular']);
 
-        $html = (new WeeklyDigest($user, Digest::global(), []))->render();
+        $html = $this->mail($user, 'popular')->render();
 
-        $this->assertStringContainsString('class="col"', $html);
+        $this->assertStringContainsString('class="card"', $html);
         $this->assertStringContainsString('<!--[if mso]>', $html);
+        // nedēļas skaitļi ir tikai popular e-pastā
         $this->assertStringContainsString('class="stat"', $html);
-        // bez atrašanās vietas aicina to pievienot
-        $this->assertStringContainsString('Add location', $html);
+        $this->assertStringNotContainsString('class="stat"', $this->mail($user, 'authors')->render());
         // markdown nedrīkst html pārvērst par tekstu vai kodu
         $this->assertStringNotContainsString('&lt;div', $html);
         $this->assertStringNotContainsString('<code>', $html);
     }
 
-    public function test_unsubscribe_link_works_without_login(): void
+    public function test_unsubscribe_removes_only_that_type(): void
     {
-        $user = $this->subscriber();
+        $user = $this->subscriber(['popular', 'rated']);
 
-        $this->get(WeeklyDigest::unsubscribeUrl($user))->assertOk()->assertSee('unsubscribed');
+        $this->get(DigestEmail::unsubscribeUrl($user, 'popular'))->assertOk()->assertSee('Most swapped books');
 
-        $this->assertFalse($user->fresh()->digest_opt_in);
+        $this->assertSame(['rated'], $user->emailSubscriptions()->pluck('type')->all());
     }
 
     public function test_one_click_unsubscribe_post(): void
     {
-        $user = $this->subscriber();
+        $user = $this->subscriber(['rated', 'authors']);
 
-        $this->post(WeeklyDigest::unsubscribeUrl($user, true))->assertNoContent();
+        $this->post(DigestEmail::unsubscribeUrl($user, 'rated', true))->assertNoContent();
 
-        $this->assertFalse($user->fresh()->digest_opt_in);
+        $this->assertSame(['authors'], $user->emailSubscriptions()->pluck('type')->all());
     }
 
     public function test_unsubscribe_without_signature_is_rejected(): void
     {
-        $user = $this->subscriber();
-        $other = $this->subscriber();
+        $user = $this->subscriber(['popular', 'rated']);
+        $other = $this->subscriber(['popular']);
 
-        $this->get('/email/unsubscribe/' . $user->id)->assertForbidden();
-        $this->postJson('/api/email/unsubscribe/' . $user->id)->assertForbidden();
+        $this->get('/email/unsubscribe/' . $user->id . '/popular')->assertForbidden();
+        $this->postJson('/api/email/unsubscribe/' . $user->id . '/popular')->assertForbidden();
 
         // ar cita lietotāja parakstu arī nevar
-        $url = str_replace('/unsubscribe/' . $other->id, '/unsubscribe/' . $user->id, WeeklyDigest::unsubscribeUrl($other));
+        $url = str_replace('/unsubscribe/' . $other->id . '/', '/unsubscribe/' . $user->id . '/', DigestEmail::unsubscribeUrl($other, 'popular'));
         $this->get($url)->assertForbidden();
 
-        $this->assertTrue($user->fresh()->digest_opt_in);
+        // ar cita veida parakstu arī nevar
+        $url = str_replace('/popular?', '/rated?', DigestEmail::unsubscribeUrl($user, 'popular'));
+        $this->get($url)->assertForbidden();
+
+        $this->assertSame(2, $user->emailSubscriptions()->count());
+    }
+
+    public function test_deleting_account_removes_subscriptions(): void
+    {
+        $user = $this->subscriber(['popular', 'rated']);
+        $user->forceFill(['password' => 'Password1!'])->save();
+
+        $this->actingAs($user)->deleteJson('/api/profile', ['password' => 'Password1!'])->assertSuccessful();
+
+        $this->assertSame(0, $user->emailSubscriptions()->count());
     }
 
     // lietotāja vārds ar markdown saiti nedrīkst kļūt par īstu saiti e-pastā
@@ -227,8 +287,8 @@ class DigestTest extends TestCase
         $this->assertStringContainsString('[Click here](http://evil.test)', $html);
 
         $user->forceFill(['name' => '[x](http://evil.test)'])->save();
-        $this->makeSwap();
-        $digest = (new WeeklyDigest($user, Digest::global(), []))->render();
+        $this->makeSwap('[y](http://evil.test)', '*z*');
+        $digest = $this->mail($user, 'popular')->render();
         $this->assertStringNotContainsString('href="http://evil.test"', $digest);
     }
 }

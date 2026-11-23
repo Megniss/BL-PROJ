@@ -21,8 +21,8 @@
 <body>
     <div class="box">
         <h1>📚 You are unsubscribed</h1>
-        <p>You will not get the weekly roundup anymore.<br>Pārskatu vairs nesūtīsim.</p>
-        <p>You can turn it back on any time in your settings.</p>
+        <p>You will not get "{{ $title }}" emails anymore.<br>Šo e-pastu vairs nesūtīsim.</p>
+        <p>Other emails stay as they were. You can change them any time in your settings.</p>
         <a href="{{ url('/settings') }}">Go to BookLoop</a>
     </div>
 </body>
