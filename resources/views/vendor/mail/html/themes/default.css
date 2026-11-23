@@ -151,13 +151,13 @@ blockquote {
 .inner-body {
     -premailer-cellpadding: 0;
     -premailer-cellspacing: 0;
-    -premailer-width: 570px;
+    -premailer-width: 640px;
     background-color: #ffffff;
     border: 1px solid #e5ddd0;
     border-radius: 8px;
     margin: 0 auto;
     padding: 0;
-    width: 570px;
+    width: 640px;
 }
 
 .inner-body a {
@@ -181,11 +181,11 @@ blockquote {
 .footer {
     -premailer-cellpadding: 0;
     -premailer-cellspacing: 0;
-    -premailer-width: 570px;
+    -premailer-width: 640px;
     margin: 0 auto;
     padding: 0;
     text-align: center;
-    width: 570px;
+    width: 640px;
 }
 
 .footer p {
@@ -304,7 +304,46 @@ blockquote {
     padding-bottom: 0;
 }
 
-/* Grāmatu saraksts (iknedēļas apkopojums) */
+/* Statistika - 3 kartītes blakus */
+
+.stats {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 4px 0 24px;
+    width: 100%;
+}
+
+.stat {
+    background-color: #e8f0e9;
+    border-radius: 8px;
+    padding: 14px 6px;
+}
+
+.stat-value {
+    color: #3a6b3e;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 26px;
+    font-weight: bold;
+    line-height: 1.1;
+    margin: 0;
+    text-align: center;
+}
+
+.stat-label {
+    color: #7a7068;
+    font-size: 12px;
+    line-height: 1.3;
+    margin: 4px 0 0;
+    text-align: center;
+}
+
+/* Grāmatu sadaļas (iknedēļas apkopojums) - 2 kolonnas, telefonā viena zem otras */
+
+.col h2 {
+    font-size: 17px;
+    margin: 0 0 4px;
+}
 
 .book-list {
     -premailer-cellpadding: 0;
@@ -316,20 +355,20 @@ blockquote {
 
 .book-row td {
     border-bottom: 1px solid #e5ddd0;
-    padding: 10px 0;
-    vertical-align: middle;
+    padding: 9px 0;
+    vertical-align: top;
 }
 
 .book-rank {
     color: #c47c28;
     font-family: Georgia, 'Times New Roman', serif;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: bold;
-    width: 32px;
+    width: 26px;
 }
 
 .book-cover {
-    width: 52px;
+    width: 48px;
 }
 
 .book-cover img {
@@ -339,26 +378,27 @@ blockquote {
 
 .book-title {
     color: #1a1612;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: bold;
     line-height: 1.3;
     margin: 0;
+    word-break: break-word;
 }
 
 .book-meta {
     color: #7a7068;
-    font-size: 13px;
+    font-size: 12px;
     line-height: 1.3;
     margin: 2px 0 0;
+    word-break: break-word;
 }
 
 .book-badge {
     color: #3a6b3e;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: bold;
-    padding-left: 8px;
-    text-align: right;
-    white-space: nowrap;
+    line-height: 1.3;
+    margin: 3px 0 0;
 }
 
 /* Utilities */

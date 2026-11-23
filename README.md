@@ -194,10 +194,16 @@ Visi e-pasti izmanto Laravel Markdown mail veidnes, kas pārveidotas BookLoop st
 - **Tēma** `html/themes/default.css` - tās pašas krāsas kā lapā (zaļš `#3a6b3e`, krēmīgs fons, Georgia virsraksti)
 - **Izkārtojums ar tabulām**, nevis flex/grid - tā strādā arī Outlook Classic, kas e-pastus zīmē ar Word
 - **CSS inline** - Laravel pirms sūtīšanas ieliek stilus pie katra elementa, jo Gmail izmet `<style>` bloku
-- **Viena kolonna**, max 570px, telefonā izstiepjas pa visu platumu, poga kļūst pilna platuma, vāki paslēpti
+- **Responsīvs režģis** (max 640px) - uz datora apkopojuma sadaļas ir 2 blakus (2×2), telefonā viena zem otras pa visu platumu
+  - kolonnas ir `inline-block` div ar `max-width: 284px` - ja nav vietas, tās pašas pāriet nākamajā rindā (strādā arī Gmail bez media query)
+  - Outlook Classic neprot inline-block, tam ir slēpta tabula `<!--[if mso]>...<![endif]-->`, ko citi klienti neredz
+  - media query (`max-width: 620px`) telefonā izstiepj kolonnas pa visu platumu, poga kļūst pilna platuma
+  - augšā 3 statistikas kartītes vienā rindā (jaunas grāmatas, apmaiņas, pieejamās) - parasta tabula, paliek blakus arī telefonā
 - **Dark mode** - `color-scheme: light dark` un `@media (prefers-color-scheme: dark)` krāsas (Apple Mail, iOS, Outlook.com). Gmail šo ignorē un krāsas apgriež pats
 - **Logo kā teksts** (📚 BookLoop), nevis bilde - nav jāielādē no servera un tumšajā režīmā neizskatās dīvaini
-- `html/book-list.blade.php` - grāmatu saraksta komponente ar numuru, vāku, autoru un "badge"
+- `html/book-columns.blade.php` - sadaļu režģis ar grāmatu sarakstiem (numurs, vāks, autors, "badge")
+- `html/stats.blade.php` - statistikas kartītes
+- Katrai komponentei ir arī `text/` versija vienkāršajam teksta e-pastam
 - Lietotāja teksts (vārds, grāmatas nosaukums, ziņa) e-pastos tiek escapots ar `App\Support\Md`, lai `[teksts](saite)` nekļūst par īstu saiti
 
 | Klients | Atbalsts |

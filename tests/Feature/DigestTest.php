@@ -164,6 +164,24 @@ class DigestTest extends TestCase
         $this->assertSame('List-Unsubscribe=One-Click', $headers['List-Unsubscribe-Post']);
     }
 
+    // sadaļas kā kolonnas (2 blakus uz datora), outlook classic ar slēptu tabulu
+    public function test_sections_are_columns_with_outlook_fallback(): void
+    {
+        $this->makeSwap();
+        $user = $this->subscriber();
+
+        $html = (new WeeklyDigest($user, Digest::global(), []))->render();
+
+        $this->assertStringContainsString('class="col"', $html);
+        $this->assertStringContainsString('<!--[if mso]>', $html);
+        $this->assertStringContainsString('class="stat"', $html);
+        // bez atrašanās vietas aicina to pievienot
+        $this->assertStringContainsString('Add location', $html);
+        // markdown nedrīkst html pārvērst par tekstu vai kodu
+        $this->assertStringNotContainsString('&lt;div', $html);
+        $this->assertStringNotContainsString('<code>', $html);
+    }
+
     public function test_unsubscribe_link_works_without_login(): void
     {
         $user = $this->subscriber();

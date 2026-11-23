@@ -38,6 +38,7 @@ class Digest
             'week' => [
                 'books' => Book::where('created_at', '>=', now()->subDays(7))->whereNotIn('status', self::HIDDEN)->count(),
                 'swaps' => DB::table('swap_requests')->where('status', 'accepted')->where('updated_at', '>=', now()->subDays(7))->count(),
+                'available' => Book::where('status', 'Available')->count(),
             ],
             'popular' => $books,
             'authors' => $authors,

@@ -8,7 +8,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="supported-color-schemes" content="light dark">
 <style>
-@media only screen and (max-width: 600px) {
+@media only screen and (max-width: 680px) {
 .inner-body {
 width: 100% !important;
 }
@@ -22,14 +22,27 @@ padding: 20px !important;
 }
 }
 
+/* telefonā sadaļas pa visu platumu viena zem otras */
+/* bez media query tās arī pāriet uz leju, tikai paliek 284px platas */
+@media only screen and (max-width: 620px) {
+.col {
+display: block !important;
+max-width: 100% !important;
+}
+
+.col-pad {
+padding: 0 !important;
+}
+}
+
 @media only screen and (max-width: 500px) {
 .button {
 width: 100% !important;
 text-align: center !important;
 }
 
-.book-cover {
-display: none !important;
+.stat-value {
+font-size: 22px !important;
 }
 }
 
@@ -44,7 +57,7 @@ background-color: #262019 !important;
 border-color: #3d3630 !important;
 }
 
-p, td, li, .book-meta, .panel-content, .panel-content p {
+p, td, li, .book-meta, .stat-label, .panel-content, .panel-content p {
 color: #e5ddd0 !important;
 }
 
@@ -52,8 +65,16 @@ h1, h2, .book-title {
 color: #faf6ef !important;
 }
 
-a, .header a, .book-badge {
+a, .header a, .book-badge, .stat-value {
 color: #8fc493 !important;
+}
+
+.book-rank {
+color: #e0a256 !important;
+}
+
+.stat {
+background-color: #2d3a2e !important;
 }
 
 .book-row td {
@@ -86,7 +107,7 @@ color: #b0a090 !important;
 <!-- Email Body -->
 <tr>
 <td class="body" width="100%" cellpadding="0" cellspacing="0" style="border: hidden !important;">
-<table class="inner-body" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation">
+<table class="inner-body" align="center" width="640" cellpadding="0" cellspacing="0" role="presentation">
 <!-- Body content -->
 <tr>
 <td class="content-cell">
