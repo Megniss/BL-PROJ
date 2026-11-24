@@ -51,7 +51,10 @@
           <slot />
         </div>
 
-        <!-- zvans un tamlīdzīgi, vienmēr redzami -->
+        <!-- paziņojumu zvaniņš visās lapās (ne admin panelī) -->
+        <NotificationBell v-if="authStore.user && !admin" />
+
+        <!-- citas pogas, vienmēr redzamas -->
         <slot name="inline" />
 
         <!-- avatars un dropdown, tikai desktop -->
@@ -120,9 +123,11 @@ import langMixin from '../langMixin.js'
 import { themeStore } from '../themeStore.js'
 import { authStore, clearAuth } from '../authStore.js'
 import axios from 'axios'
+import NotificationBell from './NotificationBell.vue'
 
 export default {
   name: 'AppNavbar',
+  components: { NotificationBell },
   mixins: [langMixin],
   props: { admin: Boolean },
   emits: ['admin-password'],

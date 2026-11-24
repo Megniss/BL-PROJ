@@ -263,7 +263,9 @@ export const translations = {
 
     // Paziņojumi
     'notif.title': 'Notifications',
-    'notif.markAllRead': 'Mark all read',
+    'notif.markAllRead': 'Mark all as read',
+    'notif.clear': 'Clear',
+    'notif.clearTitle': 'Delete notifications you have already read',
     'notif.swapRequests': 'Swap Requests',
     'notif.activity': 'Activity',
     'notif.empty': 'No notifications yet.',
@@ -272,6 +274,19 @@ export const translations = {
     'notif.andOffers': 'and offers',
     'notif.accept': 'Accept',
     'notif.decline': 'Decline',
+    'notif.k.message': '{name} sent you a message',
+    'notif.k.swap_accepted': 'Your swap was accepted! You get "{book}".',
+    'notif.k.swap_declined': 'Your swap request was declined. "{book}" is available again.',
+    'notif.k.swap_unavailable': 'A swap is no longer possible. "{book}" is available again.',
+    'notif.k.book_review': 'Your book "{book}" was placed under review.',
+    'notif.k.book_deleted': 'Your book "{book}" was removed by an admin.',
+    'notif.k.support_reply': 'Support replied to your ticket "{subject}"',
+    'notif.reason': 'Reason',
+    'notif.open': 'Open',
+    'notif.justNow': 'just now',
+    'notif.minAgo': '{n} min ago',
+    'notif.hAgo': '{n} h ago',
+    'notif.yesterday': 'yesterday',
 
     // Bibliotēka
     'dash.title': 'My Library',
@@ -402,12 +417,16 @@ export const translations = {
     // Sīkdatnes
     'cookie.text': 'We use cookies to keep you logged in and improve your experience.',
     'cookie.btn': 'Got it',
+    'emailPrompt.title': 'Want book news by email?',
+    'emailPrompt.text': 'You can get new books near you, most swapped books, popular authors and top rated books. Each email is separate and off by default.',
+    'emailPrompt.choose': 'Choose in settings',
+    'emailPrompt.later': 'Not now',
 
     // Par mums
     'about.why.title': 'The Idea',
     'about.why.body': "Books can be expensive, and libraries don't always have what you're looking for. BookLoop solves this by connecting readers directly - you give a book, you get a book. Simple, free, and community-driven.",
     'about.creator.title': 'The Creator',
-    'about.creator.body': 'BookLoop was built by Eduards Megnis, a 3rd year student at Riga State Technical school. It was created as a school project to practice full stack web development using Laravel and Vue.js.',
+    'about.creator.body': 'BookLoop was built by Eduards Megnis, a 4th year student at Riga State Technical school. It was created as a school project to practice full stack web development using Laravel and Vue.js.',
     'about.back': 'Home',
     'about.backFull': '← Back to home',
     'notFound.text': "This page doesn't exist.",
@@ -931,7 +950,9 @@ export const translations = {
 
     // Paziņojumi
     'notif.title': 'Paziņojumi',
-    'notif.markAllRead': 'Atzīmēt visus',
+    'notif.markAllRead': 'Atzīmēt visus kā lasītus',
+    'notif.clear': 'Notīrīt',
+    'notif.clearTitle': 'Izdzēst jau izlasītos paziņojumus',
     'notif.swapRequests': 'Apmaiņas Pieprasījumi',
     'notif.activity': 'Aktivitāte',
     'notif.empty': 'Pagaidām nav paziņojumu.',
@@ -940,6 +961,19 @@ export const translations = {
     'notif.andOffers': 'un piedāvā',
     'notif.accept': 'Pieņemt',
     'notif.decline': 'Noraidīt',
+    'notif.k.message': '{name} tev atsūtīja ziņu',
+    'notif.k.swap_accepted': 'Tava apmaiņa pieņemta! Tu saņem "{book}".',
+    'notif.k.swap_declined': 'Tavs apmaiņas pieprasījums noraidīts. "{book}" atkal pieejama.',
+    'notif.k.swap_unavailable': 'Apmaiņa vairs nav iespējama. "{book}" atkal pieejama.',
+    'notif.k.book_review': 'Tava grāmata "{book}" nodota pārbaudei.',
+    'notif.k.book_deleted': 'Admins izdzēsa tavu grāmatu "{book}".',
+    'notif.k.support_reply': 'Atbalsts atbildēja uz tavu pieteikumu "{subject}"',
+    'notif.reason': 'Iemesls',
+    'notif.open': 'Atvērt',
+    'notif.justNow': 'tikko',
+    'notif.minAgo': 'pirms {n} min',
+    'notif.hAgo': 'pirms {n} h',
+    'notif.yesterday': 'vakar',
 
     // Bibliotēka
     'dash.title': 'Mana Bibliotēka',
@@ -1070,12 +1104,16 @@ export const translations = {
     // Sīkdatnes
     'cookie.text': 'Mēs izmantojam sīkdatnes, lai saglabātu tavu pieteikšanos un uzlabotu pieredzi.',
     'cookie.btn': 'Sapratu',
+    'emailPrompt.title': 'Gribi saņemt grāmatu jaunumus e-pastā?',
+    'emailPrompt.text': 'Vari saņemt jaunas grāmatas tuvumā, visvairāk samainītās, populārākos autorus un labāk novērtētās. Katrs e-pasts ir atsevišķs un pēc noklusējuma izslēgts.',
+    'emailPrompt.choose': 'Izvēlēties iestatījumos',
+    'emailPrompt.later': 'Ne tagad',
 
     // Par mums
     'about.why.title': 'Ideja',
     'about.why.body': 'Grāmatas var būt dārgas, un bibliotēkās ne vienmēr ir tas, ko meklē. BookLoop risina šo problēmu, tieši savienojot lasītājus - tu dod grāmatu, tu saņem grāmatu. Vienkārši, bez maksas un uz kopienas principiem.',
     'about.creator.title': 'Veidotājs',
-    'about.creator.body': 'BookLoop izstrādāja Eduards Megnis, 3. kursa Rīgas Valsts tehnikuma students. Tas tika izveidots kā skolas projekts, lai praktizētu tīmekļa izstrādi, izmantojot Laravel un Vue.js.',
+    'about.creator.body': 'BookLoop izstrādāja Eduards Megnis, 4. kursa Rīgas Valsts tehnikuma students. Tas tika izveidots kā skolas projekts, lai praktizētu tīmekļa izstrādi, izmantojot Laravel un Vue.js.',
     'about.back': 'Sākums',
     'about.backFull': '← Atpakaļ uz sākumu',
     'notFound.text': 'Šāda lapa neeksistē.',

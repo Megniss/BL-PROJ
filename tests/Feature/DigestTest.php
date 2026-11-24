@@ -74,6 +74,24 @@ class DigestTest extends TestCase
         $this->assertSame(['rated'], $user->emailSubscriptions()->pluck('type')->all());
     }
 
+    // aicinājuma logs: "ne tagad" un e-pasta ieslēgšana to aizver uz visiem laikiem
+    public function test_email_prompt_is_dismissed_by_button_or_by_turning_email_on(): void
+    {
+        $user = User::factory()->create();
+        $this->assertFalse((bool) $user->fresh()->email_prompted);
+
+        $this->actingAs($user)->postJson("/api/profile/email-prompt/dismiss")->assertOk();
+        $this->assertTrue($user->fresh()->email_prompted);
+        $this->actingAs($user)->getJson("/api/me")->assertJsonPath("email_prompted", true);
+
+        $other = User::factory()->create();
+        // izslēgšana logu neaizver
+        $this->actingAs($other)->patchJson("/api/profile/emails", ["rated" => false]);
+        $this->assertFalse((bool) $other->fresh()->email_prompted);
+        $this->actingAs($other)->patchJson("/api/profile/emails", ["rated" => true]);
+        $this->assertTrue($other->fresh()->email_prompted);
+    }
+
     public function test_unknown_email_type_is_ignored(): void
     {
         $user = User::factory()->create();

@@ -9,49 +9,6 @@
         </button>
       </div>
 
-      <!-- zvans blakus hamburgeram mobilajā -->
-      <template #inline>
-        <div class="notif-wrap" ref="notifWrap">
-          <button class="notif-bell" @click="toggleNotifs" :aria-label="t('notif.title') + (unreadCount > 0 ? ' (' + unreadCount + ')' : '')">
-            <span aria-hidden="true">🔔</span>
-            <span v-if="unreadCount > 0" class="notif-badge" aria-hidden="true">{{ unreadCount }}</span>
-          </button>
-          <div v-if="showNotifs" class="notif-dropdown">
-            <div class="notif-header">
-              <span>{{ t('notif.title') }}</span>
-              <button v-if="unreadNotifCount > 0" class="notif-read-all" @click.stop="markAllRead">{{ t('notif.markAllRead') }}</button>
-            </div>
-            <template v-if="pendingIncoming.length > 0">
-              <div class="notif-section-label">{{ t('notif.swapRequests') }}</div>
-              <div v-for="req in pendingIncoming" :key="'req-'+req.id" class="notif-item notif-swap unread">
-                <p class="notif-msg">
-                  <strong>{{ req.requester.name }}</strong> {{ t('notif.wants') }}
-                  <strong>{{ req.wanted_book.title }}</strong> {{ t('notif.andOffers') }}
-                  <strong>{{ req.offered_book.title }}</strong>.
-                </p>
-                <div class="notif-swap-actions">
-                  <button class="btn btn-primary btn-sm" @click.stop="acceptSwap(req)">{{ t('notif.accept') }}</button>
-                  <button class="btn btn-outline-secondary btn-sm" @click.stop="declineSwap(req)">{{ t('notif.decline') }}</button>
-                </div>
-              </div>
-            </template>
-            <template v-if="notifications.length > 0">
-              <div v-if="pendingIncoming.length > 0" class="notif-section-label">{{ t('notif.activity') }}</div>
-              <div v-for="n in notifications" :key="n.id" class="notif-item" :class="{ unread: !n.read_at }" @click="handleNotifClick(n)">
-                <p class="notif-msg">{{ n.data.message }}</p>
-                <button v-if="n.data.type === 'admin_action'" class="notif-support-link" @click.stop="goSupport">
-                  {{ t('support.contactLink') }} →
-                </button>
-                <span class="notif-time">{{ formatTime(n.created_at) }}</span>
-              </div>
-            </template>
-            <div v-if="pendingIncoming.length === 0 && notifications.length === 0" class="notif-empty">{{ t('notif.empty') }}</div>
-            <div v-if="notifsNextPage" class="notif-load-more">
-              <button class="notif-load-more-btn" @click.stop="loadMoreNotifs">{{ t('notif.loadMore') }}</button>
-            </div>
-          </div>
-        </div>
-      </template>
     </AppNavbar>
 
     <div class="container-xl py-4 px-3 px-md-4">
@@ -317,10 +274,6 @@ export default {
       coverFile: null,
       coverPreview: null,
       coverRemoved: false,
-      notifications: [],
-      notifsNextPage: null,
-      unreadNotifCount: 0,
-      showNotifs: false,
     }
   },
 
@@ -333,23 +286,17 @@ export default {
     pendingIncoming() {
       return this.incoming.filter(r => r.status === 'pending')
     },
-    unreadCount() {
-      return this.pendingIncoming.length + this.unreadNotifCount
-    },
   },
 
   mounted() {
     this.fetchAll()
-    this._notifClickaway = (e) => {
-      if (this.showNotifs && this.$refs.notifWrap && !this.$refs.notifWrap.contains(e.target)) {
-        this.showNotifs = false
-      }
-    }
-    document.addEventListener('click', this._notifClickaway)
+    // zvaniņā pieņēma/noraidīja apmaiņu - atjaunojam sarakstus bez ielādes ekrāna
+    this._onSwapsChanged = () => this.fetchAll(true)
+    window.addEventListener('bookloop:swaps-changed', this._onSwapsChanged)
   },
 
   beforeUnmount() {
-    document.removeEventListener('click', this._notifClickaway)
+    window.removeEventListener('bookloop:swaps-changed', this._onSwapsChanged)
   },
 
   methods: {
@@ -364,23 +311,19 @@ export default {
       showToast(this.t('twofa.enabled'))
     },
 
-    async fetchAll() {
-      this.loading = true
+    async fetchAll(silent = false) {
+      if (!silent) this.loading = true
       this.fetchError = ''
       try {
-        const [books, incoming, outgoing, notifs, msgCount] = await Promise.all([
+        const [books, incoming, outgoing, msgCount] = await Promise.all([
           axios.get('/api/books'),
           axios.get('/api/swap-requests/incoming'),
           axios.get('/api/swap-requests/outgoing'),
-          axios.get('/api/notifications'),
           axios.get('/api/messages/unread-count'),
         ])
         this.books = books.data
         this.incoming = incoming.data
         this.outgoing = outgoing.data
-        this.notifications = notifs.data.data
-        this.notifsNextPage = notifs.data.next_page_url
-        this.unreadNotifCount = notifs.data.data.filter(n => !n.read_at).length
         this.unreadMessages = msgCount.data.count
       } catch {
         this.fetchError = this.t('dash.fetchError')
@@ -393,56 +336,6 @@ export default {
       showToast(msg, 'error')
     },
 
-    toggleNotifs() {
-      this.showNotifs = !this.showNotifs
-    },
-
-    async markRead(n) {
-      if (n.read_at) return
-      try {
-        await axios.patch(`/api/notifications/${n.id}/read`)
-        n.read_at = new Date().toISOString()
-        this.unreadNotifCount = Math.max(0, this.unreadNotifCount - 1)
-      } catch {}
-    },
-
-    goSupport() {
-      this.showNotifs = false
-      this.$router.push({ name: 'support' })
-    },
-
-    async handleNotifClick(n) {
-      await this.markRead(n)
-      if (n.data.type === 'message') {
-        this.showNotifs = false
-        this.$router.push({ name: 'messages' })
-      }
-    },
-
-    async markAllRead() {
-      try {
-        await axios.post('/api/notifications/read-all')
-        const now = new Date().toISOString()
-        this.notifications.forEach(n => { n.read_at = n.read_at || now })
-        this.unreadNotifCount = 0
-      } catch {}
-    },
-
-    async loadMoreNotifs() {
-      if (! this.notifsNextPage) return
-      try {
-        const { data } = await axios.get(this.notifsNextPage)
-        this.notifications.push(...data.data)
-        this.notifsNextPage = data.next_page_url
-      } catch {}
-    },
-
-    formatTime(dateStr) {
-      return new Date(dateStr).toLocaleDateString('en-GB', {
-        day: 'numeric', month: 'short', year: 'numeric'
-      })
-    },
-
     statusClass(status) {
       if (status === 'accepted') return 'tag-green'
       if (status === 'pending') return 'tag-yellow'
@@ -452,8 +345,9 @@ export default {
     async acceptSwap(req) {
       try {
         await axios.patch(`/api/swap-requests/${req.id}/accept`)
-        this.showNotifs = false
         await this.fetchAll()
+        // zvaniņā pieprasījums vairs nav jārāda
+        window.dispatchEvent(new Event('bookloop:notifs-refresh'))
       } catch (err) {
         this.flashError(err.response?.data?.message || this.t('dash.genericError'))
       }
@@ -462,8 +356,9 @@ export default {
     async declineSwap(req) {
       try {
         await axios.patch(`/api/swap-requests/${req.id}/decline`)
-        this.showNotifs = false
         await this.fetchAll()
+        // zvaniņā pieprasījums vairs nav jārāda
+        window.dispatchEvent(new Event('bookloop:notifs-refresh'))
       } catch (err) {
         this.flashError(err.response?.data?.message || this.t('dash.genericError'))
       }

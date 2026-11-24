@@ -172,7 +172,20 @@ class ProfileController extends Controller
             }
         }
 
+        // ieslēdza kaut ko - aicinājuma logs vairs nav vajadzīgs
+        if (in_array(true, $data, true) && !$user->email_prompted) {
+            $user->forceFill(['email_prompted' => true])->save();
+        }
+
         return response()->json($user->emailSettings());
+    }
+
+    // "ne tagad" vai "uz iestatījumiem" e-pastu aicinājuma logā - vairs nerādām
+    public function dismissEmailPrompt(Request $request)
+    {
+        $request->user()->forceFill(['email_prompted' => true])->save();
+
+        return response()->json(['email_prompted' => true]);
     }
 
     // konta dzēšana - lietotājs tiek anonimizēts, vēsture paliek
@@ -307,9 +320,65 @@ class ProfileController extends Controller
         return response()->json($history);
     }
 
+    // zvaniņam: paziņojumi + īstais nelasīto skaits + gaidošie apmaiņas pieprasījumi
+    // kind un link aprēķina šeit, lai strādā arī vecajiem paziņojumiem datubāzē
     public function notifications(Request $request)
     {
-        return response()->json($request->user()->notifications()->latest()->paginate(15));
+        $user = $request->user();
+        $page = $user->notifications()->latest()->paginate(15);
+
+        $page->setCollection($page->getCollection()->map(fn($n) => [
+            'id' => $n->id,
+            'kind' => $this->notifKind($n->type),
+            'data' => $n->data,
+            'link' => $this->notifLink($this->notifKind($n->type), $n->data),
+            'read_at' => $n->read_at,
+            'created_at' => $n->created_at,
+        ]));
+
+        // gaidošie pieprasījumi tikai pirmajā lapā, "ielādēt vēl" tos nevajag
+        $pending = $page->currentPage() === 1
+            ? SwapRequest::whereIn('wanted_book_id', $user->books()->pluck('id'))
+                ->where('owner_dismissed', false)
+                ->where('status', 'pending')
+                ->with(['requester:id,name', 'wantedBook:id,title', 'offeredBook:id,title'])
+                ->latest()
+                ->get()
+            : [];
+
+        return response()->json([
+            ...$page->toArray(),
+            'unread_count' => $user->unreadNotifications()->count(),
+            'pending_swaps' => $pending,
+        ]);
+    }
+
+    // paziņojuma klase -> īss nosaukums, pēc kura frontend izvēlas tekstu
+    private function notifKind(string $class): string
+    {
+        return match (class_basename($class)) {
+            'NewMessage' => 'message',
+            'SwapAccepted' => 'swap_accepted',
+            'SwapDeclined' => 'swap_declined',
+            'SwapUnavailable' => 'swap_unavailable',
+            'BookUnderReview' => 'book_review',
+            'BookDeletedByAdmin' => 'book_deleted',
+            'SupportReply' => 'support_reply',
+            default => 'other',
+        };
+    }
+
+    // kur aizvest, uzspiežot uz paziņojuma
+    private function notifLink(string $kind, array $data): ?string
+    {
+        return match ($kind) {
+            'message' => isset($data['sender_id'])
+                ? '/messages?' . http_build_query(['userId' => $data['sender_id'], 'userName' => $data['sender_name'] ?? ''])
+                : '/messages',
+            'support_reply' => isset($data['complaint_id']) ? '/support?ticket=' . $data['complaint_id'] : '/support',
+            'swap_accepted', 'swap_declined', 'swap_unavailable', 'book_review', 'book_deleted' => '/dashboard',
+            default => null,
+        };
     }
 
     public function markRead(Request $request, string $id)
@@ -334,7 +403,14 @@ class ProfileController extends Controller
 
     public function markAllRead(Request $request)
     {
-        $request->user()->unreadNotifications->markAsRead();
+        $request->user()->unreadNotifications()->update(['read_at' => now()]);
         return response()->json(['message' => 'All marked as read.']);
+    }
+
+    // notīrīt zvaniņu - dzēš tikai izlasītos, nelasītie paliek
+    public function clearRead(Request $request)
+    {
+        $request->user()->readNotifications()->delete();
+        return response()->json(null, 204);
     }
 }

@@ -21,6 +21,7 @@ class SwapUnavailable extends Notification
     {
         return [
             'message' => "Swap is no longer available. \"{$this->bookTitle}\" is available again.",
+            'book' => $this->bookTitle,
         ];
     }
 }

@@ -73,7 +73,7 @@
       </div>
 
       <!-- e-pasti, katrs veids atsevišķi, pēc noklusējuma viss izslēgts -->
-      <div class="settings-card mb-4">
+      <div id="emails" class="settings-card mb-4" :class="{ 'settings-card-highlight': highlightEmails }">
         <h2 class="settings-section-title">📬 {{ t('settings.emails') }}</h2>
         <p class="text-muted small mb-3">{{ t('settings.emailsText') }}</p>
         <div class="d-flex flex-column gap-2">
@@ -228,6 +228,7 @@ export default {
       // tādā pašā secībā kā App\Support\Digest::TYPES
       emailTypes: ['nearby', 'popular', 'authors', 'rated'],
       emails: { nearby: false, popular: false, authors: false, rated: false },
+      highlightEmails: false,
 
       blockedUsers: [],
       blockedLoading: true,
@@ -263,6 +264,15 @@ export default {
     this.location = { latitude: profile.data.latitude, longitude: profile.data.longitude }
     this.twoFactor.enabled = profile.data.two_factor_enabled
     this.profileLoaded = true
+
+    // no e-pastu aicinājuma loga (/settings#emails) - aizritina un uz brīdi izceļ
+    if (this.$route.hash === '#emails') {
+      this.$nextTick(() => {
+        document.getElementById('emails')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        this.highlightEmails = true
+        setTimeout(() => { this.highlightEmails = false }, 2000)
+      })
+    }
   },
 
   computed: {

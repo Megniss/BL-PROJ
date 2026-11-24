@@ -156,4 +156,42 @@ class SupportTest extends TestCase
         $this->assertCount(0, Storage::disk('local')->files('support'));
         $this->assertTrue($complaint->messages()->get()->last()->image_removed);
     }
+
+    // admina atbilde - lietotājam paziņojums zvaniņā, viens kamēr nav izlasīts
+    public function test_admin_reply_notifies_user_once_until_read(): void
+    {
+        $user = User::factory()->create();
+        $complaint = $this->complaint($user);
+        $adminToken = $this->adminToken($this->admin());
+
+        $this->as($adminToken)->postJson("/api/admin/complaints/{$complaint->id}/messages", ["body" => "Sveiki!"])->assertCreated();
+        $this->as($adminToken)->postJson("/api/admin/complaints/{$complaint->id}/messages", ["body" => "Vēl kas"])->assertCreated();
+
+        $userToken = $user->createToken("t")->plainTextToken;
+        $res = $this->as($userToken)->getJson("/api/notifications")->assertOk();
+        $this->assertSame(1, $res->json("unread_count"));
+        $this->assertSame("support_reply", $res->json("data.0.kind"));
+        $this->assertSame("/support?ticket=" . $complaint->id, $res->json("data.0.link"));
+        $this->assertSame("Problēma", $res->json("data.0.data.subject"));
+
+        // atver pieteikumu - paziņojums izlasīts
+        $this->as($userToken)->getJson("/api/complaints/{$complaint->id}")->assertOk();
+        $this->assertSame(0, $this->as($userToken)->getJson("/api/notifications")->json("unread_count"));
+
+        // nākamā atbilde - atkal jauns paziņojums
+        $this->as($adminToken)->postJson("/api/admin/complaints/{$complaint->id}/messages", ["body" => "Atrisināts"])->assertCreated();
+        $this->assertSame(1, $this->as($userToken)->getJson("/api/notifications")->json("unread_count"));
+    }
+
+    // lietotāja paša ziņa paziņojumu neveido
+    public function test_user_message_does_not_notify_user(): void
+    {
+        $user = User::factory()->create();
+        $complaint = $this->complaint($user);
+        $token = $user->createToken("t")->plainTextToken;
+
+        $this->as($token)->postJson("/api/complaints/{$complaint->id}/messages", ["body" => "Vēl jautājums"])->assertCreated();
+
+        $this->assertSame(0, $user->notifications()->count());
+    }
 }

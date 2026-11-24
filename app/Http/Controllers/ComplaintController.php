@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AdminLog;
 use App\Models\Complaint;
 use App\Models\ComplaintMessage;
+use App\Notifications\SupportReply;
 use App\Support\Chat;
 use Illuminate\Http\Request;
 
@@ -59,6 +60,12 @@ class ComplaintController extends Controller
         }
 
         $complaint->load(['user:id,name', 'messages.sender:id,name']);
+
+        // atvēra pieteikumu - paziņojums par atbildi vairs nav jauns
+        $request->user()->unreadNotifications()
+            ->where('type', SupportReply::class)
+            ->where('data->complaint_id', $complaint->id)
+            ->update(['read_at' => now()]);
 
         return response()->json($this->formatComplaint($complaint));
     }
@@ -127,6 +134,16 @@ class ComplaintController extends Controller
         }
 
         $this->log($request, 'support_reply', $complaint, $request->body ?: '[bilde]');
+
+        // paziņojums lietotājam zvaniņā, bet tikai viens kamēr nav izlasīts
+        $owner = $complaint->user;
+        $alreadyUnread = $owner->unreadNotifications()
+            ->where('type', SupportReply::class)
+            ->where('data->complaint_id', $complaint->id)
+            ->exists();
+        if (!$alreadyUnread) {
+            $owner->notify(new SupportReply($complaint));
+        }
 
         return response()->json($this->formatMessage($msg, $complaint), 201);
     }

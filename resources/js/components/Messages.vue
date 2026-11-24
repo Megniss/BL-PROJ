@@ -161,6 +161,15 @@ export default {
     clearInterval(this.pollTimer)
   },
 
+  watch: {
+    // zvaniņš var aizvest uz citu sarunu, kamēr šī lapa jau ir atvērta
+    '$route.query.userId'(id) {
+      if (id && Number(id) !== this.activeUser?.id) {
+        this.openConversation({ id: Number(id), name: this.$route.query.userName || 'User' })
+      }
+    },
+  },
+
   methods: {
     async fetchConversations() {
       this.loadingConvos = true
@@ -223,6 +232,8 @@ export default {
 
         const convo = this.conversations.find(c => c.user.id === this.activeUser.id)
         if (convo) convo.unread = 0
+        // serveris paziņojumu par šo sarunu atzīmēja kā izlasītu - zvaniņam jāatjaunojas
+        window.dispatchEvent(new Event('bookloop:notifs-refresh'))
       } catch (err) {
         this.threadError = err.response?.data?.message || this.t('messages.loadError')
       } finally {

@@ -3,7 +3,11 @@
 namespace Database\Seeders;
 
 use App\Models\Book;
+use App\Models\Complaint;
+use App\Models\ComplaintMessage;
 use App\Models\User;
+use App\Notifications\SupportReply;
+use App\Notifications\SwapUnavailable;
 use Illuminate\Database\Seeder;
 
 // dati Playwright testiem - visiem parole Password1!
@@ -40,6 +44,22 @@ class E2eSeeder extends Seeder
         $this->user('Oskars Vējš', 'twofaoff@e2e.test', extra: ['two_factor_enabled' => true]);
         $this->user('Marta Egle', 'digest@e2e.test');
 
+        // atbalsta pieteikums ar admina atbildi un paziņojumu zvaniņā
+        $admin = User::where('email', 'admin@e2e.test')->first();
+        $helen = $this->user('Helēna Rozīte', 'support@e2e.test');
+        $ticket = Complaint::create(['user_id' => $helen->id, 'subject' => 'Nevaru atrast grāmatu', 'status' => 'open', 'admin_read_at' => now()]);
+        ComplaintMessage::create(['complaint_id' => $ticket->id, 'sender_id' => $helen->id, 'body' => 'Kur palika mana grāmata?']);
+        ComplaintMessage::create(['complaint_id' => $ticket->id, 'sender_id' => $admin->id, 'body' => 'Paskatīsimies!']);
+        $helen->notify(new SupportReply($ticket));
+
+        // e-pastu aicinājuma logam
+        $this->user('Toms Kalējs', 'prompt@e2e.test', extra: ['email_prompted' => false]);
+
+        // zvaniņa pogām (atzīmēt visus, notīrīt)
+        $liene = $this->user('Liene Bērza', 'notif@e2e.test');
+        $liene->notify(new SwapUnavailable('Dune'));
+        $liene->notify(new SwapUnavailable('Hobits'));
+
         $this->book($edgars, 'Kaija', 'Cehovs', 'Detektīvs');
         $this->book($zane, 'Fausts', 'Gete', 'Detektīvs');
     }
@@ -50,6 +70,8 @@ class E2eSeeder extends Seeder
 
         $user->forceFill($extra + [
             'two_factor_prompted' => true,
+            // e-pastu aicinājuma logs testiem netraucē, rāda tikai prompt@e2e.test
+            'email_prompted' => true,
             'latitude' => $place[0] ?? null,
             'longitude' => $place[1] ?? null,
         ])->save();

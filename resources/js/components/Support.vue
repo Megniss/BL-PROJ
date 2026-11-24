@@ -131,6 +131,14 @@ export default {
     if (this.$route.query.new) {
       this.showNew = true
     }
+    this.openFromQuery()
+  },
+
+  watch: {
+    // paziņojums aizved uz ?ticket=ID arī tad, ja lapa jau atvērta
+    '$route.query.ticket'() {
+      this.openFromQuery()
+    },
   },
 
   computed: {
@@ -165,6 +173,14 @@ export default {
       }
     },
 
+    // ?ticket=ID - atver šo pieteikumu (saite no zvaniņa)
+    openFromQuery() {
+      const id = Number(this.$route.query.ticket)
+      if (!id || this.admin) return
+      const c = this.listItem(id)
+      if (c && this.active?.id !== id) this.open(c)
+    },
+
     listItem(id) {
       return this.complaints.find(x => x.id === id)
     },
@@ -189,6 +205,8 @@ export default {
             this.$emit('read')
           }
         }
+        // lietotājam paziņojums par atbildi tagad izlasīts
+        if (!this.admin) window.dispatchEvent(new Event('bookloop:notifs-refresh'))
       } finally {
         this.loadingThread = false
       }

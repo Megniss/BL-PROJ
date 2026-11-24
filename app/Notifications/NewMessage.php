@@ -27,6 +27,7 @@ class NewMessage extends Notification implements ShouldQueue
             'type' => 'message',
             'message' => "{$this->sender->name} sent you a message.",
             'sender_id' => $this->sender->id,
+            'sender_name' => $this->sender->name,
             'preview' => mb_strimwidth($this->preview, 0, 60, '…'),
         ];
     }

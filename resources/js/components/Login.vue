@@ -182,6 +182,9 @@ export default {
           this.errorMsg = this.t('login.errorThrottle').replace('{m}', data.minutes)
         } else if (data?.blocked) {
           this.errorMsg = this.t('login.errorBlocked')
+        } else if (e.response?.status === 503) {
+          // parole pareiza, bet 2FA kodu nevarēja nosūtīt
+          this.errorMsg = this.t('twofa.mailError')
         } else {
           this.errorMsg = this.t('login.error')
         }

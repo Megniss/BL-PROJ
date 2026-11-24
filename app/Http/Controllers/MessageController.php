@@ -75,6 +75,12 @@ class MessageController extends Controller
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
 
+        // arī zvaniņā paziņojums par šo sarunu vairs nav jauns
+        $request->user()->unreadNotifications()
+            ->where('type', NewMessage::class)
+            ->where('data->sender_id', $user->id)
+            ->update(['read_at' => now()]);
+
         return response()->json($messages);
     }
 

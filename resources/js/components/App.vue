@@ -13,6 +13,9 @@
       <button class="cookie-btn" @click="acceptCookie">{{ t('cookie.btn') }}</button>
     </div>
 
+    <!-- aicinājums ieslēgt e-pastus, pēc cookie paziņojuma -->
+    <EmailPrompt :blocked="showCookie" />
+
     <ToastContainer />
   </div>
 </template>
@@ -21,11 +24,12 @@
 import langMixin from '../langMixin.js'
 import { initLanguages } from '../langStore.js'
 import ToastContainer from './ToastContainer.vue'
+import EmailPrompt from './EmailPrompt.vue'
 
 export default {
   name: 'App',
 
-  components: { ToastContainer },
+  components: { ToastContainer, EmailPrompt },
 
   mixins: [langMixin],
 

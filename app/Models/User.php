@@ -91,6 +91,7 @@ class User extends Authenticatable
             'deleted_at' => 'datetime',
             'two_factor_enabled' => 'boolean',
             'two_factor_prompted' => 'boolean',
+            'email_prompted' => 'boolean',
             'show_on_map' => 'boolean',
             'latitude' => 'float',
             'longitude' => 'float',

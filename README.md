@@ -105,8 +105,16 @@ Laravel apstrādā REST API loģiku, Vue veido lietotāja saskarni un komunicē 
 - Atbalsta saruna vienmēr redzama sarakstā pirmā
 
 ### 9. Paziņojumu sistēma
-- Paziņojumi par apmaiņas lēmumiem, jauniem ziņojumiem un admina darbībām ar grāmatām
-- Paziņojumu zvans ar sarkanu skaitītāju, var atzīmēt kā izlasītus
+- Paziņojumi par apmaiņas lēmumiem, jauniem ziņojumiem, admina darbībām ar grāmatām un **admina atbildēm atbalsta čatā**
+- Zvaniņš ir navigācijas joslā **visās lapās** (`NotificationBell.vue`), nevis tikai My Library
+- Sarkanais skaitlis = īstais nelasīto skaits (serveris skaita visus, ne tikai pirmos 15) + gaidošie apmaiņas pieprasījumi
+- Jaunus paziņojumus pārbauda ik 30 s, atverot cilni un pārejot uz citu lapu (fona cilnē nepārbauda)
+- Teksti LV/EN pēc izvēlētās valodas, ar ikonu, laiku ("pirms 5 min") un otru rindu (ziņas sākums vai admina iemesls)
+- Uzspiežot - paziņojums izlasīts un aizved uz vietu: ziņa -> konkrētā saruna, atbalsts -> konkrētais pieteikums (`/support?ticket=ID`), apmaiņa/grāmata -> My Library
+- Atverot sarunu vai atbalsta pieteikumu, attiecīgais paziņojums pats kļūst izlasīts
+- Apmaiņas pieprasījumu var pieņemt/noraidīt tieši zvaniņā
+- Pogas zvaniņa galvenē: **"✓ Mark all as read"** (vienmēr redzama, pelēka ja nav ko atzīmēt) un **"Clear"** (izdzēš jau izlasītos, nelasītie paliek)
+- Par vienu pieteikumu/sarunu ir tikai viens nelasīts paziņojums, lai nekrājas
 - **E-pasta paziņojumi:** lielākā daļa paziņojumu tiek nosūtīti arī uz e-pastu (sk. sadaļu 15)
 
 ### 10. Lietotāju bloķēšana
@@ -119,6 +127,7 @@ Laravel apstrādā REST API loģiku, Vue veido lietotāja saskarni un komunicē 
 - Vārda, e-pasta un paroles maiņa (e-pastu un paroli var mainīt tikai ar pašreizējo paroli, pēc tam citas ierīces tiek izlogotas)
 - Privātuma iestatījumi: vai rādīt pievienošanās datumu, apmaiņu skaitu, apmaiņu vēsturi un grāmatas kartē
 - **E-pasti:** 4 atsevišķi slēdži - jaunas grāmatas tuvumā, visvairāk samainītās, populārākie autori, labāk novērtētās (pēc noklusējuma viss izslēgts, sk. sadaļu 15)
+- **Aicinājums ieslēgt e-pastus:** pēc ielogošanās apakšā parādās logs (`EmailPrompt.vue`) ar pogām "Izvēlēties iestatījumos" (aizved uz `/settings#emails` un izceļ sadaļu) un "Ne tagad". Rāda vienreiz - kamēr nav ieslēgts neviens e-pasts un logs nav aizvērts (`users.email_prompted`, glabājas serverī, tāpēc citā ierīcē neatkārtojas). Nerāda kopā ar cookie paziņojumu un 2FA ieteikumu
 - Divpakāpju pieteikšanās ieslēgšana/izslēgšana
 - Atrašanās vietas izvēle kartē
 - Bloķēto lietotāju pārvaldība
@@ -185,6 +194,7 @@ Pilns LV/EN tulkojums, tumšā režīma atbalsts.
   - `BookUnderReview` - admins atzīmēja grāmatu pārskatīšanai (paziņojums + e-pasts)
   - `BookDeletedByAdmin` - admins dzēsa grāmatu, ar iemeslu (paziņojums + e-pasts)
   - `SwapUnavailable` - otrs lietotājs izdzēsa kontu, apmaiņa vairs nav iespējama (tikai paziņojums)
+  - `SupportReply` - admins atbildēja atbalsta čatā (tikai paziņojums, viens kamēr nav izlasīts)
   - `LoginLocked` - 5 neveiksmīgi pieteikšanās mēģinājumi, konts bloķēts 15 min (tikai e-pasts)
   - `TwoFactorCode` - 2FA kods (tikai e-pasts)
   - `DigestEmail` - 4 atsevišķi grāmatu e-pasti, katrs tikai tiem, kas to ieslēguši (sk. zemāk)
@@ -273,7 +283,7 @@ php artisan schedule:work                                # palaiž scheduler lok
 ## Datubāzes struktūra
 
 ```
-users                   - lietotāju konti (is_admin, is_blocked, admin_password, atrašanās vieta, 2FA)
+users                   - lietotāju konti (is_admin, is_blocked, admin_password, atrašanās vieta, 2FA, email_prompted)
 email_subscriptions     - kurus e-pastus lietotājs ieslēdzis (type: nearby/popular/authors/rated, sent_at)
 books                   - grāmatu katalogs
 swap_requests           - apmaiņas pieprasījumi
@@ -346,7 +356,7 @@ Lietotne ir instalējama kā progresīvā tīmekļa lietotne (PWA):
 app/Http/Controllers/   ← 14 API kontrolieri (ieskaitot AdminController, AdminAuthController, TwoFactorController)
 app/Http/Middleware/    ← AdminMiddleware, SecurityHeaders
 app/Models/             ← 12 modeļi (User, Book, SwapRequest, Message, Rating, Block, Complaint, ComplaintMessage, AdminLog, Language, TranslationOverride, EmailSubscription)
-app/Notifications/      ← 8 paziņojumi (sk. sadaļu 15)
+app/Notifications/      ← 9 paziņojumi (sk. sadaļu 15)
 app/Mail/               ← DigestEmail (grāmatu e-pasti, viens veids = viens e-pasts)
 app/Console/Commands/   ← bookloop:emails, bookloop:load-test
 app/Support/            ← TwoFactor (2FA), Distance (attālums), Chat (čats), Digest (e-pastu dati), Md (markdown escape)

@@ -53,6 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->middleware('throttle:5,1');
     Route::patch('/profile/privacy', [ProfileController::class, 'updatePrivacy']);
     Route::patch('/profile/emails', [ProfileController::class, 'updateEmails']);
+    Route::post('/profile/email-prompt/dismiss', [ProfileController::class, 'dismissEmailPrompt']);
     Route::post('/two-factor/send', [TwoFactorController::class, 'sendEnableCode'])->middleware('throttle:3,1');
     Route::post('/two-factor/enable', [TwoFactorController::class, 'enable'])->middleware('throttle:10,1');
     Route::post('/two-factor/disable', [TwoFactorController::class, 'disable']);
@@ -62,6 +63,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile/history', [ProfileController::class, 'history']);
     Route::get('/notifications', [ProfileController::class, 'notifications']);
     Route::post('/notifications/read-all', [ProfileController::class, 'markAllRead']);
+    Route::delete('/notifications/read', [ProfileController::class, 'clearRead']);
     Route::patch('/notifications/{id}/read', [ProfileController::class, 'markRead']);
 
     Route::get('/books', [BookController::class, 'index']);
