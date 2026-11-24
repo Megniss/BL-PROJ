@@ -7,7 +7,7 @@
 <x-mail::stats :items="$stats" />
 
 @endif
-<x-mail::book-grid :items="$items" :placeholder="$copy['placeholder']" :link="$copy['link']" />
+<x-mail::book-grid :items="$items" :placeholder="$copy['placeholder']" :link="$copy['link']" :message="($embedImages ?? false) ? ($message ?? null) : null" />
 
 <x-mail::button :url="$buttonUrl">
 {{ $copy['button'] }}

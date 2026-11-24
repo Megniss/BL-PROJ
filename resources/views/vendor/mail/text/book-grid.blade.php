@@ -1,4 +1,4 @@
-@props(['items' => [], 'placeholder' => '', 'link' => ''])
+@props(['items' => [], 'placeholder' => '', 'link' => '', 'message' => null])
 @foreach ($items as $i => $item)
 {{ $i + 1 }}. {{ $item['title'] }}@if (!empty($item['meta'])) - {{ $item['meta'] }}@endif @if (!empty($item['badge']))({{ $item['badge'] }})@endif
 

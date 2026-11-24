@@ -214,7 +214,17 @@ Visi e-pasti izmanto Laravel Markdown mail veidnes, kas pārveidotas BookLoop st
 | New Outlook / Outlook.com | ✅ |
 | Apple Mail / iOS | ✅ ar dark mode |
 
-> Mailtrap **sandbox** īstiem adresātiem neko nesūta. Lai redzētu e-pastu īstā Gmail/Outlook, uz brīdi jāsūta caur īstu SMTP (piem. Mailtrap Email Sending ar savu domēnu). Vāku bildes no `localhost` īstā e-pasta klientā neielādēsies - vajag publisku `APP_URL`.
+> Mailtrap **sandbox** īstiem adresātiem neko nesūta.
+
+**Vāku bildes:** Gmail un Outlook bildes ielādē caur saviem serveriem, kas `localhost` neredz. Tāpēc, ja `APP_URL` ir `localhost`/`127.0.0.1`/`*.test`, vāki tiek **pielikti pašam e-pastam** (inline, `cid:`) un rādās jebkurā klientā. Uz publiska servera tiek izmantotas parastas saites (e-pasts mazāks). Ar roku: `MAIL_EMBED_IMAGES=true` vai `false`. Saites uz grāmatām gan ved uz `APP_URL`, tāpēc lokāli tās atveras tikai tavā datorā.
+
+**Īsti e-pasti dažām adresēm** (`MAIL_MAILER=split`, `App\Mail\SplitTransport`):
+- adreses no `MAIL_REAL_RECIPIENTS` (ar komatu) saņem e-pastus pa īstam caur Gmail SMTP, **visas pārējās** iet uz Mailtrap sandbox kā līdz šim
+- strādā visiem e-pastiem (grāmatu e-pasti, 2FA kodi, paziņojumi, paroles atjaunošana)
+- ja e-pastam ir vairāki adresāti un kaut viens nav sarakstā - viss iet uz sandbox
+- vajag `REAL_MAIL_USERNAME` (gmail adrese, no kuras sūta) un `REAL_MAIL_PASSWORD` - Google **app password** (myaccount.google.com/apppasswords, kontam jābūt ieslēgtai 2-step verification). Ja parole tukša, arī saraksta adreses iet uz Mailtrap
+- Gmail sūtītāju vienmēr parāda kā `REAL_MAIL_USERNAME`, nevis `noreply@bookloop.lv`. Limits ~500 e-pasti dienā
+- lai e-pasts pienāk Outlook, sarakstā liek @outlook.com/@hotmail.com adresi vai Gmail kontu pievieno Outlook programmā
 
 **Priekšskatījums pārlūkā** (tikai `APP_ENV=local`, neko nesūta, `?user=ID` konkrētam lietotājam):
 - http://localhost:8000/dev/mail/digest/nearby - jaunas grāmatas tuvumā

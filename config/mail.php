@@ -83,6 +83,28 @@ return [
             'transport' => 'mailtrap-sdk',
         ],
 
+        // īsts gmail smtp (vajag google "app password", parasta parole neder)
+        'real' => [
+            'transport' => 'smtp',
+            'host' => env('REAL_MAIL_HOST', 'smtp.gmail.com'),
+            'port' => env('REAL_MAIL_PORT', 587),
+            'username' => env('REAL_MAIL_USERNAME'),
+            'password' => env('REAL_MAIL_PASSWORD'),
+            'timeout' => 30,
+        ],
+
+        // MAIL_MAILER=split - adreses no MAIL_REAL_RECIPIENTS pa īstam, pārējās uz sandbox
+        // sk. App\Mail\SplitTransport
+        'split' => [
+            'transport' => 'split',
+            'sandbox' => env('MAIL_SANDBOX_MAILER', 'mailtrap-sdk'),
+            'real' => 'real',
+            'recipients' => array_filter(array_map(
+                fn($a) => strtolower(trim($a)),
+                explode(',', (string) env('MAIL_REAL_RECIPIENTS', ''))
+            )),
+        ],
+
         'failover' => [
             'transport' => 'failover',
             'mailers' => [
@@ -113,6 +135,10 @@ return [
     | used globally for all emails that are sent by your application.
     |
     */
+
+    // vāku bildes pielikt e-pastam (true) vai rādīt ar saiti (false)
+    // ja nav uzlikts, lokāli (localhost) pieliek, uz publiska servera - saite
+    'embed_images' => env('MAIL_EMBED_IMAGES'),
 
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),

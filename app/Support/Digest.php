@@ -68,6 +68,7 @@ class Digest
                 'meta' => $r->author,
                 'badge' => $r->cnt . ($r->cnt == 1 ? ' swap' : ' swaps'),
                 'cover' => self::cover($r->cover),
+                'cover_file' => self::coverFile($r->cover),
                 'url' => self::bookUrl($r->title, $r->author),
             ])
             ->all();
@@ -114,6 +115,7 @@ class Digest
                 'meta' => $r->author . ' · ' . $r->cnt . ' ratings',
                 'badge' => '★ ' . number_format((float) $r->avg_stars, 1),
                 'cover' => self::cover($r->cover),
+                'cover_file' => self::coverFile($r->cover),
                 'url' => self::bookUrl($r->title, $r->author),
             ])
             ->all();
@@ -150,6 +152,7 @@ class Digest
                 'meta' => $b->author,
                 'badge' => Distance::toKm((float) $b->dist) . ' km',
                 'cover' => self::cover($b->cover_image),
+                'cover_file' => self::coverFile($b->cover_image),
                 'url' => self::bookUrl($b->title, $b->author),
             ])
             ->all();
@@ -171,5 +174,15 @@ class Digest
     private static function cover(?string $path): ?string
     {
         return $path ? Storage::disk('public')->url($path) : null;
+    }
+
+    // faila ceļš diskā, lai bildi var pielikt e-pastam (sk. DigestEmail::embedImages)
+    private static function coverFile(?string $path): ?string
+    {
+        if (!$path || !Storage::disk('public')->exists($path)) {
+            return null;
+        }
+
+        return Storage::disk('public')->path($path);
     }
 }

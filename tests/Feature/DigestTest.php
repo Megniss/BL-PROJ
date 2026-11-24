@@ -11,6 +11,7 @@ use App\Notifications\NewMessage;
 use App\Support\Digest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 // e-pasti pa veidiem: piekrišana katram atsevišķi, saturs, atrakstīšanās
@@ -272,6 +273,32 @@ class DigestTest extends TestCase
 
         $this->assertSame(['Kaija', 'Fausts', 'Ābece'], array_column($res->json('data'), 'title'));
         $this->assertSame(2, $res->json('data.0.swaps_count'));
+    }
+
+    // gmail localhost bildes neredz, tāpēc lokāli vāks tiek pielikts pašam e-pastam (cid)
+    public function test_covers_are_embedded_on_localhost_and_linked_on_public_server(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('covers/kaija.jpg', 'jpg');
+        $this->makeSwap();
+        Book::where('title', 'Kaija')->update(['cover_image' => 'covers/kaija.jpg']);
+        $user = $this->subscriber(['popular']);
+
+        config(['mail.default' => 'array', 'app.url' => 'http://localhost:8000']);
+        Mail::to($user)->send($this->mail($user, 'popular'));
+
+        $sent = app('mailer')->getSymfonyTransport()->messages()->last()->getOriginalMessage();
+        $this->assertStringContainsString('src="cid:', $sent->getHtmlBody());
+        $this->assertCount(1, $sent->getAttachments());
+
+        // uz publiska servera parasta saite, nekas nav pielikts
+        config(['app.url' => 'https://bookloop.lv']);
+        Mail::to($user)->send($this->mail($user, 'popular'));
+
+        $sent = app('mailer')->getSymfonyTransport()->messages()->last()->getOriginalMessage();
+        $this->assertStringNotContainsString('cid:', $sent->getHtmlBody());
+        $this->assertStringContainsString('covers/kaija.jpg', $sent->getHtmlBody());
+        $this->assertCount(0, $sent->getAttachments());
     }
 
     public function test_unsubscribe_removes_only_that_type(): void

@@ -97,8 +97,24 @@ class DigestEmail extends Mailable
             'stats' => $this->stats(),
             'items' => $this->items,
             'buttonUrl' => url($copy['url']),
+            'embedImages' => self::embedImages(),
             'unsubscribeUrl' => self::unsubscribeUrl($this->user, $this->type),
         ]);
+    }
+
+    // gmail/outlook bildes ielādē caur saviem serveriem, tie localhost neredz
+    // tāpēc lokāli vākus pieliekam pašam e-pastam (cid), uz publiska servera - parastas saites
+    // MAIL_EMBED_IMAGES=true/false var uzlikt ar roku
+    public static function embedImages(): bool
+    {
+        $setting = config('mail.embed_images');
+        if ($setting !== null) {
+            return (bool) $setting;
+        }
+
+        $host = parse_url(config('app.url'), PHP_URL_HOST) ?: 'localhost';
+
+        return in_array($host, ['localhost', '127.0.0.1', '0.0.0.0']) || str_ends_with($host, '.test');
     }
 
     // nedēļas skaitļi tikai "popular" e-pastā

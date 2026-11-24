@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Mail\SplitTransport;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
@@ -16,6 +18,19 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // MAIL_MAILER=split - daļa e-pastu pa īstam (gmail), pārējie uz mailtrap
+        // transportus izveido tikai kad vajag, lai bez gmail paroles nekas nelūzt
+        Mail::extend('split', function (array $config) {
+            $manager = app('mail.manager');
+
+            return new SplitTransport(
+                fn() => $manager->mailer($config['sandbox'])->getSymfonyTransport(),
+                fn() => $manager->mailer($config['real'])->getSymfonyTransport(),
+                $config['recipients'] ?? [],
+                filled(config('mail.mailers.real.username')) && filled(config('mail.mailers.real.password')),
+            );
+        });
+
         // e2e testos vienmēr nobūvētie faili, arī ja strādā npm run dev
         if (env('E2E_TESTS')) {
             Vite::useHotFile(storage_path('framework/e2e-no-hot'));
