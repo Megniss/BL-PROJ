@@ -68,6 +68,7 @@ class Digest
                 'meta' => $r->author,
                 'badge' => $r->cnt . ($r->cnt == 1 ? ' swap' : ' swaps'),
                 'cover' => self::cover($r->cover),
+                'url' => self::bookUrl($r->title, $r->author),
             ])
             ->all();
     }
@@ -89,6 +90,8 @@ class Digest
                 'title' => $r->author,
                 'meta' => $r->titles . ($r->titles == 1 ? ' book' : ' different books'),
                 'badge' => $r->cnt . ($r->cnt == 1 ? ' swap' : ' swaps'),
+                // autoram - visas viņa grāmatas
+                'url' => url('/browse') . '?' . http_build_query(['search' => $r->author]),
             ])
             ->all();
     }
@@ -111,6 +114,7 @@ class Digest
                 'meta' => $r->author . ' · ' . $r->cnt . ' ratings',
                 'badge' => '★ ' . number_format((float) $r->avg_stars, 1),
                 'cover' => self::cover($r->cover),
+                'url' => self::bookUrl($r->title, $r->author),
             ])
             ->all();
     }
@@ -146,6 +150,7 @@ class Digest
                 'meta' => $b->author,
                 'badge' => Distance::toKm((float) $b->dist) . ' km',
                 'cover' => self::cover($b->cover_image),
+                'url' => self::bookUrl($b->title, $b->author),
             ])
             ->all();
     }
@@ -154,6 +159,12 @@ class Digest
     public static function items(string $type, User $user, array $global): array
     {
         return $type === 'nearby' ? self::nearby($user) : $global[$type];
+    }
+
+    // saite uz lapu, kur uzreiz atveras šīs grāmatas logs (Browse.vue lasa title un author)
+    private static function bookUrl(string $title, string $author): string
+    {
+        return url('/browse') . '?' . http_build_query(['title' => $title, 'author' => $author]);
     }
 
     // vākiem vajag pilnu adresi, citādi e-pastā bilde neatvērsies

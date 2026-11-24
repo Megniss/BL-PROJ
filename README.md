@@ -234,6 +234,8 @@ Katra tēma ir **atsevišķs e-pasts** ar savu tēmu (subject), savu dienu un sa
 | `rated` | ⭐ Top rated books | sestdienās | vidējais vērtējums, vismaz 2 vērtējumi |
 
 - Katrā e-pastā līdz 6 grāmatām (datorā 3×2)
+- Vāks, nosaukums un "View book →" ved uz `/browse?title=...&author=...` - lapa uzreiz atver tieši šīs grāmatas logu ar visiem eksemplāriem (ja nevienam tā šobrīd nav, logs to parāda). Autora kartīte ("See their books →") ved uz `/browse?search=autors` - visas viņa grāmatas
+- Poga apakšā atver Browse ar atbilstošu filtru: tuvumā - `?sort=newest&max_km=25`, most swapped un autori - `?sort=most_swapped` (jauna kārtošana pēc pieņemto apmaiņu skaita), top rated - `?sort=top_rated`
 - Admina dzēstās vai pārbaudāmās grāmatas netiek rādītas
 - Visiem veidiem viens skats `resources/views/mail/digest.blade.php`, teksti ir `DigestEmail::COPY`
 

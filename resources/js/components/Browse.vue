@@ -96,6 +96,7 @@
               <option value="newest">{{ t('featured.recent') }}</option>
               <option value="popular">{{ t('featured.popular') }}</option>
               <option value="top_rated">{{ t('featured.topRated') }}</option>
+              <option value="most_swapped">{{ t('sort.mostSwapped') }}</option>
               <option v-if="authStore.user" value="nearest">{{ t('location.nearest') }}</option>
             </select>
           </div>
@@ -304,7 +305,7 @@
 
   <BookDetailModal
     :book="detailBook"
-    @close="detailBook = null"
+    @close="closeDetail"
     @swap="openSwap"
     @message="goToMessages"
     @profile="(user) => $router.push({ name: 'userProfile', params: { id: user.id } })"
@@ -378,6 +379,8 @@ export default {
       userLastPage: 1,
       userTotal: 0,
       detailBook: null,
+      // grāmata, kuru atvērt pēc ielādes (saite no e-pasta: ?title=...&author=...)
+      openTarget: null,
       swapModal: {
         open: false, wantedBook: null, myBooks: [],
         selectedBookId: null, sending: false, error: '', success: false,
@@ -399,6 +402,7 @@ export default {
       switch (this.sortBy) {
         case 'popular': return this.t('featured.popular')
         case 'top_rated': return this.t('featured.topRated')
+        case 'most_swapped': return this.t('sort.mostSwapped')
         case 'newest': return this.t('featured.recent')
         case 'nearest': return this.t('location.nearest')
         default: return this.t('browse.allBooks')
@@ -465,7 +469,9 @@ export default {
     },
 
     readRouteParams(q) {
-      this.searchQuery = q.search || ''
+      // no e-pasta: aizmugurē rāda šīs grāmatas meklēšanu, logu atver pēc ielādes
+      this.openTarget = q.title && q.author ? { title: q.title, author: q.author } : null
+      this.searchQuery = q.search || q.title || ''
       this.sortBy = q.sort || 'title_asc'
       this.maxKm = q.max_km || ''
       this.langFilters = q.languages ? q.languages.split(',') : []
@@ -519,6 +525,26 @@ export default {
         // atstāj sarakstu tukšu
       } finally {
         this.loadingBooks = false
+      }
+      this.openFromLink()
+    },
+
+    // atver grāmatu no e-pasta saites. ja nav pieejamu eksemplāru,
+    // logs tik un tā atveras un parāda, ka šobrīd nevienam tās nav
+    openFromLink() {
+      if (!this.openTarget) return
+      const { title, author } = this.openTarget
+      this.openTarget = null
+      const same = (a, b) => (a || '').toLowerCase() === (b || '').toLowerCase()
+      const found = this.books.find(b => same(b.title, title) && same(b.author, author))
+      this.openDetail(found || { id: null, title, author })
+    },
+
+    // aizverot noņem title/author no adreses, lai pārlādējot logs neatveras vēlreiz
+    closeDetail() {
+      this.detailBook = null
+      if (this.$route.query.title) {
+        this.$router.replace({ name: 'browse', query: this.buildQuery() })
       }
     },
 

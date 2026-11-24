@@ -7,14 +7,14 @@
       <div class="book-detail-layout">
         <div class="book-detail-cover-wrap" :style="!book.cover_image ? { background: coverColor(book) } : {}">
           <img v-if="book.cover_image" :src="'/storage/' + book.cover_image" :alt="book.title" class="book-detail-cover-img" />
-          <span v-else class="book-card-genre">{{ t('genre.' + book.genre) }}</span>
+          <span v-else-if="book.genre" class="book-card-genre">{{ t('genre.' + book.genre) }}</span>
         </div>
 
         <div class="book-detail-info">
           <h2 class="book-detail-title mb-1" :id="'detail-title-' + book.id">{{ book.title }}</h2>
           <p class="book-detail-author mb-3">{{ book.author }}</p>
 
-          <div class="d-flex flex-wrap gap-1 mb-3">
+          <div v-if="book.genre" class="d-flex flex-wrap gap-1 mb-3">
             <span class="tag">{{ t('genre.' + book.genre) }}</span>
           </div>
 
@@ -116,7 +116,8 @@ export default {
       this.iHave = false
       if (val) {
         this.fetchCopies(val)
-        this.fetchSuggestions(val.id)
+        // no e-pasta saites grāmatai var nebūt id (ja nevienam tā šobrīd nav)
+        if (val.id) this.fetchSuggestions(val.id)
       }
     }
   },

@@ -228,6 +228,52 @@ class DigestTest extends TestCase
         $this->assertStringNotContainsString('<code>', $html);
     }
 
+    // uzspiežot uz grāmatas atveras tieši tā, uz autora - visas viņa grāmatas
+    public function test_books_and_authors_link_to_the_site(): void
+    {
+        $this->makeSwap('Kaija & co', 'Čehovs');
+        $user = $this->subscriber(['popular', 'authors']);
+
+        $global = Digest::global();
+        $this->assertSame(url('/browse') . '?title=Kaija+%26+co&author=%C4%8Cehovs', $global['popular'][0]['url']);
+        $this->assertSame(url('/browse') . '?search=%C4%8Cehovs', $global['authors'][0]['url']);
+
+        $html = $this->mail($user, 'popular')->render();
+        $this->assertStringContainsString('href="' . e($global['popular'][0]['url']) . '"', $html);
+        $this->assertStringContainsString('View book', $html);
+        $this->assertStringContainsString('See their books', $this->mail($user, 'authors')->render());
+    }
+
+    // poga apakšā atver lapu ar atbilstošu filtru
+    public function test_button_opens_matching_filter(): void
+    {
+        $this->makeSwap();
+        $user = $this->subscriber(['popular', 'rated']);
+
+        $this->assertStringContainsString('href="' . url('/browse?sort=most_swapped') . '"', $this->mail($user, 'popular')->render());
+        $this->assertStringContainsString('href="' . url('/browse?sort=top_rated') . '"', $this->mail($user, 'rated')->render());
+
+        $nearby = new DigestEmail($user, 'nearby', [['title' => 'X', 'meta' => 'Y']]);
+        $this->assertStringContainsString('href="' . e(url('/browse?sort=newest&max_km=25')) . '"', $nearby->render());
+    }
+
+    // jaunā kārtošana lapā: visvairāk samainītās pirmās
+    public function test_browse_can_sort_by_most_swapped(): void
+    {
+        $this->makeSwap('Kaija', 'Čehovs');
+        $this->makeSwap('Kaija', 'Čehovs');
+        $this->makeSwap('Fausts', 'Gēte');
+        // pieejami eksemplāri, ko lapā var redzēt
+        foreach (['Anna' => ['Ābece', 'Kāds'], 'B' => ['Fausts', 'Gēte'], 'C' => ['Kaija', 'Čehovs']] as [$title, $author]) {
+            Book::factory()->create(['title' => $title, 'author' => $author, 'status' => 'Available']);
+        }
+
+        $res = $this->getJson('/api/browse?sort=most_swapped')->assertOk();
+
+        $this->assertSame(['Kaija', 'Fausts', 'Ābece'], array_column($res->json('data'), 'title'));
+        $this->assertSame(2, $res->json('data.0.swaps_count'));
+    }
+
     public function test_unsubscribe_removes_only_that_type(): void
     {
         $user = $this->subscriber(['popular', 'rated']);

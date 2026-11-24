@@ -47,10 +47,22 @@ class BookController extends Controller
             ->selectRaw('lower(rb.title) as rt, lower(rb.author) as ra, avg(r.stars) as avg_stars, count(*) as cnt')
             ->groupByRaw('lower(rb.title), lower(rb.author)');
 
+        // cik reizes šī grāmata samainīta (pieņemtas apmaiņas, kur to izvēlējās), kārtošanai "most_swapped"
+        $swaps = DB::table('swap_requests as s')
+            ->join('books as sb', 'sb.id', '=', 's.wanted_book_id')
+            ->where('s.status', 'accepted')
+            ->selectRaw('lower(sb.title) as st, lower(sb.author) as sa, count(*) as cnt')
+            ->groupByRaw('lower(sb.title), lower(sb.author)');
+
         $query->leftJoinSub($ratings, 'rs', function ($join) {
                 $join->on('rs.rt', '=', DB::raw('lower(books.title)'))
                     ->on('rs.ra', '=', DB::raw('lower(books.author)'));
             })
+            ->leftJoinSub($swaps, 'sw', function ($join) {
+                $join->on('sw.st', '=', DB::raw('lower(books.title)'))
+                    ->on('sw.sa', '=', DB::raw('lower(books.author)'));
+            })
+            ->selectRaw('coalesce(max(sw.cnt), 0) as swaps_count')
             ->selectRaw('max(books.id) as rep_id, count(*) as copies_count, max(books.created_at) as newest')
             ->selectRaw('max(books.cover_image) as any_cover')
             ->selectRaw('max(rs.avg_stars) as ratings_avg_stars')
@@ -73,6 +85,7 @@ class BookController extends Controller
             'newest' => $query->orderByDesc('newest'),
             'popular' => $query->orderByDesc('ratings_count'),
             'top_rated' => $query->orderByDesc('ratings_avg_stars'),
+            'most_swapped' => $query->orderByDesc('swaps_count')->orderByRaw('lower(books.title) asc'),
             'nearest' => $query->orderByRaw('distance_sq is null')->orderBy('distance_sq'),
             default => $query->orderByRaw('lower(books.title) asc'),
         };
@@ -92,6 +105,7 @@ class BookController extends Controller
                 'copies_count' => (int) $g->copies_count,
                 'ratings_avg_stars' => $g->ratings_avg_stars,
                 'ratings_count' => (int) $g->ratings_count,
+                'swaps_count' => (int) $g->swaps_count,
                 'distance_km' => Distance::toKm($g->distance_sq ?? null),
             ];
         }));

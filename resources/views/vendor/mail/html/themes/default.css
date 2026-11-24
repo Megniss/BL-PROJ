@@ -396,6 +396,24 @@ blockquote {
     text-align: center;
 }
 
+/* nosaukums ir saite, bet izskatās kā virsraksts */
+.card-title-link {
+    color: #1a1612;
+    text-decoration: none;
+}
+
+.card-link {
+    font-size: 12px;
+    line-height: 1.3;
+    margin: 6px 0 0;
+    text-align: center;
+}
+
+.card-link a {
+    color: #3a6b3e;
+    text-decoration: underline;
+}
+
 /* Utilities */
 
 .break-all {

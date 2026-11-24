@@ -77,7 +77,7 @@ p, td, li, .card-meta, .stat-label, .panel-content, .panel-content p {
 color: #e5ddd0 !important;
 }
 
-h1, h2, .card-title {
+h1, h2, .card-title, .card-title-link {
 color: #faf6ef !important;
 }
 
