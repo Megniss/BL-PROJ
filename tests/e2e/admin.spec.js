@@ -49,8 +49,8 @@ test('admin grāmatas var kārtot un filtrēt ar dropdown', async ({ page }) => 
   await page.getByRole('button', { name: 'Open' }).click()
 
   await page.getByRole('button', { name: 'All Books' }).click()
-  const table = page.getByRole('table', { name: 'All Books' })
-  const firstTitle = table.locator('tbody tr').first().locator('td').first()
+  const cards = page.getByTestId('admin-book')
+  const firstTitle = page.getByTestId('admin-book-title').first()
   const sort = page.getByRole('combobox', { name: 'Sort' })
 
   await sort.selectOption({ label: 'Title A–Z' })
@@ -59,10 +59,12 @@ test('admin grāmatas var kārtot un filtrēt ar dropdown', async ({ page }) => 
   await expect(firstTitle).toHaveText('MazaisPrincis')
 
   await page.locator('select').filter({ hasText: 'All Genres' }).selectOption('Romāns')
-  await expect(table.locator('tbody tr')).toHaveCount(1)
+  await expect(cards).toHaveCount(1)
 
   await page.getByRole('button', { name: 'Clear filters' }).click()
-  await expect(table.locator('tbody tr')).toHaveCount(9)
+  // kopā 9, lapā rāda 6
+  await expect(page.getByTestId('book-stat-all')).toContainText('9')
+  await expect(cards).toHaveCount(6)
 })
 
 test('telefonā admin rāda tikai galveno, pārējo pēc "Skatīt vairāk"', async ({ page }) => {
@@ -73,6 +75,8 @@ test('telefonā admin rāda tikai galveno, pārējo pēc "Skatīt vairāk"', asy
   await page.getByRole('button', { name: 'Open' }).click()
   await page.getByRole('button', { name: 'All Books' }).click()
 
+  // datora kartītes telefonā paslēptas
+  await expect(page.getByTestId('admin-book').first()).toBeHidden()
   const card = page.getByRole('table', { name: 'All Books' }).locator('tbody tr').first()
   await expect(card.getByText('Delete')).toBeHidden()
   await card.getByRole('button', { name: 'View more ▾' }).click()

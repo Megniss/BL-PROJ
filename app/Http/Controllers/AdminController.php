@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 class AdminController extends Controller
 {
     // lai nesanāk copy paste katrā metodē
-    private function log(Request $request, string $action, string $type, int|null $id, string $name, string $reason = null): void
+    private function log(Request $request, string $action, string $type, int|null $id, string $name, ?string $reason = null): void
     {
         AdminLog::create([
             'admin_id' => $request->user()->id,
@@ -52,7 +52,27 @@ class AdminController extends Controller
 
     public function books()
     {
-        $books = Book::with('user:id,name')
+        // apmaiņas pa grāmatām un statusiem, piem. [5 => ['pending' => 1, 'accepted' => 2]]
+        // grāmata var būt gan piedāvātā, gan vēlamā, tāpēc skaita abas puses
+        $swaps = [];
+        foreach (['offered_book_id', 'wanted_book_id'] as $col) {
+            $rows = SwapRequest::selectRaw("$col as book_id, status, count(*) as cnt")
+                ->groupBy($col, 'status')
+                ->get();
+            foreach ($rows as $row) {
+                $swaps[$row->book_id][$row->status] = ($swaps[$row->book_id][$row->status] ?? 0) + $row->cnt;
+            }
+        }
+
+        // kāpēc grāmata pārbaudē - pēdējais admina iemesls
+        $reviewReasons = AdminLog::where('action', 'review_book')
+            ->orderBy('id')
+            ->get(['target_id', 'reason'])
+            ->pluck('reason', 'target_id');
+
+        $books = Book::with('user:id,name,is_blocked,deleted_at')
+            ->withAvg('ratings', 'stars')
+            ->withCount('ratings')
             ->where('status', '!=', 'Removed')
             ->orderBy('created_at', 'desc')
             ->get()
@@ -64,8 +84,17 @@ class AdminController extends Controller
                 'language' => $b->language,
                 'condition' => $b->condition,
                 'status' => $b->status,
-                'owner' => $b->user?->name,
-                'created_at' => $b->created_at->format('Y-m-d H:i'),
+                'description' => $b->description,
+                'cover_image' => $b->cover_image,
+                'owner' => $this->swapUser($b->user),
+                // kārtošanai pēc īpašnieka
+                'owner_name' => $b->user?->name,
+                'created_at' => $b->created_at,
+                'swaps_pending' => $swaps[$b->id]['pending'] ?? 0,
+                'swaps_accepted' => $swaps[$b->id]['accepted'] ?? 0,
+                'rating_avg' => $b->ratings_avg_stars ? round($b->ratings_avg_stars, 1) : null,
+                'rating_count' => $b->ratings_count,
+                'review_reason' => $b->status === 'UnderReview' ? ($reviewReasons[$b->id] ?? null) : null,
             ]);
 
         return response()->json($books);
@@ -173,12 +202,57 @@ class AdminController extends Controller
     public function swaps()
     {
         $swaps = SwapRequest::with([
-            'requester:id,name',
-            'offeredBook:id,title,author',
-            'wantedBook:id,title,author',
+            'requester:id,name,is_blocked,deleted_at',
+            'owner:id,name,is_blocked,deleted_at',
+            'offeredBook:id,title,author,cover_image,status',
+            'wantedBook:id,title,author,cover_image,status',
+            'ratings.rater:id,name',
         ])->latest()->get();
 
-        return response()->json($swaps);
+        // viss vienā formā, lai Vue nav jāmeklē pa relācijām
+        return response()->json($swaps->map(fn($s) => [
+            'id' => $s->id,
+            'status' => $s->status,
+            'closed_by' => $s->closed_by,
+            'created_at' => $s->created_at,
+            'closed_at' => $s->closed_at,
+            // cik dienas gaida (tikai gaidošajiem)
+            'days_waiting' => $s->status === 'pending' ? (int) $s->created_at->diffInDays(now()) : null,
+            'requester' => $this->swapUser($s->requester),
+            'owner' => $this->swapUser($s->owner),
+            // pieprasītājs piedāvā offered, īpašnieks atdod wanted
+            'offered' => $this->swapBook($s->offeredBook),
+            'wanted' => $this->swapBook($s->wantedBook),
+            // paslēpts savā sarakstā (lietotājs nospieda "noņemt")
+            'requester_dismissed' => (bool) $s->requester_dismissed,
+            'owner_dismissed' => (bool) $s->owner_dismissed,
+            'ratings' => $s->ratings->map(fn($r) => [
+                'stars' => $r->stars,
+                'review' => $r->review,
+                'rater' => $r->rater?->name,
+                'by_requester' => $r->rater_id === $s->requester_id,
+            ])->values(),
+        ]));
+    }
+
+    private function swapUser(?User $user): ?array
+    {
+        if (!$user) {
+            return null;
+        }
+
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'blocked' => (bool) $user->is_blocked,
+            'deleted' => $user->deleted_at !== null,
+        ];
+    }
+
+    // grāmata var būt izdzēsta (admins dzēsa) - tad null
+    private function swapBook(?Book $book): ?array
+    {
+        return $book ? $book->only(['id', 'title', 'author', 'cover_image', 'status']) : null;
     }
 
     public function acceptSwap(Request $request, SwapRequest $swap)
@@ -193,7 +267,7 @@ class AdminController extends Controller
         DB::transaction(function () use ($swap, $requesterId, $ownerId) {
             Book::where('id', $swap->offered_book_id)->update(['user_id' => $ownerId, 'status' => 'Available']);
             Book::where('id', $swap->wanted_book_id)->update(['user_id' => $requesterId, 'status' => 'Available']);
-            $swap->update(['status' => 'accepted']);
+            $swap->update(['status' => 'accepted', ...SwapRequest::closedBy('admin')]);
 
             // noraida konfliktējošos
             $conflicting = SwapRequest::where('id', '!=', $swap->id)
@@ -208,7 +282,7 @@ class AdminController extends Controller
                     ->flatMap(fn($s) => [$s->offered_book_id, $s->wanted_book_id])
                     ->unique()->diff([$swap->offered_book_id, $swap->wanted_book_id])->values();
 
-                SwapRequest::whereIn('id', $conflicting->pluck('id'))->update(['status' => 'declined']);
+                SwapRequest::whereIn('id', $conflicting->pluck('id'))->update(['status' => 'declined', ...SwapRequest::closedBy('system')]);
                 if ($bookIdsToFree->isNotEmpty()) {
                     Book::whereIn('id', $bookIdsToFree)->update(['status' => 'Available']);
                 }
@@ -218,7 +292,7 @@ class AdminController extends Controller
         try {
             User::find($swap->requester_id)->notify(new SwapAccepted($swap));
         } catch (\Exception $e) {}
-        $this->log($request, 'accept_swap', 'swap', $swap->id, "{$swap->offeredBook->title} ↔ {$swap->wantedBook->title}");
+        $this->log($request, 'accept_swap', 'swap', $swap->id, ($swap->offeredBook?->title ?? "?") . " ↔ " . ($swap->wantedBook?->title ?? "?"));
 
         return response()->json($swap->fresh(['offeredBook', 'wantedBook', 'requester:id,name']));
     }
@@ -232,20 +306,20 @@ class AdminController extends Controller
         DB::transaction(function () use ($swap) {
             Book::where('id', $swap->offered_book_id)->update(['status' => 'Available']);
             Book::where('id', $swap->wanted_book_id)->update(['status' => 'Available']);
-            $swap->update(['status' => 'declined']);
+            $swap->update(['status' => 'declined', ...SwapRequest::closedBy('admin')]);
         });
 
         try {
             User::find($swap->requester_id)->notify(new SwapDeclined($swap));
         } catch (\Exception $e) {}
-        $this->log($request, 'decline_swap', 'swap', $swap->id, "{$swap->offeredBook->title} ↔ {$swap->wantedBook->title}");
+        $this->log($request, 'decline_swap', 'swap', $swap->id, ($swap->offeredBook?->title ?? "?") . " ↔ " . ($swap->wantedBook?->title ?? "?"));
 
         return response()->json($swap->fresh(['offeredBook', 'wantedBook', 'requester:id,name']));
     }
 
     public function deleteSwap(Request $request, SwapRequest $swap)
     {
-        $label = "{$swap->offeredBook->title} ↔ {$swap->wantedBook->title}";
+        $label = ($swap->offeredBook?->title ?? "?") . " ↔ " . ($swap->wantedBook?->title ?? "?");
 
         // atbrīvo grāmatas ja vēl pending
         if ($swap->status === 'pending') {
@@ -280,17 +354,26 @@ class AdminController extends Controller
     public function ratings()
     {
         $ratings = Rating::with([
-            'book:id,title,author',
-            'rater:id,name',
-        ])->latest()->get()->map(fn($r) => [
-            'id' => $r->id,
-            'book' => $r->book?->title,
-            'author' => $r->book?->author,
-            'rater' => $r->rater?->name,
-            'stars' => $r->stars,
-            'review' => $r->review,
-            'date' => $r->created_at->toDateString(),
-        ]);
+            'book:id,title,author,cover_image,status',
+            'rater:id,name,is_blocked,deleted_at',
+            'swapRequest.requester:id,name,is_blocked,deleted_at',
+            'swapRequest.owner:id,name,is_blocked,deleted_at',
+        ])->latest()->get()->map(function ($r) {
+            $swap = $r->swapRequest;
+            // grāmatu atdeva otrs apmaiņas dalībnieks
+            $giver = $swap && $r->rater_id === $swap->requester_id ? $swap->owner : $swap?->requester;
+
+            return [
+                'id' => $r->id,
+                'stars' => $r->stars,
+                'review' => $r->review,
+                'date' => $r->created_at,
+                'swap_id' => $swap?->id,
+                'rater' => $this->swapUser($r->rater),
+                'giver' => $this->swapUser($giver),
+                'book' => $this->swapBook($r->book),
+            ];
+        });
 
         return response()->json($ratings);
     }

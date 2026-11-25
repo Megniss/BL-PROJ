@@ -43,7 +43,8 @@
       </div>
       <div class="admin-tabs-controls">
         <button class="admin-open-all-btn" :class="{ active: perPage === 99999 }" @click="openAll">{{ perPage === 99999 ? t('admin.collapseAll') : t('admin.openAll') }}</button>
-        <select class="form-select form-select-sm" style="width:auto" v-model.number="perPage">
+        <!-- grāmatām (6), apmaiņām (4) un vērtējumiem (6) lapas izmērs ir fiksēts, tāpēc tur šo nerāda -->
+        <select v-if="!['books', 'swaps', 'ratings'].includes(activeTab)" class="form-select form-select-sm" style="width:auto" v-model.number="perPage">
           <option :value="5">5</option>
           <option :value="10">10</option>
           <option :value="25">25</option>
@@ -90,7 +91,49 @@
           </select>
           <button v-if="hasFilters('users')" class="btn btn-sm btn-outline-secondary m-keep" @click="resetFilters('users')">{{ t('books.clearFilters') }}</button>
         </div>
-        <div class="table-responsive">
+        <p v-if="!filteredUsers.length" class="text-muted text-center py-4 mb-0">{{ t('admin.user.none') }}</p>
+
+        <!-- datorā kartītes -->
+        <div class="swap-list desk-only">
+          <article v-for="u in pagedUsers" :key="u.id" class="swap-item" :class="'user-item-' + (u.is_blocked ? 'blocked' : u.is_admin ? 'admin' : 'active')" data-testid="admin-user">
+            <header class="swap-head">
+              <span class="swap-badge" :class="u.is_admin ? 'user-badge-admin' : 'swap-badge-declined'">{{ u.is_admin ? t('admin.role.admin') : t('admin.role.user') }}</span>
+              <span class="swap-badge" :class="u.is_blocked ? 'rating-badge-bad' : 'swap-badge-accepted'">{{ u.is_blocked ? t('admin.status.blocked') : t('admin.status.active') }}</span>
+              <span class="swap-id">#{{ u.id }}</span>
+              <span class="swap-when">{{ t('admin.col.joined') }} {{ u.joined }}</span>
+              <div class="swap-actions">
+                <template v-if="u.id !== currentUserId">
+                  <button v-if="!u.is_blocked && !u.is_admin" class="ab btn btn-sm btn-outline-danger" @click="blockUser(u)">{{ t('admin.btn.block') }}</button>
+                  <button v-if="u.is_blocked" class="ab btn btn-sm btn-outline-success" @click="unblockUser(u)">{{ t('admin.btn.unblock') }}</button>
+                  <button v-if="!u.is_admin" class="ab btn btn-sm btn-outline-primary" @click="makeAdmin(u)">{{ t('admin.btn.makeAdmin') }}</button>
+                  <button v-if="u.is_admin" class="ab btn btn-sm btn-outline-warning" @click="removeAdmin(u)">{{ t('admin.btn.removeAdmin') }}</button>
+                </template>
+                <span v-else class="text-muted small">{{ t('admin.status.you') }}</span>
+              </div>
+            </header>
+            <div class="book-sides">
+              <div class="swap-side">
+                <p class="swap-role">{{ t('admin.user.account') }}</p>
+                <p class="swap-user">👤 {{ u.name }}</p>
+                <p class="swap-author">✉️ {{ u.email }}</p>
+              </div>
+              <div class="swap-side">
+                <p class="swap-role">{{ t('admin.user.activity') }}</p>
+                <ul class="book-facts">
+                  <li>📚 {{ t('admin.col.books') }}: {{ u.books_count }}</li>
+                  <li>
+                    📍
+                    <button v-if="u.latitude !== null" class="btn btn-link btn-sm p-0 align-baseline" @click="mapUser = u">{{ t('admin.showMap') }}</button>
+                    <span v-else class="text-muted">{{ t('admin.user.noLocation') }}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- telefonā saraksts ar "skatīt vairāk" -->
+        <div class="table-responsive mob-only">
         <table class="table table-hover align-middle m-cards" :aria-label="t('admin.users')">
           <thead>
             <tr>
@@ -151,6 +194,17 @@
     <!-- grāmatas -->
     <div v-show="activeTab === 'books' && !loading[activeTab]" class="admin-card">
       <div class="mt-1">
+        <!-- kopsavilkums pa statusiem, uzspiežot atfiltrē -->
+        <div class="swap-stats mb-3">
+          <button type="button" class="swap-stat" :class="{ active: !filters.books.status }" data-testid="book-stat-all" @click="filters.books.status = ''">
+            <strong>{{ books.length }}</strong> {{ t('admin.book.all') }}
+          </button>
+          <button v-for="st in ['Available', 'Pending', 'UnderReview']" :key="st" type="button"
+            class="swap-stat" :class="['book-stat-' + st, { active: filters.books.status === st }]"
+            @click="filters.books.status = filters.books.status === st ? '' : st">
+            <strong>{{ bookCounts[st] ?? 0 }}</strong> {{ t('books.status.' + st) }}
+          </button>
+        </div>
         <div class="filter-bar mb-3" :class="{ 'filters-open': showFilters }">
           <input v-model="filters.books.search" type="text" class="form-control form-control-sm m-keep" :placeholder="t('admin.filter.searchBooks')" />
           <button class="btn btn-sm btn-outline-secondary m-filter-btn" @click="showFilters = !showFilters">{{ t('admin.filters') }}<span v-if="hasFilters('books')"> •</span></button>
@@ -159,7 +213,6 @@
             <option value="Available">{{ t('books.status.Available') }}</option>
             <option value="Pending">{{ t('books.status.Pending') }}</option>
             <option value="UnderReview">{{ t('books.status.UnderReview') }}</option>
-            <option value="Exchanged">{{ t('books.status.Exchanged') }}</option>
           </select>
           <select v-model="filters.books.genre" class="form-select form-select-sm">
             <option value="">{{ t('search.allGenres') }}</option>
@@ -178,37 +231,83 @@
           </select>
           <button v-if="hasFilters('books')" class="btn btn-sm btn-outline-secondary m-keep" @click="resetFilters('books')">{{ t('books.clearFilters') }}</button>
         </div>
-        <div class="table-responsive">
+        <p v-if="!filteredBooks.length" class="text-muted text-center py-4 mb-0">{{ t('admin.book.none') }}</p>
+
+        <!-- katra grāmata kā kartīte: kreisajā pusē grāmata, labajā īpašnieks un vēsture -->
+        <div class="swap-list desk-only" :aria-label="t('admin.books')">
+          <article v-for="b in pagedBooks" :key="b.id" class="swap-item" :class="'book-item-' + b.status" data-testid="admin-book">
+            <header class="swap-head">
+              <span class="swap-badge" :class="'book-badge-' + b.status">{{ t('books.status.' + b.status) || b.status }}</span>
+              <span class="swap-id">#{{ b.id }}</span>
+              <span class="swap-when">{{ t('admin.book.added') }} {{ fmtDate(b.created_at) }}</span>
+              <div class="swap-actions">
+                <button v-if="b.status !== 'UnderReview'" class="ab btn btn-sm btn-outline-info" @click="reviewBook(b)">{{ t('admin.btn.review') }}</button>
+                <button v-if="b.status === 'UnderReview'" class="ab btn btn-sm btn-outline-success" @click="unreviewBook(b)">{{ t('admin.btn.unreview') }}</button>
+                <button class="ab btn btn-sm btn-outline-danger" @click="deleteBook(b)">{{ t('admin.btn.delete') }}</button>
+              </div>
+            </header>
+
+            <div class="book-sides">
+              <div class="swap-side">
+                <div class="swap-book">
+                  <img v-if="b.cover_image" :src="'/storage/' + b.cover_image" :alt="b.title" class="swap-cover book-cover-lg" />
+                  <div v-else class="swap-cover book-cover-lg swap-cover-ph" aria-hidden="true">📖</div>
+                  <div class="swap-book-text">
+                    <p class="swap-title" data-testid="admin-book-title">{{ b.title }}</p>
+                    <p class="swap-author">{{ b.author }}</p>
+                    <div class="book-chips">
+                      <span class="book-chip">{{ b.genre }}</span>
+                      <span class="book-chip">{{ b.language }}</span>
+                      <span class="book-chip">{{ b.condition }}</span>
+                    </div>
+                    <p v-if="b.description" class="book-desc">{{ b.description }}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="swap-side">
+                <p class="swap-role">{{ t('admin.col.owner') }}</p>
+                <p class="swap-user">
+                  👤 {{ b.owner?.name ?? '?' }}
+                  <span v-if="b.owner?.blocked" class="swap-flag swap-flag-red">{{ t('admin.swap.blockedUser') }}</span>
+                  <span v-if="b.owner?.deleted" class="swap-flag">{{ t('admin.swap.deletedUser') }}</span>
+                </p>
+                <ul class="book-facts">
+                  <li>⇄ {{ t('admin.book.swaps').replace('{n}', b.swaps_accepted) }}<template v-if="b.swaps_pending"> · <span class="book-fact-pending">{{ t('admin.book.swapsPending').replace('{n}', b.swaps_pending) }}</span></template></li>
+                  <li v-if="b.rating_count"><span class="stars-display">★</span> {{ b.rating_avg }} ({{ b.rating_count }})</li>
+                  <li v-else class="text-muted">{{ t('admin.swap.noRatings') }}</li>
+                </ul>
+                <p v-if="b.status === 'UnderReview' && b.review_reason" class="book-review-reason">
+                  <strong>{{ t('admin.book.reviewReason') }}:</strong> {{ b.review_reason }}
+                </p>
+              </div>
+            </div>
+          </article>
+        </div>
+        <!-- telefonā saraksts ar "skatīt vairāk" -->
+        <div class="table-responsive mob-only">
         <table class="table table-hover align-middle m-cards" :aria-label="t('admin.books')">
-          <thead>
-            <tr>
-              <th scope="col">{{ t('admin.col.title') }}</th>
-              <th scope="col">{{ t('admin.col.author') }}</th>
-              <th scope="col">{{ t('admin.col.genre') }}</th>
-              <th scope="col">{{ t('admin.col.owner') }}</th>
-              <th scope="col">{{ t('admin.col.status') }}</th>
-              <th scope="col">{{ t('admin.col.added') }}</th>
-              <th scope="col" class="ab-col"></th>
-              <th scope="col" class="ab-col"></th>
-            </tr>
-          </thead>
           <tbody>
             <tr :class="{ open: isOpen('books', b.id) }" v-for="b in pagedBooks" :key="b.id">
               <td class="m-main fw-semibold">{{ b.title }}</td>
-              <td :data-label="t('admin.col.author')">{{ b.author }}</td>
-              <td :data-label="t('admin.col.genre')">{{ b.genre }}</td>
-              <td :data-label="t('admin.col.owner')">{{ b.owner }}</td>
               <td class="m-main">
-                <span class="stag" :class="{
-                  'stag-green': b.status === 'Available',
-                  'stag-yellow': b.status === 'Pending',
-                  'stag-gray': b.status === 'Exchanged',
-                  'stag-blue': b.status === 'UnderReview',
-                }" :title="t('books.status.' + b.status) || b.status">
-                  {{ { Available: '✓', Pending: '~', Exchanged: '⇄', UnderReview: '!' }[b.status] ?? '?' }}
+                <span class="stag" :class="{ 'stag-green': b.status === 'Available', 'stag-yellow': b.status === 'Pending', 'stag-blue': b.status === 'UnderReview' }" :title="t('books.status.' + b.status)">
+                  {{ { Available: '✓', Pending: '~', UnderReview: '!' }[b.status] ?? '?' }}
                 </span>
               </td>
-              <td :data-label="t('admin.col.added')" class="text-nowrap">{{ b.created_at }}</td>
+              <td :data-label="t('admin.col.status')">{{ t('books.status.' + b.status) || b.status }}</td>
+              <td :data-label="t('admin.col.author')">{{ b.author }}</td>
+              <td :data-label="t('admin.col.genre')">{{ b.genre }} · {{ b.language }} · {{ b.condition }}</td>
+              <td :data-label="t('admin.col.owner')">
+                {{ b.owner?.name ?? '?' }}
+                <span v-if="b.owner?.blocked" class="swap-flag swap-flag-red">{{ t('admin.swap.blockedUser') }}</span>
+              </td>
+              <td :data-label="t('admin.book.swapsCol')">{{ t('admin.book.swaps').replace('{n}', b.swaps_accepted) }}<template v-if="b.swaps_pending"> · {{ t('admin.book.swapsPending').replace('{n}', b.swaps_pending) }}</template></td>
+              <td :data-label="t('admin.book.ratingCol')">
+                <template v-if="b.rating_count"><span class="stars-display">★</span> {{ b.rating_avg }} ({{ b.rating_count }})</template>
+                <span v-else class="text-muted">-</span>
+              </td>
+              <td :data-label="t('admin.col.added')">{{ fmtDate(b.created_at) }}</td>
+              <td v-if="b.status === 'UnderReview' && b.review_reason" :data-label="t('admin.col.reason')">{{ b.review_reason }}</td>
               <td class="ab-col">
                 <button v-if="b.status !== 'UnderReview'" class="ab btn btn-sm btn-outline-info" @click="reviewBook(b)">{{ t('admin.btn.review') }}</button>
                 <button v-if="b.status === 'UnderReview'" class="ab btn btn-sm btn-outline-success" @click="unreviewBook(b)">{{ t('admin.btn.unreview') }}</button>
@@ -228,6 +327,15 @@
     <!-- apmaiņas -->
     <div v-show="activeTab === 'swaps' && !loading[activeTab]" class="admin-card">
       <div class="mt-1">
+        <!-- kopsavilkums, uzspiežot atfiltrē -->
+        <div class="swap-stats mb-3">
+          <button v-for="st in ['pending', 'accepted', 'declined']" :key="st" type="button"
+            class="swap-stat" :class="['swap-stat-' + st, { active: filters.swaps.status === st }]"
+            @click="filters.swaps.status = filters.swaps.status === st ? '' : st">
+            <strong>{{ swapCounts[st] }}</strong> {{ t('admin.status.' + st) }}
+          </button>
+          <span v-if="swapCounts.stale" class="swap-stat swap-stat-stale">⚠ {{ t('admin.swap.stale').replace('{n}', swapCounts.stale) }}</span>
+        </div>
         <div class="filter-bar mb-3" :class="{ 'filters-open': showFilters }">
           <input v-model="filters.swaps.search" type="text" class="form-control form-control-sm m-keep" :placeholder="t('admin.filter.searchSwaps')" />
           <button class="btn btn-sm btn-outline-secondary m-filter-btn" @click="showFilters = !showFilters">{{ t('admin.filters') }}<span v-if="hasFilters('swaps')"> •</span></button>
@@ -242,34 +350,83 @@
           </select>
           <button v-if="hasFilters('swaps')" class="btn btn-sm btn-outline-secondary m-keep" @click="resetFilters('swaps')">{{ t('books.clearFilters') }}</button>
         </div>
-        <div class="table-responsive">
+        <p v-if="!filteredSwaps.length" class="text-muted text-center py-4 mb-0">{{ t('admin.swap.none') }}</p>
+
+        <!-- katra apmaiņa kā kartīte: kreisajā pusē pieprasītājs, labajā īpašnieks -->
+        <div class="swap-list desk-only">
+          <article v-for="s in pagedSwaps" :key="s.id" class="swap-item" :class="'swap-item-' + s.status" :data-testid="'admin-swap-' + s.id">
+            <header class="swap-head">
+              <span class="swap-badge" :class="'swap-badge-' + s.status">{{ t('admin.status.' + s.status) }}</span>
+              <span class="swap-id">#{{ s.id }}</span>
+              <span class="swap-when" :class="{ 'swap-when-stale': s.days_waiting >= 7 }">{{ swapWhen(s) }}</span>
+              <div class="swap-actions">
+                <button v-if="s.status === 'pending'" class="ab btn btn-sm btn-outline-success" @click="acceptSwap(s)">{{ t('admin.btn.accept') }}</button>
+                <button v-if="s.status === 'pending'" class="ab btn btn-sm btn-outline-warning" @click="declineSwap(s)">{{ t('admin.btn.decline') }}</button>
+                <button class="ab btn btn-sm btn-outline-danger" @click="deleteSwap(s)">{{ t('admin.btn.delete') }}</button>
+              </div>
+            </header>
+
+            <div class="swap-sides">
+              <div v-for="side in swapSides(s)" :key="side.key" class="swap-side">
+                <p class="swap-role">{{ t(side.role) }}</p>
+                <p class="swap-user">
+                  👤 {{ side.user?.name ?? '?' }}
+                  <span v-if="side.user?.blocked" class="swap-flag swap-flag-red">{{ t('admin.swap.blockedUser') }}</span>
+                  <span v-if="side.user?.deleted" class="swap-flag">{{ t('admin.swap.deletedUser') }}</span>
+                </p>
+                <div v-if="side.book" class="swap-book">
+                  <img v-if="side.book.cover_image" :src="'/storage/' + side.book.cover_image" :alt="side.book.title" class="swap-cover" />
+                  <div v-else class="swap-cover swap-cover-ph" aria-hidden="true">📖</div>
+                  <div class="swap-book-text">
+                    <p class="swap-title">{{ side.book.title }}</p>
+                    <p class="swap-author">{{ side.book.author }}</p>
+                    <span v-if="['UnderReview', 'Removed'].includes(side.book.status)" class="swap-flag swap-flag-red">{{ t('books.status.' + side.book.status) || side.book.status }}</span>
+                  </div>
+                </div>
+                <p v-else class="swap-book-gone">{{ t('admin.swap.bookDeleted') }}</p>
+              </div>
+              <div class="swap-arrow" aria-hidden="true">⇄</div>
+            </div>
+
+            <footer class="swap-foot">
+              <span>{{ t('admin.swap.created') }}: {{ fmtDate(s.created_at) }}</span>
+              <span v-if="s.status !== 'pending'">{{ swapClosedText(s) }}<template v-if="s.closed_at"> · {{ fmtDate(s.closed_at) }}</template></span>
+              <span v-if="s.requester_dismissed || s.owner_dismissed" class="text-muted">
+                {{ t('admin.swap.hidden') }}: {{ [s.requester_dismissed && s.requester?.name, s.owner_dismissed && s.owner?.name].filter(Boolean).join(', ') }}
+              </span>
+              <div v-if="s.status === 'accepted'" class="swap-ratings">
+                <template v-if="s.ratings.length">
+                  <span v-for="(r, i) in s.ratings" :key="i" class="swap-rating">
+                    <span class="stars-display">{{ '★'.repeat(r.stars) }}{{ '☆'.repeat(5 - r.stars) }}</span>
+                    {{ r.rater }}<template v-if="r.review">: "{{ r.review }}"</template>
+                  </span>
+                </template>
+                <span v-else class="text-muted">{{ t('admin.swap.noRatings') }}</span>
+              </div>
+            </footer>
+          </article>
+        </div>
+        <!-- telefonā saraksts ar "skatīt vairāk" -->
+        <div class="table-responsive mob-only">
         <table class="table table-hover align-middle m-cards" :aria-label="t('admin.swaps')">
-          <thead>
-            <tr>
-              <th scope="col">{{ t('admin.col.requester') }}</th>
-              <th scope="col">{{ t('admin.col.offers') }}</th>
-              <th scope="col">{{ t('admin.col.wants') }}</th>
-              <th scope="col">{{ t('admin.col.status') }}</th>
-              <th scope="col">{{ t('admin.col.date') }}</th>
-              <th scope="col" class="ab-col"></th>
-              <th scope="col" class="ab-col"></th>
-            </tr>
-          </thead>
           <tbody>
             <tr :class="{ open: isOpen('swaps', s.id) }" v-for="s in pagedSwaps" :key="s.id">
-              <td class="m-main fw-semibold">{{ s.requester?.name }}</td>
-              <td :data-label="t('admin.col.offers')">{{ s.offered_book?.title }}</td>
-              <td :data-label="t('admin.col.wants')">{{ s.wanted_book?.title }}</td>
+              <td class="m-main fw-semibold">{{ s.requester?.name ?? '?' }} ⇄ {{ s.owner?.name ?? '?' }}</td>
               <td class="m-main">
-                <span class="stag" :class="{
-                  'stag-yellow': s.status === 'pending',
-                  'stag-green': s.status === 'accepted',
-                  'stag-gray': s.status === 'declined',
-                }" :title="t('admin.status.' + s.status)">
+                <span class="stag" :class="{ 'stag-yellow': s.status === 'pending', 'stag-green': s.status === 'accepted', 'stag-gray': s.status === 'declined' }" :title="t('admin.status.' + s.status)">
                   {{ { pending: '~', accepted: '✓', declined: '✕' }[s.status] ?? '?' }}
                 </span>
               </td>
-              <td :data-label="t('admin.col.date')" class="text-nowrap">{{ s.created_at?.slice(0, 10) }}</td>
+              <td :data-label="t('admin.col.status')">{{ t('admin.status.' + s.status) }}<template v-if="s.status === 'pending'"> · {{ swapWhen(s) }}</template></td>
+              <td :data-label="t('admin.swap.requesterGives')">{{ s.offered ? s.offered.title + ' (' + s.offered.author + ')' : t('admin.swap.bookDeleted') }}</td>
+              <td :data-label="t('admin.swap.ownerGives')">{{ s.wanted ? s.wanted.title + ' (' + s.wanted.author + ')' : t('admin.swap.bookDeleted') }}</td>
+              <td :data-label="t('admin.swap.created')">{{ fmtDate(s.created_at) }}</td>
+              <td v-if="s.status !== 'pending'" :data-label="t('admin.swap.closed')">{{ swapClosedText(s) }}<template v-if="s.closed_at"> · {{ fmtDate(s.closed_at) }}</template></td>
+              <td v-if="s.ratings.length" :data-label="t('admin.book.ratingCol')">
+                <span>
+                  <span v-for="(r, i) in s.ratings" :key="i" class="d-block"><span class="stars-display">{{ '★'.repeat(r.stars) }}</span> {{ r.rater }}</span>
+                </span>
+              </td>
               <td class="ab-col">
                 <button v-if="s.status === 'pending'" class="ab btn btn-sm btn-outline-success" @click="acceptSwap(s)">{{ t('admin.btn.accept') }}</button>
                 <button v-if="s.status === 'pending'" class="ab btn btn-sm btn-outline-warning" @click="declineSwap(s)">{{ t('admin.btn.decline') }}</button>
@@ -289,6 +446,16 @@
     <!-- vērtējumi -->
     <div v-show="activeTab === 'ratings' && !loading[activeTab]" class="admin-card">
       <div class="mt-1">
+        <!-- kopsavilkums: vidējais un cik katru zvaigžņu skaitu, uzspiežot atfiltrē -->
+        <div class="swap-stats mb-3">
+          <span class="swap-stat rating-avg">{{ t('admin.rating.avg').replace('{avg}', ratingStats.avg).replace('{n}', ratings.length) }}</span>
+          <button v-for="n in [5, 4, 3, 2, 1]" :key="n" type="button"
+            class="swap-stat" :class="{ active: filters.ratings.stars === String(n) }"
+            @click="filters.ratings.stars = filters.ratings.stars === String(n) ? '' : String(n)">
+            <strong>{{ ratingStats.count[n] }}</strong> {{ n }}★
+          </button>
+          <span class="swap-stat rating-avg">{{ ratingStats.withReview }} {{ t('admin.rating.withReview') }}</span>
+        </div>
         <div class="filter-bar mb-3" :class="{ 'filters-open': showFilters }">
           <input v-model="filters.ratings.search" type="text" class="form-control form-control-sm m-keep" :placeholder="t('admin.filter.searchBookRater')" />
           <button class="btn btn-sm btn-outline-secondary m-filter-btn" @click="showFilters = !showFilters">{{ t('admin.filters') }}<span v-if="hasFilters('ratings')"> •</span></button>
@@ -305,28 +472,68 @@
           </select>
           <button v-if="hasFilters('ratings')" class="btn btn-sm btn-outline-secondary m-keep" @click="resetFilters('ratings')">{{ t('books.clearFilters') }}</button>
         </div>
-        <div class="table-responsive">
+        <p v-if="!filteredRatings.length" class="text-muted text-center py-4 mb-0">{{ t('admin.rating.none') }}</p>
+
+        <!-- katrs vērtējums kā kartīte: kurš vērtēja, kādu grāmatu un no kā to saņēma -->
+        <div class="swap-list desk-only">
+          <article v-for="r in pagedRatings" :key="r.id" class="swap-item rating-item" :class="'rating-item-' + ratingTone(r.stars)" :data-testid="'admin-rating-' + r.id">
+            <header class="swap-head">
+              <span class="rating-stars" :aria-label="r.stars + '/5'">{{ '★'.repeat(r.stars) }}<span class="rating-stars-off">{{ '☆'.repeat(5 - r.stars) }}</span></span>
+              <span class="swap-badge" :class="'rating-badge-' + ratingTone(r.stars)">{{ r.stars }}/5</span>
+              <span class="swap-id">#{{ r.id }}</span>
+              <span class="swap-when">{{ fmtDate(r.date) }}</span>
+              <div class="swap-actions">
+                <button v-if="r.swap_id" class="ab btn btn-sm btn-outline-secondary" @click="openSwap(r.swap_id)">{{ t('admin.rating.swap').replace('{id}', r.swap_id) }}</button>
+              </div>
+            </header>
+
+            <div class="swap-sides">
+              <div class="swap-side">
+                <p class="swap-role">{{ t('admin.rating.rater') }}</p>
+                <p class="swap-user">
+                  👤 {{ r.rater?.name ?? '?' }}
+                  <span v-if="r.rater?.blocked" class="swap-flag swap-flag-red">{{ t('admin.swap.blockedUser') }}</span>
+                  <span v-if="r.rater?.deleted" class="swap-flag">{{ t('admin.swap.deletedUser') }}</span>
+                </p>
+                <blockquote v-if="r.review" class="rating-review">"{{ r.review }}"</blockquote>
+                <p v-else class="rating-no-review">{{ t('admin.rating.noReview') }}</p>
+              </div>
+              <div class="swap-side">
+                <p class="swap-role">{{ t('admin.rating.book') }}</p>
+                <div v-if="r.book" class="swap-book">
+                  <img v-if="r.book.cover_image" :src="'/storage/' + r.book.cover_image" :alt="r.book.title" class="swap-cover" />
+                  <div v-else class="swap-cover swap-cover-ph" aria-hidden="true">📖</div>
+                  <div class="swap-book-text">
+                    <p class="swap-title">{{ r.book.title }}</p>
+                    <p class="swap-author">{{ r.book.author }}</p>
+                    <p v-if="r.giver" class="swap-author">
+                      {{ t('admin.rating.gaveBy') }} {{ r.giver.name }}
+                      <span v-if="r.giver.blocked" class="swap-flag swap-flag-red">{{ t('admin.swap.blockedUser') }}</span>
+                      <span v-if="r.giver.deleted" class="swap-flag">{{ t('admin.swap.deletedUser') }}</span>
+                    </p>
+                  </div>
+                </div>
+                <p v-else class="swap-book-gone">{{ t('admin.swap.bookDeleted') }}</p>
+              </div>
+              <div class="swap-arrow" aria-hidden="true">→</div>
+            </div>
+          </article>
+        </div>
+        <!-- telefonā saraksts ar "skatīt vairāk" -->
+        <div class="table-responsive mob-only">
         <table class="table table-hover align-middle m-cards" :aria-label="t('admin.ratings')">
-          <thead>
-            <tr>
-              <th scope="col">{{ t('admin.col.title') }}</th>
-              <th scope="col">{{ t('admin.col.author') }}</th>
-              <th scope="col">{{ t('admin.col.ratedBy') }}</th>
-              <th scope="col">{{ t('admin.col.stars') }}</th>
-              <th scope="col">{{ t('admin.col.review') }}</th>
-              <th scope="col">{{ t('admin.col.date') }}</th>
-            </tr>
-          </thead>
           <tbody>
             <tr :class="{ open: isOpen('ratings', r.id) }" v-for="r in pagedRatings" :key="r.id">
-              <td class="m-main fw-semibold">{{ r.book }}</td>
-              <td :data-label="t('admin.col.author')">{{ r.author }}</td>
-              <td :data-label="t('admin.col.ratedBy')">{{ r.rater }}</td>
-              <td class="m-main">
-                <span class="stars-display">{{ '★'.repeat(r.stars) }}{{ '☆'.repeat(5 - r.stars) }}</span>
+              <td class="m-main fw-semibold">{{ r.book?.title ?? t('admin.swap.bookDeleted') }}</td>
+              <td class="m-main"><span class="stars-display">{{ '★'.repeat(r.stars) }}{{ '☆'.repeat(5 - r.stars) }}</span></td>
+              <td :data-label="t('admin.col.author')">{{ r.book?.author ?? '-' }}</td>
+              <td :data-label="t('admin.rating.rater')">{{ r.rater?.name ?? '?' }}</td>
+              <td :data-label="t('admin.rating.gaveBy')">{{ r.giver?.name ?? '?' }}</td>
+              <td :data-label="t('admin.col.review')">{{ r.review || t('admin.rating.noReview') }}</td>
+              <td :data-label="t('admin.col.date')">{{ fmtDate(r.date) }}</td>
+              <td class="ab-col">
+                <button v-if="r.swap_id" class="ab btn btn-sm btn-outline-secondary" @click="openSwap(r.swap_id)">{{ t('admin.rating.swap').replace('{id}', r.swap_id) }}</button>
               </td>
-              <td :data-label="t('admin.col.review')">{{ r.review || '-' }}</td>
-              <td :data-label="t('admin.col.date')" class="text-nowrap">{{ r.date }}</td>
               <td class="m-toggle"><button class="btn btn-link btn-sm p-0" @click="toggleRow('ratings', r.id)">{{ isOpen('ratings', r.id) ? t('admin.less') : t('admin.more') }}</button></td>
             </tr>
           </tbody>
@@ -475,7 +682,32 @@
           </select>
           <button v-if="hasFilters('logs')" class="btn btn-sm btn-outline-secondary m-keep" @click="resetFilters('logs')">{{ t('books.clearFilters') }}</button>
         </div>
-        <div class="table-responsive">
+        <p v-if="!filteredLogs.length" class="text-muted text-center py-4 mb-0 desk-only">{{ t('admin.logs.empty') }}</p>
+
+        <!-- datorā kartītes -->
+        <div class="swap-list desk-only">
+          <article v-for="l in pagedLogs" :key="l.id" class="swap-item" :class="'log-item-' + logTone(l.action)" data-testid="admin-log">
+            <header class="swap-head">
+              <span class="log-action-badge">{{ t('admin.log.' + l.action) }}</span>
+              <span class="swap-id">#{{ l.id }}</span>
+              <span class="swap-when">{{ l.date }}</span>
+            </header>
+            <div class="book-sides">
+              <div class="swap-side">
+                <p class="swap-role">{{ t('admin.col.admin') }}</p>
+                <p class="swap-user mb-0">👤 {{ l.admin ?? '?' }}</p>
+              </div>
+              <div class="swap-side">
+                <p class="swap-role">{{ t('admin.col.target') }}</p>
+                <p class="swap-title">{{ l.target_name || '-' }}</p>
+                <p v-if="l.reason" class="book-review-reason"><strong>{{ t('admin.col.reason') }}:</strong> {{ l.reason }}</p>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- telefonā saraksts ar "skatīt vairāk" -->
+        <div class="table-responsive mob-only">
           <table class="table table-hover align-middle m-cards" :aria-label="t('admin.logs')">
             <thead>
               <tr>
@@ -580,12 +812,12 @@ const SORT_OPTIONS = {
   books: [
     ['created_at:desc', 'admin.sort.newest'], ['created_at:asc', 'admin.sort.oldest'],
     ['title:asc', 'admin.sort.titleAsc'], ['title:desc', 'admin.sort.titleDesc'],
-    ['author:asc', 'admin.sort.authorAsc'], ['owner:asc', 'admin.sort.ownerAsc'],
+    ['author:asc', 'admin.sort.authorAsc'], ['owner_name:asc', 'admin.sort.ownerAsc'],
     ['genre:asc', 'admin.sort.genreAsc'], ['status:asc', 'admin.sort.status'],
   ],
   swaps: [
     ['created_at:desc', 'admin.sort.newest'], ['created_at:asc', 'admin.sort.oldest'],
-    ['status:asc', 'admin.sort.status'],
+    ['status:asc', 'admin.sort.status'], ['days_waiting:desc', 'admin.sort.waitingLongest'],
   ],
   ratings: [
     ['date:desc', 'admin.sort.newest'], ['date:asc', 'admin.sort.oldest'],
@@ -683,11 +915,9 @@ export default {
     filteredBooks() {
       let list = this.books
       const s = this.filters.books.search.toLowerCase()
-      if (s) list = list.filter(b =>
-        b.title?.toLowerCase().includes(s) ||
-        b.author?.toLowerCase().includes(s) ||
-        b.owner?.toLowerCase().includes(s) ||
-        b.genre?.toLowerCase().includes(s)
+      if (/^#\d+$/.test(s)) list = list.filter(b => '#' + b.id === s)
+      else if (s) list = list.filter(b =>
+        [b.title, b.author, b.owner_name, b.genre, '#' + b.id].some(v => v && v.toLowerCase().includes(s))
       )
       const f = this.filters.books
       for (const key of ['status', 'genre', 'language', 'condition']) {
@@ -696,22 +926,59 @@ export default {
       return sortList(list, f.sort)
     },
 
+    // grāmatu skaits pa statusiem
+    bookCounts() {
+      const out = {}
+      for (const b of this.books) out[b.status] = (out[b.status] ?? 0) + 1
+      return out
+    },
+
+    // skaitļi kopsavilkumam virs saraksta
+    swapCounts() {
+      const out = { pending: 0, accepted: 0, declined: 0, stale: 0 }
+      for (const s of this.swaps) {
+        out[s.status] = (out[s.status] ?? 0) + 1
+        if (s.days_waiting >= 7) out.stale++
+      }
+      return out
+    },
+
     filteredSwaps() {
       let list = this.swaps
       const s = this.filters.swaps.search.toLowerCase()
-      if (s) list = list.filter(sw =>
-        sw.requester?.name?.toLowerCase().includes(s) ||
-        sw.offered_book?.title?.toLowerCase().includes(s) ||
-        sw.wanted_book?.title?.toLowerCase().includes(s)
+      // "#12" - tieši šī apmaiņa (piem. no vērtējumu taba)
+      if (/^#\d+$/.test(s)) list = list.filter(sw => '#' + sw.id === s)
+      // meklē pēc abiem lietotājiem, abām grāmatām, autoriem un #id
+      else if (s) list = list.filter(sw =>
+        [sw.requester?.name, sw.owner?.name, sw.offered?.title, sw.offered?.author, sw.wanted?.title, sw.wanted?.author, '#' + sw.id]
+          .some(v => v && v.toLowerCase().includes(s))
       )
       if (this.filters.swaps.status) list = list.filter(sw => sw.status === this.filters.swaps.status)
       return sortList(list, this.filters.swaps.sort)
     },
 
+    // vidējais, cik katrā zvaigžņu skaitā un cik ar komentāru
+    ratingStats() {
+      const count = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+      let sum = 0
+      let withReview = 0
+      for (const r of this.ratings) {
+        count[r.stars]++
+        sum += r.stars
+        if (r.review) withReview++
+      }
+      const avg = this.ratings.length ? (sum / this.ratings.length).toFixed(1) : '-'
+      return { count, avg, withReview }
+    },
+
     filteredRatings() {
       let list = this.ratings
       const s = this.filters.ratings.search.toLowerCase()
-      if (s) list = list.filter(r => r.book?.toLowerCase().includes(s) || r.rater?.toLowerCase().includes(s))
+      // meklē grāmatā, autorā, abos lietotājos un komentārā
+      if (s) list = list.filter(r =>
+        [r.book?.title, r.book?.author, r.rater?.name, r.giver?.name, r.review, '#' + r.id]
+          .some(v => v && v.toLowerCase().includes(s))
+      )
       if (this.filters.ratings.stars) list = list.filter(r => r.stars === Number(this.filters.ratings.stars))
       return sortList(list, this.filters.ratings.sort)
     },
@@ -730,15 +997,19 @@ export default {
     },
 
     pagedUsers() { return this.paginate(this.filteredUsers, this.pages.users) },
-    pagedBooks() { return this.paginate(this.filteredBooks, this.pages.books) },
-    pagedSwaps() { return this.paginate(this.filteredSwaps, this.pages.swaps) },
-    pagedRatings() { return this.paginate(this.filteredRatings, this.pages.ratings) },
+    booksPerPage() { return this.perPage === 99999 ? 99999 : 6 },
+    pagedBooks() { return this.paginate(this.filteredBooks, this.pages.books, this.booksPerPage) },
+    // apmaiņu kartītes ir lielas, tāpēc pa 4 lapā ("atvērt visu" joprojām rāda visas)
+    swapsPerPage() { return this.perPage === 99999 ? 99999 : 4 },
+    pagedSwaps() { return this.paginate(this.filteredSwaps, this.pages.swaps, this.swapsPerPage) },
+    ratingsPerPage() { return this.perPage === 99999 ? 99999 : 6 },
+    pagedRatings() { return this.paginate(this.filteredRatings, this.pages.ratings, this.ratingsPerPage) },
     pagedLogs() { return this.paginate(this.filteredLogs, this.pages.logs) },
 
     totalPagesUsers() { return Math.ceil(this.filteredUsers.length / this.perPage) || 1 },
-    totalPagesBooks() { return Math.ceil(this.filteredBooks.length / this.perPage) || 1 },
-    totalPagesSwaps() { return Math.ceil(this.filteredSwaps.length / this.perPage) || 1 },
-    totalPagesRatings() { return Math.ceil(this.filteredRatings.length / this.perPage) || 1 },
+    totalPagesBooks() { return Math.ceil(this.filteredBooks.length / this.booksPerPage) || 1 },
+    totalPagesSwaps() { return Math.ceil(this.filteredSwaps.length / this.swapsPerPage) || 1 },
+    totalPagesRatings() { return Math.ceil(this.filteredRatings.length / this.ratingsPerPage) || 1 },
     totalPagesLogs() { return Math.ceil(this.filteredLogs.length / this.perPage) || 1 },
   },
 
@@ -836,9 +1107,9 @@ export default {
       await this.loadTab(this.activeTab)
     },
 
-    paginate(list, page) {
-      const start = (page - 1) * this.perPage
-      return list.slice(start, start + this.perPage)
+    paginate(list, page, size = this.perPage) {
+      const start = (page - 1) * size
+      return list.slice(start, start + size)
     },
 
     syncUrl() {
@@ -945,6 +1216,7 @@ export default {
       try {
         await axios.patch(`/api/admin/books/${b.id}/review`, { reason: reason.trim() })
         b.status = 'UnderReview'
+        b.review_reason = reason.trim()
       } catch {
         this.error = this.t('admin.loadError')
       }
@@ -974,16 +1246,76 @@ export default {
       }
     },
 
+    // pieņemot mainās arī citi pieprasījumi uz tām pašām grāmatām, tāpēc ielādē sarakstu no jauna
     async acceptSwap(s) {
-      if (!confirm(this.t('admin.confirm.acceptSwap').replace('{a}', s.offered_book?.title).replace('{b}', s.wanted_book?.title))) return
-      const res = await axios.patch(`/api/admin/swaps/${s.id}/accept`)
-      s.status = res.data.status
+      if (!confirm(this.t('admin.confirm.acceptSwap').replace('{a}', s.offered?.title ?? '?').replace('{b}', s.wanted?.title ?? '?'))) return
+      try {
+        await axios.patch(`/api/admin/swaps/${s.id}/accept`)
+      } catch (err) {
+        showToast(err.response?.data?.message || this.t('dash.genericError'), 'error')
+      }
+      await this.reloadSwaps()
     },
 
     async declineSwap(s) {
-      if (!confirm(this.t('admin.confirm.declineSwap').replace('{a}', s.offered_book?.title).replace('{b}', s.wanted_book?.title))) return
-      const res = await axios.patch(`/api/admin/swaps/${s.id}/decline`)
-      s.status = res.data.status
+      if (!confirm(this.t('admin.confirm.declineSwap').replace('{a}', s.offered?.title ?? '?').replace('{b}', s.wanted?.title ?? '?'))) return
+      try {
+        await axios.patch(`/api/admin/swaps/${s.id}/decline`)
+      } catch (err) {
+        showToast(err.response?.data?.message || this.t('dash.genericError'), 'error')
+      }
+      await this.reloadSwaps()
+    },
+
+    async reloadSwaps() {
+      this.loaded.swaps = false
+      await this.loadTab('swaps')
+    },
+
+    // žurnāla krāsa: dzēšana/bloķēšana sarkana, atjaunošana zaļa, pārējais pelēks
+    logTone(action) {
+      if (/^(delete_|block_user|remove_|decline_|admin_unlock_failed)/.test(action)) return 'bad'
+      if (/^(unblock_user|unreview_book|restore_|accept_)/.test(action)) return 'good'
+      return 'plain'
+    },
+
+    // krāsa pēc zvaigznēm: 4-5 labi, 3 vidēji, 1-2 slikti
+    ratingTone(stars) {
+      return stars >= 4 ? 'good' : stars === 3 ? 'mid' : 'bad'
+    },
+
+    // no vērtējuma uz apmaiņu žurnālu, atfiltrētu uz šo apmaiņu
+    openSwap(id) {
+      this.filters.swaps = { search: '#' + id, status: '', sort: 'created_at:desc' }
+      this.setTab('swaps')
+    },
+
+    // kreisā puse pieprasītājs (atdod offered), labā īpašnieks (atdod wanted)
+    swapSides(s) {
+      return [
+        { key: 'r', role: 'admin.swap.requesterGives', user: s.requester, book: s.offered },
+        { key: 'o', role: 'admin.swap.ownerGives', user: s.owner, book: s.wanted },
+      ]
+    },
+
+    swapWhen(s) {
+      if (s.status !== 'pending') return ''
+      return s.days_waiting > 0
+        ? this.t('admin.swap.waiting').replace('{n}', s.days_waiting)
+        : this.t('admin.swap.waitingToday')
+    },
+
+    // kurš pieņēma/noraidīja, veciem ierakstiem nav zināms
+    swapClosedText(s) {
+      if (!s.closed_by) return this.t('admin.swap.unknown')
+      return this.t('admin.swap.' + (s.status === 'accepted' ? 'acc' : 'dec') + '.' + s.closed_by)
+    },
+
+    fmtDate(value) {
+      if (!value) return ''
+      const d = new Date(value)
+      const pad = n => String(n).padStart(2, '0')
+      return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`
     },
 
     async deleteSwap(s) {
@@ -1188,6 +1520,145 @@ export default {
 
 .stars-display { color: #f5a623; letter-spacing: .1em; }
 
+/* apmaiņu tabs */
+.swap-stats { display: flex; flex-wrap: wrap; gap: 8px; }
+.swap-stat {
+  border: 1px solid var(--border);
+  background: transparent;
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-size: .85rem;
+  color: inherit;
+  cursor: pointer;
+}
+.swap-stat strong { margin-right: 2px; }
+.swap-stat-pending strong { color: #a16207; }
+.swap-stat-accepted strong { color: #166534; }
+.swap-stat-declined strong { color: #64748b; }
+.swap-stat.active { border-color: #3a6b3e; background: #3a6b3e; color: #fff; }
+.swap-stat.active strong { color: #fff; }
+.swap-stat-stale { cursor: default; border-color: #f59e0b; color: #a16207; background: #fffbeb; }
+
+.swap-list { display: flex; flex-direction: column; gap: 12px; }
+.swap-item {
+  border: 1px solid var(--border);
+  border-left: 4px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.swap-item-pending { border-left-color: #eab308; }
+.swap-item-accepted { border-left-color: #22c55e; }
+
+.swap-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
+.swap-badge { font-size: .75rem; font-weight: 700; padding: 2px 10px; border-radius: 999px; }
+.swap-badge-pending { background: #fef9c3; color: #854d0e; }
+.swap-badge-accepted { background: #d1fae5; color: #166534; }
+.swap-badge-declined { background: #f1f5f9; color: #64748b; }
+.swap-id { font-size: .8rem; color: var(--muted); }
+.swap-when { font-size: .85rem; color: var(--muted); }
+.swap-when-stale { color: #b45309; font-weight: 600; }
+.swap-actions { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+
+.swap-sides { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: stretch; }
+.swap-side:first-child { order: 1; }
+.swap-arrow { order: 2; align-self: center; font-size: 1.4rem; color: var(--muted); }
+.swap-side:nth-child(2) { order: 3; }
+.swap-side {
+  background: rgba(0, 0, 0, .025);
+  border-radius: 8px;
+  padding: 8px 10px;
+  min-width: 0;
+}
+.swap-side p { margin: 0; }
+.swap-role { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.swap-user { font-weight: 600; margin: 2px 0 6px !important; }
+.swap-book { display: flex; gap: 10px; align-items: flex-start; }
+.swap-cover { width: 40px; height: 58px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+.swap-cover-ph { display: flex; align-items: center; justify-content: center; background: #e5ddd0; font-size: 1.1rem; }
+.swap-book-text { min-width: 0; }
+.swap-title { font-weight: 600; overflow-wrap: anywhere; }
+.swap-author { font-size: .85rem; color: var(--muted); }
+.swap-book-gone { font-size: .85rem; color: #991b1b; font-style: italic; }
+.swap-flag { display: inline-block; font-size: .7rem; font-weight: 600; padding: 0 6px; border-radius: 4px; background: #f1f5f9; color: #64748b; margin-left: 4px; }
+.swap-flag-red { background: #fee2e2; color: #991b1b; }
+
+/* datorā kartītes, telefonā saraksts ar "skatīt vairāk" (kā lietotājiem) */
+.mob-only { display: none; }
+
+/* lietotāju un žurnāla kartītes */
+.user-item-active { border-left-color: #22c55e; }
+.user-item-admin { border-left-color: #8b5cf6; }
+.user-item-blocked { border-left-color: #ef4444; }
+.user-badge-admin { background: #ede9fe; color: #5b21b6; }
+.log-item-bad { border-left-color: #ef4444; }
+.log-item-good { border-left-color: #22c55e; }
+
+/* grāmatu tabs - tās pašas kartītes */
+.book-item-Available { border-left-color: #22c55e; }
+.book-item-Pending { border-left-color: #eab308; }
+.book-item-UnderReview { border-left-color: #3b82f6; }
+.book-badge-Available { background: #d1fae5; color: #166534; }
+.book-badge-Pending { background: #fef9c3; color: #854d0e; }
+.book-badge-UnderReview { background: #dbeafe; color: #1e40af; }
+.book-stat-Available strong { color: #166534; }
+.book-stat-Pending strong { color: #a16207; }
+.book-stat-UnderReview strong { color: #1e40af; }
+.book-sides { display: grid; grid-template-columns: 3fr 2fr; gap: 10px; }
+.book-cover-lg { width: 56px; height: 80px; }
+.book-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.book-chip { font-size: .72rem; padding: 1px 8px; border-radius: 999px; background: rgba(0, 0, 0, .06); }
+.book-desc {
+  margin-top: 6px !important;
+  font-size: .82rem;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.book-facts { list-style: none; padding: 0; margin: 0; font-size: .85rem; display: flex; flex-direction: column; gap: 2px; }
+.book-fact-pending { color: #a16207; font-weight: 600; }
+.book-review-reason {
+  margin-top: 8px !important;
+  font-size: .82rem;
+  padding: 6px 10px;
+  border-left: 3px solid #3b82f6;
+  background: rgba(59, 130, 246, .08);
+  border-radius: 0 6px 6px 0;
+  overflow-wrap: anywhere;
+}
+
+/* vērtējumu tabs - tās pašas kartītes, krāsa pēc zvaigznēm */
+.rating-item-good { border-left-color: #22c55e; }
+.rating-item-mid { border-left-color: #eab308; }
+.rating-item-bad { border-left-color: #ef4444; }
+.rating-stars { color: #f5a623; font-size: 1.05rem; letter-spacing: .08em; }
+.rating-stars-off { color: #d6d3d1; }
+.rating-badge-good { background: #d1fae5; color: #166534; }
+.rating-badge-mid { background: #fef9c3; color: #854d0e; }
+.rating-badge-bad { background: #fee2e2; color: #991b1b; }
+.rating-review {
+  margin: 0;
+  padding: 6px 10px;
+  border-left: 3px solid #f5a623;
+  background: rgba(245, 166, 35, .08);
+  border-radius: 0 6px 6px 0;
+  font-style: italic;
+  overflow-wrap: anywhere;
+}
+.rating-no-review { font-size: .85rem; color: var(--muted); font-style: italic; }
+.rating-avg { cursor: default; }
+
+.swap-foot { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 10px; font-size: .8rem; color: var(--muted); }
+.swap-ratings { width: 100%; display: flex; flex-direction: column; gap: 2px; }
+.swap-rating { color: inherit; }
+
+@media (max-width: 575.98px) {
+  .swap-sides, .book-sides { grid-template-columns: 1fr; }
+  .swap-arrow { justify-self: center; transform: rotate(90deg); font-size: 1.1rem; }
+  .swap-actions { margin-left: 0; width: 100%; }
+}
+
 
 .admin-section-title {
   display: flex;
@@ -1283,6 +1754,9 @@ export default {
 .m-toggle, .m-filter-btn { display: none; }
 
 @media (max-width: 767.98px) {
+  .desk-only { display: none; }
+  .mob-only { display: block; }
+
   .admin-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
   .admin-tabs::-webkit-scrollbar { display: none; }
   .admin-tab-btn { white-space: nowrap; padding: 8px 12px; }
@@ -1362,4 +1836,26 @@ export default {
   background: #2e2820 !important;
   color: #c8c0b5 !important;
 }
+
+/* apmaiņu tabs tumšajā režīmā */
+[data-theme="dark"] .admin-card .swap-side { background: rgba(255, 255, 255, .04); }
+[data-theme="dark"] .admin-card .swap-cover-ph { background: #3d3630; }
+[data-theme="dark"] .admin-card .swap-badge-pending { background: #422006; color: #fde68a; }
+[data-theme="dark"] .admin-card .swap-badge-accepted { background: #14532d; color: #bbf7d0; }
+[data-theme="dark"] .admin-card .swap-badge-declined,
+[data-theme="dark"] .admin-card .swap-flag { background: #2e2820; color: #c8c0b5; }
+[data-theme="dark"] .admin-card .swap-flag-red { background: #450a0a; color: #fecaca; }
+[data-theme="dark"] .admin-card .swap-stat-stale { background: #422006; color: #fde68a; }
+[data-theme="dark"] .admin-card .swap-book-gone { color: #fca5a5; }
+[data-theme="dark"] .admin-card .user-badge-admin { background: #2e1065; color: #ddd6fe; }
+[data-theme="dark"] .admin-card .book-badge-Available { background: #14532d; color: #bbf7d0; }
+[data-theme="dark"] .admin-card .book-badge-Pending { background: #422006; color: #fde68a; }
+[data-theme="dark"] .admin-card .book-badge-UnderReview { background: #172554; color: #bfdbfe; }
+[data-theme="dark"] .admin-card .book-chip { background: rgba(255, 255, 255, .08); }
+[data-theme="dark"] .admin-card .book-review-reason { background: rgba(59, 130, 246, .12); }
+[data-theme="dark"] .admin-card .rating-badge-good { background: #14532d; color: #bbf7d0; }
+[data-theme="dark"] .admin-card .rating-badge-mid { background: #422006; color: #fde68a; }
+[data-theme="dark"] .admin-card .rating-badge-bad { background: #450a0a; color: #fecaca; }
+[data-theme="dark"] .admin-card .rating-stars-off { color: #57534e; }
+[data-theme="dark"] .admin-card .rating-review { background: rgba(245, 166, 35, .1); }
 </style>

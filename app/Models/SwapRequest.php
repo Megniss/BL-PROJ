@@ -7,9 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['requester_id', 'owner_id', 'offered_book_id', 'wanted_book_id', 'status', 'requester_dismissed', 'owner_dismissed'])]
+#[Fillable(['requester_id', 'owner_id', 'offered_book_id', 'wanted_book_id', 'status', 'closed_by', 'closed_at', 'requester_dismissed', 'owner_dismissed'])]
 class SwapRequest extends Model
 {
+    protected $casts = ['closed_at' => 'datetime'];
+
+    // ko ierakstīt kad apmaiņu pieņem vai noraida, piem. update(['status' => 'declined', ...SwapRequest::closedBy('owner')])
+    public static function closedBy(string $who): array
+    {
+        return ['closed_by' => $who, 'closed_at' => now()];
+    }
+
     public function ratings(): HasMany
     {
         return $this->hasMany(Rating::class);

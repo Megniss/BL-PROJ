@@ -206,10 +206,3 @@ cd BL-PROJ
 docker compose up -d --build
 apstadinat: docker compose down
 atver: http://localhost:8080
-
-
-salabots 25.11:
-- 3. paroles parbaude (profils, 2FA izslegsana, konta dzesana) - 5 kludas un 15 min lock, uz lietotaju (app/Support/PasswordCheck.php)
-- 7. jaunais e-pasts tikai pec apstiprinasanas linka (pending_email, ConfirmNewEmail, /email/confirm, der 60 min)
-- 11. Pending un UnderReview gramatu nevar rediget un mainit vaku, dashboard edit poga paslepta
-- 2. vel jaizdara pasam: composer update un npm audit fix (man neatlava palaist)

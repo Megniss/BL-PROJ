@@ -248,7 +248,7 @@ class ProfileController extends Controller
             foreach ($pending as $swap) {
                 $otherBook = $swap->requester_id === $user->id ? $swap->wanted_book_id : $swap->offered_book_id;
                 Book::where('id', $otherBook)->update(['status' => 'Available']);
-                $swap->update(['status' => 'declined']);
+                $swap->update(['status' => 'declined', ...SwapRequest::closedBy('deleted')]);
             }
 
             // grāmatas paslēpj, lai vēsturē paliek nosaukums

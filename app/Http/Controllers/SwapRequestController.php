@@ -107,7 +107,7 @@ class SwapRequestController extends Controller
             DB::transaction(function () use ($swap) {
                 Book::where('id', $swap->offered_book_id)->update(['status' => 'Available']);
                 Book::where('id', $swap->wanted_book_id)->update(['status' => 'Available']);
-                $swap->update(['status' => 'declined', 'requester_dismissed' => true]);
+                $swap->update(['status' => 'declined', 'requester_dismissed' => true, ...SwapRequest::closedBy('requester')]);
             });
             return response()->json(['message' => 'Request cancelled.']);
         }
@@ -138,7 +138,7 @@ class SwapRequestController extends Controller
             // apmainām grāmatas
             Book::where('id', $swap->offered_book_id)->update(['user_id' => $ownerId, 'status' => 'Available']);
             Book::where('id', $swap->wanted_book_id)->update(['user_id' => $requesterId, 'status' => 'Available']);
-            $swap->update(['status' => 'accepted']);
+            $swap->update(['status' => 'accepted', ...SwapRequest::closedBy('owner')]);
 
             // noraida citus pieprasījumus uz tām pašām grāmatām
             $conflicting = SwapRequest::where('id', '!=', $swap->id)
@@ -156,7 +156,7 @@ class SwapRequestController extends Controller
                     ->diff([$swap->offered_book_id, $swap->wanted_book_id])
                     ->values();
 
-                SwapRequest::whereIn('id', $conflicting->pluck('id'))->update(['status' => 'declined']);
+                SwapRequest::whereIn('id', $conflicting->pluck('id'))->update(['status' => 'declined', ...SwapRequest::closedBy('system')]);
 
                 if ($bookIdsToFree->isNotEmpty()) {
                     Book::whereIn('id', $bookIdsToFree)->update(['status' => 'Available']);
@@ -184,7 +184,7 @@ class SwapRequestController extends Controller
         DB::transaction(function () use ($swap) {
             Book::where('id', $swap->offered_book_id)->update(['status' => 'Available']);
             Book::where('id', $swap->wanted_book_id)->update(['status' => 'Available']);
-            $swap->update(['status' => 'declined']);
+            $swap->update(['status' => 'declined', ...SwapRequest::closedBy('owner')]);
         });
 
         try {
