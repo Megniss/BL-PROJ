@@ -94,7 +94,8 @@
               <div v-if="book.status === 'UnderReview'" class="review-exclaim">!</div>
               <span class="book-card-genre">{{ book.genre }}</span>
               <div class="dash-card-actions">
-                <button class="dash-action-btn" :aria-label="t('modal.editBook')" @click="openEditModal(book)">✏️</button>
+                <!-- apmaiņā vai pārbaudē esošu grāmatu mainīt nevar -->
+                <button v-if="book.status !== 'Pending' && book.status !== 'UnderReview'" class="dash-action-btn" :aria-label="t('modal.editBook')" @click="openEditModal(book)">✏️</button>
                 <button class="dash-action-btn dash-action-btn--delete" :aria-label="t('modal.deleteTitle')" @click="confirmDelete(book)">🗑️</button>
               </div>
             </div>

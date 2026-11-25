@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\PasswordCheck;
 use App\Support\TwoFactor;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class TwoFactorController extends Controller
 {
@@ -78,8 +78,8 @@ class TwoFactorController extends Controller
         $request->validate(['password' => ['required', 'string']]);
         $user = $request->user();
 
-        if (!Hash::check($request->password, $user->password)) {
-            return response()->json(['errors' => ['password' => ['Password is incorrect.']]], 422);
+        if ($error = PasswordCheck::fail($user, $request->password)) {
+            return $error;
         }
 
         $user->forceFill(['two_factor_enabled' => false])->save();

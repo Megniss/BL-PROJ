@@ -338,10 +338,25 @@ class BookController extends Controller
         return response()->json($book, 201);
     }
 
+    // apmaiņā vai admina pārbaudē esošu grāmatu mainīt nevar
+    // citādi var nomainīt nosaukumu pēc tam, kad otrs to jau pieprasīja
+    private function locked(Book $book)
+    {
+        if (in_array($book->status, ['Pending', 'UnderReview'])) {
+            return response()->json(['message' => 'This book is in a pending swap or under review, so it cannot be changed right now.'], 422);
+        }
+
+        return null;
+    }
+
     public function update(Request $request, Book $book)
     {
         if ($book->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        if ($error = $this->locked($book)) {
+            return $error;
         }
 
         $request->merge([
@@ -394,6 +409,10 @@ class BookController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
+        if ($error = $this->locked($book)) {
+            return $error;
+        }
+
         $request->validate(['cover' => ['required', 'image', 'max:2048']]);
 
         // dzēšam veco attēlu ja ir
@@ -411,6 +430,10 @@ class BookController extends Controller
     {
         if ($book->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        if ($error = $this->locked($book)) {
+            return $error;
         }
 
         if ($book->cover_image) {

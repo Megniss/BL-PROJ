@@ -77,6 +77,23 @@ class BookTest extends TestCase
              ->assertJsonFragment(['title' => 'NewTitle']);
     }
 
+    // apmaiņā vai pārbaudē esošu grāmatu nevar pārsaukt
+    public function test_cannot_edit_pending_or_under_review_book(): void
+    {
+        $user = User::factory()->create();
+
+        foreach (['Pending', 'UnderReview'] as $status) {
+            $book = Book::factory()->create(['user_id' => $user->id, 'title' => 'Old Title', 'status' => $status]);
+
+            $this->actingAs($user)
+                 ->putJson("/api/books/{$book->id}", $this->bookData(['title' => 'New Title']))
+                 ->assertStatus(422);
+            $this->actingAs($user)->deleteJson("/api/books/{$book->id}/cover")->assertStatus(422);
+
+            $this->assertSame('Old Title', $book->fresh()->title);
+        }
+    }
+
     public function test_user_cannot_edit_another_users_book(): void
     {
         $owner = User::factory()->create();

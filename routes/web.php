@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DigestController;
+use App\Http\Controllers\EmailChangeController;
 use App\Models\User;
 use App\Notifications\NewMessage;
 use App\Support\Digest;
@@ -11,6 +12,11 @@ Route::get('/email/unsubscribe/{user}/{type}', [DigestController::class, 'unsubs
     ->middleware(['signed', 'throttle:20,1'])
     ->whereIn('type', Digest::TYPES)
     ->name('digest.unsubscribe');
+
+// jaunā e-pasta apstiprināšana (saite e-pastā ir parakstīta un der 60 min)
+Route::get('/email/confirm/{user}', [EmailChangeController::class, 'confirm'])
+    ->middleware(['signed', 'throttle:20,1'])
+    ->name('email.confirm');
 
 // e-pastu priekšskatījums pārlūkā, tikai lokāli
 if (app()->environment('local')) {

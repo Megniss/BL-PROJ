@@ -9,12 +9,15 @@ use App\Models\ComplaintMessage;
 use App\Models\Message;
 use App\Models\SwapRequest;
 use App\Models\User;
+use App\Notifications\ConfirmNewEmail;
 use App\Notifications\SwapUnavailable;
 use App\Support\Digest;
+use App\Support\PasswordCheck;
 use App\Support\TwoFactor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
@@ -37,7 +40,8 @@ class ProfileController extends Controller
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
-            'joined' => $user->created_at->toDateString(),
+            'pending_email' => $user->pending_email,
+            'joined' =>$user->created_at->toDateString(),
             'books' => $booksCount,
             'swaps' => $swapsCount,
             'show_joined' => $user->show_joined,
@@ -96,11 +100,22 @@ class ProfileController extends Controller
         // e-pastu un paroli var mainīt tikai ar pašreizējo paroli
         // citādi ar nozagtu tokenu var nomainīt e-pastu un tad paroli caur reset
         if ($emailChanged || $passwordChanged) {
-            if (empty($data['current_password']) || !Hash::check($data['current_password'], $user->password)) {
-                return response()->json([
-                    'errors' => ['current_password' => ['Current password is incorrect.']],
-                ], 422);
+            $error = PasswordCheck::fail($user, $data['current_password'] ?? null, 'current_password', 'Current password is incorrect.');
+            if ($error) {
+                return $error;
             }
+        }
+
+        // jauno e-pastu uzreiz neliekam - vispirms jāapstiprina caur saiti jaunajā e-pastā
+        // citādi var ielikt sveša cilvēka e-pastu
+        if ($emailChanged) {
+            try {
+                Notification::route('mail', $data['email'])->notify(new ConfirmNewEmail($user, $data['email']));
+            } catch (\Throwable $e) {
+                report($e);
+                return response()->json(['message' => 'Could not send the confirmation email. Try again later.'], 503);
+            }
+            $user->pending_email = $data['email'];
         }
 
         if ($passwordChanged) {
@@ -108,7 +123,6 @@ class ProfileController extends Controller
         }
 
         $user->name = $data['name'];
-        $user->email = $data['email'];
         $user->save();
 
         if ($emailChanged || $passwordChanged) {
@@ -122,6 +136,7 @@ class ProfileController extends Controller
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
+            'pending_email' => $user->pending_email,
         ]);
     }
 
@@ -202,13 +217,11 @@ class ProfileController extends Controller
             'reason' => [$user->is_admin ? 'required' : 'nullable', 'string', 'max:500'],
         ]);
 
-        if (!Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'errors' => ['password' => ['Password is incorrect.']],
-            ], 422);
+        if ($error = PasswordCheck::fail($user, $request->password)) {
+            return $error;
         }
 
-        $pending = SwapRequest::where('status', 'pending')
+        $pending =SwapRequest::where('status', 'pending')
             ->where(fn($q) => $q->where('requester_id', $user->id)->orWhere('owner_id', $user->id))
             ->with(['offeredBook', 'wantedBook'])
             ->get();
@@ -260,6 +273,7 @@ class ProfileController extends Controller
             $user->forceFill([
                 'name' => 'Deleted user',
                 'email' => "deleted-{$user->id}@deleted.invalid",
+                'pending_email' => null,
                 'password' => Hash::make(Str::random(40)),
                 'remember_token' => null,
                 'is_admin' => false,

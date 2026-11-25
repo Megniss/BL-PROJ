@@ -49,11 +49,13 @@ class ProfileTest extends TestCase
             'current_password' => 'password',
         ]);
 
+        // e-pasts nomainīsies tikai pēc saites, līdz tam gaida
         $response->assertOk()
                  ->assertJsonPath('name', 'New Name')
-                 ->assertJsonPath('email', 'new@example.com');
+                 ->assertJsonPath('email', $user->email)
+                 ->assertJsonPath('pending_email', 'new@example.com');
 
-        $this->assertDatabaseHas('users', ['id' => $user->id, 'name' => 'New Name', 'email' => 'new@example.com']);
+        $this->assertDatabaseHas('users', ['id' => $user->id, 'name' => 'New Name', 'email' => $user->email, 'pending_email' => 'new@example.com']);
     }
 
     public function test_cannot_use_another_users_email(): void
