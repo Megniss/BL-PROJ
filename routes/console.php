@@ -48,3 +48,9 @@ foreach ($emailDays as $type => $day) {
         ->timezone('Europe/Riga')
         ->withoutOverlapping();
 }
+
+// izlogo visus (docker to palaiž katru reizi kad konteiners startē)
+Artisan::command('auth:logout-all', function () {
+    \App\Support\ServerBoot::start();
+    $this->info('Visi lietotāji izlogoti.');
+})->purpose('Izdzēš visus login tokenus');

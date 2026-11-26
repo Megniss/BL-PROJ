@@ -86,6 +86,21 @@ test('telefonā admin rāda tikai galveno, pārējo pēc "Skatīt vairāk"', asy
   await expect(genre).toBeHidden()
   await page.getByRole('button', { name: 'Filters' }).click()
   await expect(genre).toBeVisible()
+
+  // tabi 2 rindās - lapa nav platāka par ekrānu
+  const tabs = page.locator('.admin-tab-btn')
+  const first = await tabs.first().boundingBox()
+  const last = await tabs.last().boundingBox()
+  expect(last.y).toBeGreaterThan(first.y)
+  expect(last.x + last.width).toBeLessThanOrEqual(390)
+
+  // rindu skaitu var izvēlēties arī telefonā
+  const rows = page.getByRole('table', { name: 'All Books' }).locator('tbody tr')
+  await expect(rows).toHaveCount(6)
+  await page.getByTestId('per-page').selectOption('4')
+  await expect(rows).toHaveCount(4)
+  await page.getByTestId('open-all').click()
+  await expect(rows).toHaveCount(9)
 })
 
 test('jauns atbalsta pieteikums parādās admin paneļa cilnēs', async ({ page }) => {

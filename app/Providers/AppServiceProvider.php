@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Mail\SplitTransport;
+use App\Support\ServerBoot;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -44,6 +45,16 @@ class AppServiceProvider extends ServiceProvider
         // SQLite FK validācija pēc noklusējuma ir izslēgta
         if (DB::connection()->getDriverName() === 'sqlite') {
             DB::statement('PRAGMA foreign_keys = ON;');
+        }
+
+        // "php artisan serve" palaišana - visi lietotāji izlogoti
+        // (docker to dara entrypoint.sh ar php artisan auth:logout-all)
+        if ($this->app->runningInConsole() && ($_SERVER['argv'][1] ?? null) === 'serve') {
+            try {
+                ServerBoot::start();
+            } catch (\Throwable $e) {
+                // ja vēl nav datubāzes/tabulas, neko nedara
+            }
         }
 
         // paroles reset links jāved uz Vue, nevis Blade lapu

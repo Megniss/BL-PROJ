@@ -13,4 +13,7 @@ chown -R www-data:www-data storage public/storage "$(dirname "$DB_DATABASE")"
 
 php artisan migrate --force
 
+# katrs servera starts - visi izlogoti
+php artisan auth:logout-all
+
 exec apache2-foreground

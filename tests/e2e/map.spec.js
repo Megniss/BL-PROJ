@@ -56,7 +56,7 @@ test('lietotājs var savas grāmatas kartē paslēpt', async ({ page }) => {
   await page.locator('.privacy-toggle', { hasText: 'public map' }).click()
   await page.waitForResponse(r => r.url().includes('/api/profile/privacy'))
 
-  await page.evaluate(() => localStorage.clear())
+  await page.evaluate(() => { localStorage.clear(); sessionStorage.clear() })
   await open(page, '/')
   await page.locator('.books-map').scrollIntoViewIfNeeded()
   await zoomOutToOne(page)

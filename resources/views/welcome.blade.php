@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#3a6b3e">
+    <meta name="server-boot" content="{{ \App\Support\ServerBoot::id() }}">
     <meta name="description" content="BookLoop - grāmatu apmaiņas platforma">
     <title>BookLoop</title>
     <link rel="manifest" href="/manifest.json" crossorigin="use-credentials">

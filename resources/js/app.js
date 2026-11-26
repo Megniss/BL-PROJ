@@ -4,7 +4,7 @@ import { createApp } from 'vue'
 import axios from 'axios'
 import App from './components/App.vue'
 import router from './router/router'
-import { clearAuth, isLoggedIn } from './authStore.js'
+import { authReady, clearAuth, isLoggedIn } from './authStore.js'
 import { themeStore } from './themeStore.js'
 
 themeStore.init()
@@ -21,7 +21,8 @@ axios.interceptors.response.use(
   }
 )
 
-createApp(App).use(router).mount('#app')
+// vispirms noskaidro, vai kāda cita cilne ir ielogojusies
+authReady().then(() => createApp(App).use(router).mount('#app'))
 
 // service worker reģistrācija
 if ('serviceWorker' in navigator) {

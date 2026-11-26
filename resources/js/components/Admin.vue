@@ -41,15 +41,16 @@
           <span v-if="tab.key === 'support' && supportUnread > 0" class="admin-tab-badge">{{ supportUnread }}</span>
         </button>
       </div>
-      <div class="admin-tabs-controls">
-        <button class="admin-open-all-btn" :class="{ active: perPage === 99999 }" @click="openAll">{{ perPage === 99999 ? t('admin.collapseAll') : t('admin.openAll') }}</button>
-        <!-- grāmatām (6), apmaiņām (4) un vērtējumiem (6) lapas izmērs ir fiksēts, tāpēc tur šo nerāda -->
-        <select v-if="!['books', 'swaps', 'ratings'].includes(activeTab)" class="form-select form-select-sm" style="width:auto" v-model.number="perPage">
-          <option :value="5">5</option>
-          <option :value="10">10</option>
-          <option :value="25">25</option>
-          <option :value="50">50</option>
-        </select>
+      <!-- rindu skaits tikai sarakstu tabiem (valodām, kartei un atbalstam nav vajadzīgs) -->
+      <div v-if="listTabs.includes(activeTab)" class="admin-tabs-controls">
+        <button class="admin-open-all-btn" :class="{ active: perPage === 99999 }" data-testid="open-all" @click="openAll">{{ perPage === 99999 ? t('admin.collapseAll') : t('admin.openAll') }}</button>
+        <label class="admin-rows-pick">
+          <span>{{ t('admin.rows') }}</span>
+          <select class="form-select form-select-sm" data-testid="per-page" :value="perPage" @change="setPerPage(Number($event.target.value))">
+            <option v-for="n in pageSizes" :key="n" :value="n">{{ n }}</option>
+            <option :value="99999">{{ t('admin.rowsAll') }}</option>
+          </select>
+        </label>
       </div>
     </div>
 
@@ -829,6 +830,11 @@ const SORT_OPTIONS = {
 }
 
 // 'lauks:asc' vai 'lauks:desc'; skaitļi kā skaitļi, teksts pēc latviešu alfabēta
+// cik rindu lapā pēc noklusējuma - apmaiņu kartītes ir lielas, tāpēc mazāk
+function defaultPerPage(tab) {
+  return { books: 6, swaps: 4, ratings: 6 }[tab] ?? 10
+}
+
 function sortList(list, value) {
   const [field, dir] = value.split(':')
   return [...list].sort((a, b) => {
@@ -891,7 +897,9 @@ export default {
         const page = Number(new URLSearchParams(window.location.search).get('page')) || 1
         return { users: 1, books: 1, swaps: 1, ratings: 1, logs: 1, [tab]: page }
       })(),
-      perPage: this.$route?.query?.per_page === 'all' ? 99999 : (Number(this.$route?.query?.per_page) || 10),
+      listTabs: ['users', 'books', 'swaps', 'ratings', 'logs'],
+      perPage: this.$route?.query?.per_page === 'all' ? 99999
+        : (Number(this.$route?.query?.per_page) || defaultPerPage(this.$route?.params?.tab || 'users')),
 
     }
   },
@@ -996,20 +1004,23 @@ export default {
       return sortList(list, this.filters.logs.sort)
     },
 
+    // izvēles saraksts + taba noklusējums, ja tā tur nav (piem. 4 apmaiņām)
+    pageSizes() {
+      const list = [4, 6, 10, 15, 25, 50]
+      if (this.perPage !== 99999 && !list.includes(this.perPage)) list.push(this.perPage)
+      return list.sort((a, b) => a - b)
+    },
+
     pagedUsers() { return this.paginate(this.filteredUsers, this.pages.users) },
-    booksPerPage() { return this.perPage === 99999 ? 99999 : 6 },
-    pagedBooks() { return this.paginate(this.filteredBooks, this.pages.books, this.booksPerPage) },
-    // apmaiņu kartītes ir lielas, tāpēc pa 4 lapā ("atvērt visu" joprojām rāda visas)
-    swapsPerPage() { return this.perPage === 99999 ? 99999 : 4 },
-    pagedSwaps() { return this.paginate(this.filteredSwaps, this.pages.swaps, this.swapsPerPage) },
-    ratingsPerPage() { return this.perPage === 99999 ? 99999 : 6 },
-    pagedRatings() { return this.paginate(this.filteredRatings, this.pages.ratings, this.ratingsPerPage) },
+    pagedBooks() { return this.paginate(this.filteredBooks, this.pages.books) },
+    pagedSwaps() { return this.paginate(this.filteredSwaps, this.pages.swaps) },
+    pagedRatings() { return this.paginate(this.filteredRatings, this.pages.ratings) },
     pagedLogs() { return this.paginate(this.filteredLogs, this.pages.logs) },
 
     totalPagesUsers() { return Math.ceil(this.filteredUsers.length / this.perPage) || 1 },
-    totalPagesBooks() { return Math.ceil(this.filteredBooks.length / this.booksPerPage) || 1 },
-    totalPagesSwaps() { return Math.ceil(this.filteredSwaps.length / this.swapsPerPage) || 1 },
-    totalPagesRatings() { return Math.ceil(this.filteredRatings.length / this.ratingsPerPage) || 1 },
+    totalPagesBooks() { return Math.ceil(this.filteredBooks.length / this.perPage) || 1 },
+    totalPagesSwaps() { return Math.ceil(this.filteredSwaps.length / this.perPage) || 1 },
+    totalPagesRatings() { return Math.ceil(this.filteredRatings.length / this.perPage) || 1 },
     totalPagesLogs() { return Math.ceil(this.filteredLogs.length / this.perPage) || 1 },
   },
 
@@ -1126,13 +1137,18 @@ export default {
 
     setTab(key) {
       this.activeTab = key
-      this.perPage = 10
+      this.perPage = defaultPerPage(key)
       this.syncUrl()
       this.loadTab(key)
     },
 
     openAll() {
-      this.perPage = this.perPage === 99999 ? 10 : 99999
+      this.setPerPage(this.perPage === 99999 ? defaultPerPage(this.activeTab) : 99999)
+    },
+
+    // mainot rindu skaitu, sāk no pirmās lapas
+    setPerPage(n) {
+      this.perPage = n
       this.pages = { users: 1, books: 1, swaps: 1, ratings: 1, logs: 1 }
     },
 
@@ -1432,6 +1448,8 @@ export default {
   white-space: nowrap;
   transition: color 0.15s, border-color 0.15s;
 }
+.admin-rows-pick { display: flex; align-items: center; gap: 6px; margin: 0; font-size: .8rem; color: var(--muted); white-space: nowrap; }
+.admin-rows-pick .form-select { width: auto; }
 .admin-open-all-btn:hover { color: #1a1612; border-color: #1a1612; }
 .admin-open-all-btn.active { color: #3a6b3e; border-color: #3a6b3e; font-weight: 600; }
 .admin-tab-btn {
@@ -1757,10 +1775,37 @@ export default {
   .desk-only { display: none; }
   .mob-only { display: block; }
 
-  .admin-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
-  .admin-tabs::-webkit-scrollbar { display: none; }
-  .admin-tab-btn { white-space: nowrap; padding: 8px 12px; }
-  .admin-tabs-controls { display: none; }
+  /* tabi 2 rindās pa 4, bez scrollēšanas uz sāniem */
+  .admin-tabs-wrap { border-bottom: none; }
+  .admin-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    width: 100%;
+  }
+  .admin-tab-btn {
+    position: relative;
+    margin: 0;
+    padding: 8px 4px;
+    min-height: 44px;
+    font-size: .78rem;
+    line-height: 1.15;
+    text-align: center;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card-bg, #fff);
+  }
+  /* izvēlētais - pilns zaļš, lai uzreiz redz kur atrodies */
+  .admin-tab-btn.active {
+    background: #3a6b3e;
+    border-color: #3a6b3e;
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(58, 107, 62, .35);
+  }
+  .admin-tab-badge { position: absolute; top: -6px; right: -4px; margin: 0; }
+
+  .admin-tabs-controls { width: 100%; padding: 0; }
+  .admin-open-all-btn { flex: 1; padding: 7px 12px; }
 
   .m-filter-btn { display: inline-block; }
   .filter-bar > :not(.m-keep):not(.m-filter-btn) { display: none; }
@@ -1830,6 +1875,11 @@ export default {
 [data-theme="dark"] .admin-card .table td {
   color: #e8e0d5 !important;
   border-color: #2e2820 !important;
+}
+
+@media (max-width: 767.98px) {
+  [data-theme="dark"] .admin-tabs .admin-tab-btn { background: #211d18; border-color: #3a3228; color: #c8c0b5; }
+  [data-theme="dark"] .admin-tabs .admin-tab-btn.active { background: #4a8a4f; border-color: #4a8a4f; color: #fff; }
 }
 
 [data-theme="dark"] .admin-card .badge.bg-light {

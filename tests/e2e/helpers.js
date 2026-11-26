@@ -26,8 +26,8 @@ export async function loginAndWait(page, email) {
 // izdzēš login datus, lai var ielogoties kā cits lietotājs
 export async function logout(page) {
   await page.evaluate(() => {
-    localStorage.removeItem('bookloop_token')
-    localStorage.removeItem('bookloop_user')
+    sessionStorage.removeItem('bookloop_token')
+    sessionStorage.removeItem('bookloop_user')
   })
 }
 
