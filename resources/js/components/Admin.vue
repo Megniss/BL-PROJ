@@ -67,6 +67,9 @@
       <AdminUsersMap :users="users" />
     </div>
 
+    <!-- statistika ar grafikiem -->
+    <AdminStats v-if="activeTab === 'stats' && stats && !loading.stats" :stats="stats" />
+
     <div v-if="loading[activeTab]" class="admin-card text-center py-5">
       <span class="spinner-border spinner-border-sm text-success"></span>
     </div>
@@ -794,6 +797,7 @@ import AdminUnlock from './AdminUnlock.vue'
 import AdminPasswordForm from './AdminPasswordForm.vue'
 import LocationPicker from './LocationPicker.vue'
 import AdminUsersMap from './AdminUsersMap.vue'
+import AdminStats from './AdminStats.vue'
 import langMixin from '../langMixin.js'
 
 const DEFAULT_FILTERS = {
@@ -848,7 +852,7 @@ function sortList(list, value) {
 
 export default {
   name: 'AdminPanel',
-  components: { AppNavbar, AppFooter, Pagination, Support, AdminUnlock, AdminPasswordForm, LocationPicker, AdminUsersMap },
+  components: { AppNavbar, AppFooter, Pagination, Support, AdminUnlock, AdminPasswordForm, LocationPicker, AdminUsersMap, AdminStats },
   mixins: [langMixin],
 
   data() {
@@ -864,6 +868,7 @@ export default {
       swaps: [],
       ratings: [],
       logs: [],
+      stats: null,
       allLanguages: [],
       editingLang: null,
       langTranslations: {},
@@ -887,6 +892,7 @@ export default {
         { key: 'map', label: 'adminMap.tab' },
         { key: 'support', label: 'admin.support' },
         { key: 'logs', label: 'admin.logs' },
+        { key: 'stats', label: 'admin.statsTab' },
       ],
       filters: structuredClone(DEFAULT_FILTERS),
       sortOptions: SORT_OPTIONS,
@@ -1138,6 +1144,8 @@ export default {
     setTab(key) {
       this.activeTab = key
       this.perPage = defaultPerPage(key)
+      // statistiku katru reizi ielādē no jauna, lai skaitļi svaigi
+      if (key === 'stats') this.loaded.stats = false
       this.syncUrl()
       this.loadTab(key)
     },
@@ -1164,6 +1172,7 @@ export default {
           ratings: '/api/admin/ratings',
           logs: '/api/admin/logs',
           langs: '/api/admin/languages',
+          stats: '/api/admin/stats',
         }
         const targets = {
           users: 'users',
@@ -1173,6 +1182,7 @@ export default {
           ratings: 'ratings',
           logs: 'logs',
           langs: 'allLanguages',
+          stats: 'stats',
         }
         if (!endpoints[key]) return
         const { data } = await axios.get(endpoints[key])
@@ -1775,11 +1785,11 @@ export default {
   .desk-only { display: none; }
   .mob-only { display: block; }
 
-  /* tabi 2 rindās pa 4, bez scrollēšanas uz sāniem */
+  /* tabi 3 rindās pa 3, bez scrollēšanas uz sāniem */
   .admin-tabs-wrap { border-bottom: none; }
   .admin-tabs {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 6px;
     width: 100%;
   }

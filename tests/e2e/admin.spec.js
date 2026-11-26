@@ -132,3 +132,18 @@ test('jauns atbalsta pieteikums parādās admin paneļa cilnēs', async ({ page 
   await expect(tab.locator('.admin-tab-badge')).toHaveCount(0)
   await expect(item.locator('.support-new-badge')).toHaveCount(0)
 })
+
+test('statistikas tabā redz kopsummas un grafikus', async ({ page }) => {
+  await login(page, 'admin@e2e.test')
+  await page.locator('.modal-card', { hasText: 'Where to?' }).getByRole('button', { name: 'Admin panel' }).click()
+  await page.fill('#admin-unlock-pwd', ADMIN_PASSWORD)
+  await page.getByRole('button', { name: 'Open' }).click()
+  await page.getByRole('button', { name: 'Statistics' }).click()
+
+  await expect(page.getByTestId('stat-users')).toContainText('Users')
+  for (const id of ['chart-users', 'chart-swaps', 'chart-genres', 'chart-cities']) {
+    await expect(page.getByTestId(id)).toBeVisible()
+  }
+  // e2e grāmatām ir žanrs Romāns
+  await expect(page.getByTestId('chart-genres')).toContainText('Romāns')
+})

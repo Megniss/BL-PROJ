@@ -11,6 +11,7 @@ use App\Notifications\BookDeletedByAdmin;
 use App\Notifications\BookUnderReview;
 use App\Notifications\SwapAccepted;
 use App\Notifications\SwapDeclined;
+use App\Support\LatvianCities;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -376,5 +377,88 @@ class AdminController extends Controller
         });
 
         return response()->json($ratings);
+    }
+
+    // statistikas tabs - kopsummas, pēdējās 12 nedēļas, žanri un pilsētas
+    public function stats()
+    {
+        $weeks = 12;
+        $from = now()->startOfWeek()->subWeeks($weeks - 1);
+
+        // nedēļas sākuma datums => skaits
+        $bucket = function ($dates) use ($from, $weeks) {
+            $out = [];
+            for ($i = 0; $i < $weeks; $i++) $out[$from->copy()->addWeeks($i)->toDateString()] = 0;
+            foreach ($dates as $d) {
+                $key = $d->copy()->startOfWeek()->toDateString();
+                if (isset($out[$key])) $out[$key]++;
+            }
+            return $out;
+        };
+
+        $users = User::whereNull('deleted_at')->get(['created_at', 'latitude', 'longitude']);
+        $newUsers = $bucket($users->pluck('created_at')->filter()->filter(fn($d) => $d >= $from));
+        $requests = $bucket(SwapRequest::where('created_at', '>=', $from)->pluck('created_at'));
+        $accepted = $bucket(SwapRequest::where('status', 'accepted')->where('closed_at', '>=', $from)->pluck('closed_at'));
+
+        $weekRows = [];
+        foreach ($newUsers as $start => $n) {
+            $weekRows[] = ['start' => $start, 'users' => $n, 'requests' => $requests[$start], 'accepted' => $accepted[$start]];
+        }
+
+        // žanri - top 8, pārējie kopā
+        $genres = Book::where('status', '!=', 'Removed')
+            ->selectRaw('genre, count(*) as cnt')
+            ->groupBy('genre')
+            ->orderByDesc('cnt')
+            ->get()
+            ->map(fn($g) => ['name' => $g->genre ?: null, 'count' => (int) $g->cnt]);
+
+        // pilsētas pēc tuvākās pilsētas koordinātēm
+        $cities = [];
+        $noLocation = 0;
+        $elsewhere = 0;
+        foreach ($users as $u) {
+            if ($u->latitude === null || $u->longitude === null) {
+                $noLocation++;
+                continue;
+            }
+            $city = LatvianCities::nearest((float) $u->latitude, (float) $u->longitude);
+            if ($city) $cities[$city] = ($cities[$city] ?? 0) + 1;
+            else $elsewhere++;
+        }
+        arsort($cities);
+
+        $ratings = Rating::selectRaw('avg(stars) as avg, count(*) as cnt')->first();
+
+        return response()->json([
+            'totals' => [
+                'users' => $users->count(),
+                'new_users_week' => end($newUsers),
+                'books' => Book::where('status', '!=', 'Removed')->count(),
+                'swaps_accepted' => SwapRequest::where('status', 'accepted')->count(),
+                'swaps_pending' => SwapRequest::where('status', 'pending')->count(),
+                'rating_avg' => $ratings->cnt ? round((float) $ratings->avg, 1) : null,
+                'rating_count' => (int) $ratings->cnt,
+            ],
+            'weeks' => $weekRows,
+            'genres' => $this->topWithOther($genres->all()),
+            'cities' => $this->topWithOther(collect($cities)->map(fn($n, $c) => ['name' => $c, 'count' => $n])->values()->all()),
+            'no_location' => $noLocation,
+            'elsewhere' => $elsewhere,
+        ]);
+    }
+
+    // pirmie 8, pārējie saskaitīti vienā "other" rindā (name = null nozīmē "cits")
+    private function topWithOther(array $rows, int $top = 8): array
+    {
+        $named = array_values(array_filter($rows, fn($r) => $r['name'] !== null));
+        $rest = array_sum(array_column(array_slice($named, $top), 'count'))
+            + array_sum(array_column(array_filter($rows, fn($r) => $r['name'] === null), 'count'));
+
+        $out = array_slice($named, 0, $top);
+        if ($rest > 0) $out[] = ['name' => null, 'count' => $rest];
+
+        return $out;
     }
 }

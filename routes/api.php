@@ -129,6 +129,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/admin/books', [AdminController::class, 'books']);
         Route::get('/admin/swaps', [AdminController::class, 'swaps']);
         Route::get('/admin/ratings', [AdminController::class, 'ratings']);
+        Route::get('/admin/stats', [AdminController::class, 'stats']);
         Route::patch('/admin/users/{user}/block', [AdminController::class, 'blockUser']);
         Route::patch('/admin/users/{user}/unblock', [AdminController::class, 'unblockUser']);
         Route::patch('/admin/users/{user}/make-admin', [AdminController::class, 'makeAdmin']);
