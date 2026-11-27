@@ -25,6 +25,7 @@ class SupportReply extends Notification
             'message' => "Support replied to your ticket \"{$this->complaint->subject}\".",
             'complaint_id' => $this->complaint->id,
             'subject' => $this->complaint->subject,
+            'category' => $this->complaint->category,
         ];
     }
 }

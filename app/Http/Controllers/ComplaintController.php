@@ -8,6 +8,7 @@ use App\Models\ComplaintMessage;
 use App\Notifications\SupportReply;
 use App\Support\Chat;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ComplaintController extends Controller
 {
@@ -30,15 +31,23 @@ class ComplaintController extends Controller
             return response()->json(['message' => 'Admins use the admin panel for support.'], 403);
         }
 
+        // iemesls no saraksta. temats jāraksta tikai pie "other" (vai ja iemesla nav)
         $request->validate([
-            'subject' => ['required', 'string', 'max:200'],
+            'category' => ['nullable', Rule::in(array_keys(Complaint::CATEGORIES))],
+            'subject' => [Rule::requiredIf(fn() => in_array($request->category, [null, 'other'], true)), 'nullable', 'string', 'max:200'],
             'body' => ['required', 'string', 'max:2000'],
         ]);
+
+        $category = $request->category ?? 'other';
+        $subject = $category === 'other'
+            ? trim($request->subject)
+            : Complaint::CATEGORIES[$category];
 
         // admin_read_at paliek null - adminam rādās kā jauns
         $complaint = Complaint::create([
             'user_id' => $request->user()->id,
-            'subject' => $request->subject,
+            'subject' => $subject,
+            'category' => $category,
             'status' => 'open',
         ]);
 
@@ -192,6 +201,7 @@ class ComplaintController extends Controller
         return [
             'id' => $complaint->id,
             'subject' => $complaint->subject,
+            'category' => $complaint->category,
             'status' => $complaint->status,
             'user' => $complaint->relationLoaded('user') ? $complaint->user : null,
             'last_msg' => $last?->body,
@@ -206,6 +216,7 @@ class ComplaintController extends Controller
         return [
             'id' => $complaint->id,
             'subject' => $complaint->subject,
+            'category' => $complaint->category,
             'status' => $complaint->status,
             'user' => $complaint->user,
             'messages' => $complaint->messages->map(fn($m) => $this->formatMessage($m, $complaint)),

@@ -107,6 +107,9 @@ test('jauns atbalsta pieteikums parādās admin paneļa cilnēs', async ({ page 
   await loginAndWait(page, 'peteris@e2e.test')
   await page.goto('/support')
   await page.getByRole('button', { name: '+ New Complaint' }).click()
+  // iemeslu meklē rakstot, savs temats tikai pie "Other"
+  await page.getByTestId('support-reason').fill('oth')
+  await page.locator('.reason-item', { hasText: 'Other' }).click()
   await page.getByPlaceholder('Subject').fill('Pazudusi grāmata')
   await page.getByPlaceholder('Describe your issue').fill('Mana grāmata pazuda no saraksta')
   await page.getByRole('button', { name: 'Send', exact: true }).click()
