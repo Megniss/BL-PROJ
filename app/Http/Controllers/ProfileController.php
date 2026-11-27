@@ -378,6 +378,7 @@ class ProfileController extends Controller
             'BookUnderReview' => 'book_review',
             'BookDeletedByAdmin' => 'book_deleted',
             'SupportReply' => 'support_reply',
+            'WishlistMatch' => 'wishlist',
             default => 'other',
         };
     }
@@ -390,6 +391,9 @@ class ProfileController extends Controller
                 ? '/messages?' . http_build_query(['userId' => $data['sender_id'], 'userName' => $data['sender_name'] ?? ''])
                 : '/messages',
             'support_reply' => isset($data['complaint_id']) ? '/support?ticket=' . $data['complaint_id'] : '/support',
+            'wishlist' => isset($data['book'], $data['author'])
+                ? '/browse?' . http_build_query(['title' => $data['book'], 'author' => $data['author']])
+                : '/browse',
             'swap_accepted', 'swap_declined', 'swap_unavailable', 'book_review', 'book_deleted' => '/dashboard',
             default => null,
         };

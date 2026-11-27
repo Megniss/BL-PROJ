@@ -24,6 +24,12 @@ class User extends Authenticatable
         return $this->hasMany(Book::class);
     }
 
+    // vēlmju saraksts
+    public function wishlist(): HasMany
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
     public function blocking(): HasMany
     {
         return $this->hasMany(Block::class, 'blocker_id');

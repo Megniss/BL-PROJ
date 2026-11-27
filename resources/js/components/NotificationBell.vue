@@ -231,6 +231,7 @@ export default {
         book_review: '🔍',
         book_deleted: '🗑️',
         support_reply: '💬',
+        wishlist: '♥',
       }[kind] || '🔔'
     },
 
@@ -244,7 +245,9 @@ export default {
         swap_unavailable: { book: d.book },
         book_review: { book: d.book },
         book_deleted: { book: d.book },
-        support_reply: { subject: d.subject },
+        // iemeslu rāda lietotāja valodā
+        support_reply: { subject: d.category && d.category !== 'other' ? this.t('support.cat.' + d.category) : d.subject },
+        wishlist: { book: d.book },
       }[n.kind]
 
       if (!params || Object.values(params).some(v => !v)) return d.message || ''
@@ -258,6 +261,7 @@ export default {
     sub(n) {
       const d = n.data || {}
       if (n.kind === 'message' && d.preview) return '"' + d.preview + '"'
+      if (n.kind === 'wishlist' && d.owner_name) return this.t('notif.wishOwner') + ': ' + d.owner_name
       if ((n.kind === 'book_review' || n.kind === 'book_deleted') && d.reason) return this.t('notif.reason') + ': ' + d.reason
       return ''
     },

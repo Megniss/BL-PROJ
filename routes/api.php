@@ -17,6 +17,7 @@ use App\Http\Controllers\SwapRequestController;
 use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\TypingController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 // publiskie route'i
@@ -88,6 +89,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/messages/{message}', [MessageController::class, 'destroy']);
 
     Route::post('/ratings', [RatingController::class, 'store']);
+
+    Route::get('/wishlist', [WishlistController::class, 'index']);
+    Route::post('/wishlist', [WishlistController::class, 'store'])->middleware('throttle:30,1');
+    Route::delete('/wishlist/{wishlist}', [WishlistController::class, 'destroy']);
 
     Route::get('/blocks', [BlockController::class, 'index']);
     Route::post('/blocks/{user}', [BlockController::class, 'store']);

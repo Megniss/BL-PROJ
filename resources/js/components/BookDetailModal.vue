@@ -60,6 +60,20 @@
             <button class="btn-msg-owner btn-sm" @click="$emit('message', c.user)">✉ {{ t('books.msgOwner') }}</button>
           </div>
         </div>
+
+        <!-- vēlmju saraksts - paziņos, kad kāds pievienos vēl vienu -->
+        <button
+          v-if="loggedIn && !loadingCopies && !iHave"
+          type="button"
+          class="btn btn-sm wish-btn"
+          :class="wishId ? 'btn-outline-secondary' : 'btn-outline-primary'"
+          :disabled="wishBusy"
+          @click="toggleWish"
+          data-testid="wish-toggle"
+        >
+          {{ wishId ? '♥ ' + t('wish.inList') : '♡ ' + t('wish.addThis') }}
+        </button>
+        <p v-if="loggedIn && !loadingCopies && !iHave && !wishId && copies.length === 0" class="detail-placeholder small mt-1 mb-0">{{ t('wish.hint') }}</p>
       </div>
 
       <!-- ieteikumi -->
@@ -98,6 +112,8 @@ import langMixin from '../langMixin.js'
 import { coverColor } from '../coverColor.js'
 import { conditionClass } from '../conditionClass.js'
 import { formatDistance } from '../distance.js'
+import { authStore } from '../authStore.js'
+import { showToast } from '../toast.js'
 
 export default {
   name: 'BookDetailModal',
@@ -107,15 +123,22 @@ export default {
   },
   emits: ['close', 'swap', 'message', 'profile', 'suggest'],
   data() {
-    return { suggestions: [], copies: [], iHave: false, loadingCopies: false }
+    return { suggestions: [], copies: [], iHave: false, loadingCopies: false, wishId: null, wishBusy: false }
+  },
+  computed: {
+    loggedIn() {
+      return !!authStore.user
+    },
   },
   watch: {
     book(val) {
       this.suggestions = []
       this.copies = []
       this.iHave = false
+      this.wishId = null
       if (val) {
         this.fetchCopies(val)
+        if (this.loggedIn) this.fetchWish(val)
         // no e-pasta saites grāmatai var nebūt id (ja nevienam tā šobrīd nav)
         if (val.id) this.fetchSuggestions(val.id)
       }
@@ -137,6 +160,34 @@ export default {
       }
     },
 
+    // vai šī grāmata jau ir vēlmju sarakstā
+    async fetchWish(book) {
+      try {
+        const { data } = await axios.get('/api/wishlist')
+        const same = (a, b) => (a || '').toLowerCase() === (b || '').toLowerCase()
+        const found = data.find(w => same(w.title, book.title) && same(w.author, book.author))
+        this.wishId = found ? found.id : null
+      } catch { /* klusums */ }
+    },
+    async toggleWish() {
+      this.wishBusy = true
+      try {
+        if (this.wishId) {
+          await axios.delete(`/api/wishlist/${this.wishId}`)
+          this.wishId = null
+          showToast(this.t('wish.removed'))
+        } else {
+          const { data } = await axios.post('/api/wishlist', { title: this.book.title, author: this.book.author })
+          this.wishId = data.id
+          showToast(this.t('wish.added'))
+        }
+      } catch (err) {
+        const errors = err.response?.data?.errors
+        showToast(errors ? Object.values(errors).flat()[0] : (err.response?.data?.message || this.t('dash.genericError')), 'error')
+      } finally {
+        this.wishBusy = false
+      }
+    },
     async fetchSuggestions(bookId) {
       try {
         const { data } = await axios.get(`/api/books/${bookId}/suggestions`)

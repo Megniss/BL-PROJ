@@ -112,6 +112,59 @@
           </div>
         </div>
       </div>
+
+      <!-- vēlmju saraksts - grāmatas, ko meklēju -->
+      <section class="wishlist-section" data-testid="wishlist">
+        <h2 class="dash-section-title mb-1">♡ {{ t('wish.title') }}</h2>
+        <p class="dashboard-sub small mb-3">{{ t('wish.sub') }}</p>
+
+        <form class="wishlist-form" @submit.prevent="addWish">
+          <AutocompleteInput
+            id="wish-title"
+            v-model="wishForm.title"
+            url="/api/books/autocomplete"
+            :placeholder="t('modal.fieldTitle')"
+            :aria-label="t('modal.fieldTitle')"
+            :disabled-when="item => item.mine"
+            @select="b => { wishForm.title = b.title; wishForm.author = b.author }"
+          >
+            <template #default="{ item }">
+              <span class="fw-semibold">{{ item.title }}</span>
+              <span class="text-muted"> - {{ item.author }}</span>
+              <span v-if="item.mine" class="autocomplete-note">{{ t('copies.iHaveShort') }}</span>
+            </template>
+          </AutocompleteInput>
+          <AutocompleteInput
+            id="wish-author"
+            v-model="wishForm.author"
+            url="/api/books/authors"
+            :placeholder="t('modal.fieldAuthor')"
+            :aria-label="t('modal.fieldAuthor')"
+            @select="a => wishForm.author = a"
+          />
+          <button type="submit" class="btn btn-primary" :disabled="wishSaving || !wishForm.title.trim() || !wishForm.author.trim()">
+            + {{ t('wish.add') }}
+          </button>
+        </form>
+        <div v-if="wishError" class="alert alert-danger py-2 px-3 mt-2 mb-0" role="alert">{{ wishError }}</div>
+
+        <p v-if="!wishlist.length" class="wishlist-empty">{{ t('wish.empty') }}</p>
+        <ul v-else class="wishlist-list">
+          <li v-for="w in wishlist" :key="w.id" class="wishlist-item" data-testid="wish-item">
+            <div class="wishlist-info">
+              <span class="fw-semibold">{{ w.title }}</span>
+              <span class="text-muted"> - {{ w.author }}</span>
+            </div>
+            <router-link
+              v-if="w.available > 0"
+              class="tag tag-green wishlist-avail"
+              :to="{ name: 'browse', query: { title: w.title, author: w.author } }"
+            >{{ t('wish.available').replace('{n}', w.available) }} →</router-link>
+            <span v-else class="tag wishlist-wait">{{ t('wish.waiting') }}</span>
+            <button class="btn-dismiss" :aria-label="t('wish.remove') + ' ' + w.title" @click="removeWish(w)">✕</button>
+          </li>
+        </ul>
+      </section>
     </div>
 
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal" role="dialog" aria-modal="true" aria-labelledby="book-modal-title">
@@ -275,6 +328,10 @@ export default {
       coverFile: null,
       coverPreview: null,
       coverRemoved: false,
+      wishlist: [],
+      wishForm: { title: '', author: '' },
+      wishSaving: false,
+      wishError: '',
     }
   },
 
@@ -316,13 +373,15 @@ export default {
       if (!silent) this.loading = true
       this.fetchError = ''
       try {
-        const [books, incoming, outgoing, msgCount] = await Promise.all([
+        const [books, incoming, outgoing, msgCount, wishes] = await Promise.all([
           axios.get('/api/books'),
           axios.get('/api/swap-requests/incoming'),
           axios.get('/api/swap-requests/outgoing'),
           axios.get('/api/messages/unread-count'),
+          axios.get('/api/wishlist'),
         ])
         this.books = books.data
+        this.wishlist = wishes.data
         this.incoming = incoming.data
         this.outgoing = outgoing.data
         this.unreadMessages = msgCount.data.count
@@ -460,6 +519,9 @@ export default {
           const { data } = await axios.post('/api/books', this.form)
           this.books.unshift(data)
           savedBook = this.books[0]
+          // serveris to izņēma no vēlmju saraksta
+          const same = (a, b) => a.toLowerCase() === b.toLowerCase()
+          this.wishlist = this.wishlist.filter(w => !(same(w.title, data.title) && same(w.author, data.author)))
         }
 
         // vāka augšupielāde / noņemšana ir atsevišķs pieprasījums
@@ -484,6 +546,33 @@ export default {
         }
       } finally {
         this.saving = false
+      }
+    },
+
+    async addWish() {
+      this.wishError = ''
+      this.wishSaving = true
+      try {
+        await axios.post('/api/wishlist', this.wishForm)
+        this.wishForm = { title: '', author: '' }
+        // pārlādē, lai redz cik eksemplāru jau ir pieejami
+        const { data } = await axios.get('/api/wishlist')
+        this.wishlist = data
+        showToast(this.t('wish.added'))
+      } catch (err) {
+        const errors = err.response?.data?.errors
+        this.wishError = errors ? Object.values(errors).flat()[0] : (err.response?.data?.message || this.t('dash.genericError'))
+      } finally {
+        this.wishSaving = false
+      }
+    },
+
+    async removeWish(w) {
+      try {
+        await axios.delete(`/api/wishlist/${w.id}`)
+        this.wishlist = this.wishlist.filter(x => x.id !== w.id)
+      } catch (err) {
+        this.flashError(err.response?.data?.message || this.t('dash.genericError'))
       }
     },
 

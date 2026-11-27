@@ -943,6 +943,23 @@ body {
 .dashboard-sub { font-size: 15px; color: var(--muted); }
 .dash-section-title { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--ink); }
 
+/* vēlmju saraksts */
+.wishlist-section { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border); }
+.wishlist-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; max-width: 760px; }
+.wishlist-empty { color: var(--muted); font-size: 14px; margin: 16px 0 0; }
+.wishlist-list { list-style: none; padding: 0; margin: 16px 0 0; max-width: 760px; display: flex; flex-direction: column; gap: 8px; }
+.wishlist-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card-bg); }
+.wishlist-info { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.wishlist-avail { text-decoration: none; white-space: nowrap; }
+.wishlist-wait { white-space: nowrap; color: var(--muted); }
+.wishlist-item .btn-dismiss { padding: 4px 10px; }
+.wish-btn { margin-top: 10px; }
+@media (max-width: 575.98px) {
+  .wishlist-form { grid-template-columns: 1fr; }
+  .wishlist-item { flex-wrap: wrap; }
+  .wishlist-info { flex-basis: 100%; white-space: normal; }
+}
+
 .empty-library {
   text-align: center;
   padding: 60px 20px;

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use App\Models\User;
 use App\Support\Distance;
+use App\Support\WishlistMatcher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -335,6 +336,14 @@ class BookController extends Controller
         ]);
 
         $book = $request->user()->books()->create($data);
+
+        // pievienoja - pats vairs nemeklē, citiem paziņojam
+        $request->user()->wishlist()
+            ->whereRaw('lower(title) = ?', [mb_strtolower($book->title)])
+            ->whereRaw('lower(author) = ?', [mb_strtolower($book->author)])
+            ->delete();
+        WishlistMatcher::bookAdded($book->fresh());
+
         return response()->json($book, 201);
     }
 

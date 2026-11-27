@@ -7,6 +7,8 @@
       type="text"
       autocomplete="off"
       :required="required"
+      :placeholder="placeholder"
+      :aria-label="ariaLabel"
       @input="onInput"
       @focus="focused = true"
       @blur="focused = false"
@@ -39,6 +41,8 @@ export default {
     url: { type: String, required: true },
     id: { type: String, default: null },
     required: Boolean,
+    placeholder: { type: String, default: null },
+    ariaLabel: { type: String, default: null },
     // ieteikumi, ko nevar izvēlēties (piem. grāmata, kas jau ir)
     disabledWhen: { type: Function, default: () => false },
   },
