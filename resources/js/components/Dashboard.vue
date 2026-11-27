@@ -108,6 +108,14 @@
                 </span>
                 <span class="tag" :class="conditionClass(book.condition)">{{ book.condition }}</span>
               </div>
+              <!-- citi meklē šo grāmatu savā vēlmju sarakstā -->
+              <button
+                v-if="book.wanted_count > 0"
+                type="button"
+                class="wanted-badge mt-2"
+                @click="wantedBook = book"
+                data-testid="wanted-badge"
+              >♥ {{ t('wish.wantedBy').replace('{n}', book.wanted_count) }}</button>
             </div>
           </div>
         </div>
@@ -268,6 +276,33 @@
       </div>
     </div>
 
+    <!-- kas meklē šo grāmatu -->
+    <div v-if="wantedBook" class="modal-overlay" @click.self="wantedBook = null" role="dialog" aria-modal="true" aria-labelledby="wanted-title">
+      <div class="modal-card modal-card--sm">
+        <h2 class="modal-title mb-1" id="wanted-title">♥ {{ t('wish.wantedTitle') }}</h2>
+        <p class="modal-desc mb-3"><strong>{{ wantedBook.title }}</strong> - {{ wantedBook.author }}</p>
+
+        <ul class="wanted-list">
+          <li v-for="u in wantedBook.wanted_by" :key="u.id" class="wanted-row">
+            <router-link :to="{ name: 'userProfile', params: { id: u.id } }" class="owner-link fw-semibold">{{ u.name }}</router-link>
+            <router-link
+              v-if="wantedBook.status === 'Available'"
+              class="btn btn-sm btn-primary"
+              :to="{ name: 'userProfile', params: { id: u.id }, query: { offer: wantedBook.id } }"
+            >⇄ {{ t('wish.offer') }}</router-link>
+          </li>
+        </ul>
+        <p v-if="wantedBook.wanted_count > wantedBook.wanted_by.length" class="text-muted small mb-0">
+          {{ t('wish.wantedPrivate').replace('{n}', wantedBook.wanted_count - wantedBook.wanted_by.length) }}
+        </p>
+        <p v-if="wantedBook.status !== 'Available'" class="text-muted small mt-2 mb-0">{{ t('wish.notAvailableNow') }}</p>
+
+        <div class="d-flex justify-content-end mt-3">
+          <button class="btn btn-outline-secondary" @click="wantedBook = null">{{ t('bookDetail.close') }}</button>
+        </div>
+      </div>
+    </div>
+
     <AppFooter />
 
     <!-- jautājums par 2FA pēc reģistrācijas vai pirmā login -->
@@ -332,6 +367,7 @@ export default {
       wishForm: { title: '', author: '' },
       wishSaving: false,
       wishError: '',
+      wantedBook: null,
     }
   },
 

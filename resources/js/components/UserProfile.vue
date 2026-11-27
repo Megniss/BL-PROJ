@@ -88,6 +88,27 @@
           </div>
         </div>
 
+        <!-- ko šis lietotājs meklē - ja man tā ir, varu piedāvāt -->
+        <template v-if="profile.wishlist && profile.wishlist.length">
+          <h2 id="wishlist" class="dash-section-title mt-4 mb-1">♡ {{ t('up.wishTitle').replace('{name}', profile.name) }}</h2>
+          <p class="dashboard-sub small mb-3">{{ t('up.wishSub') }}</p>
+          <ul class="wishlist-list mt-0 mb-4" data-testid="profile-wishlist">
+            <li v-for="w in profile.wishlist" :key="w.id" class="wishlist-item">
+              <div class="wishlist-info">
+                <span class="fw-semibold">{{ w.title }}</span>
+                <span class="text-muted"> - {{ w.author }}</span>
+              </div>
+              <span v-if="w.offered" class="tag tag-green">✓ {{ t('up.offered') }}</span>
+              <button
+                v-else-if="w.my_book_id && canSwap"
+                class="btn btn-sm btn-primary"
+                @click="openOffer(w)"
+                data-testid="offer-btn"
+              >⇄ {{ t('up.offerMine') }}</button>
+            </li>
+          </ul>
+        </template>
+
         <template v-if="profile.swap_history && profile.swap_history.length">
           <h2 class="dash-section-title mt-4 mb-3">{{ profile.name }} - {{ t('profile.swapHistory') }}</h2>
           <div class="d-flex flex-column gap-2 mb-4">
@@ -122,6 +143,60 @@
     @close="closeSwapModal"
     @send="sendSwapRequest"
   />
+
+  <!-- piedāvāju savu grāmatu, ko viņš meklē - izvēlos, ko gribu pretī -->
+  <Teleport to="body">
+    <div v-if="offer.wish" class="modal-overlay" @click.self="closeOffer" role="dialog" aria-modal="true" aria-labelledby="offer-title">
+      <div class="modal-card">
+        <div v-if="offer.success" class="text-center py-2">
+          <div style="font-size:2.5rem">✅</div>
+          <h2 class="modal-title mt-2 mb-1">{{ t('swap.sent') }}</h2>
+          <p class="text-muted small mb-4">{{ t('swap.sentDesc') }}</p>
+          <button class="btn btn-primary px-4" @click="closeOffer">{{ t('swap.sentClose') }}</button>
+        </div>
+
+        <template v-else>
+          <h2 class="modal-title mb-2" id="offer-title">{{ t('up.offerTitle') }} ⇄</h2>
+          <p class="modal-desc mb-3">
+            {{ t('up.offerYouGive') }}: <strong>{{ offer.wish.title }}</strong> {{ t('up.by') }} {{ offer.wish.author }}
+            <em>({{ t('up.offerTo').replace('{name}', profile.name) }})</em>
+          </p>
+
+          <template v-if="offerChoices.length">
+            <p class="swap-hint">{{ t('up.offerPick').replace('{name}', profile.name) }}</p>
+            <div class="swap-book-list mb-3">
+              <div
+                v-for="book in offerChoices"
+                :key="book.id"
+                class="swap-book-option"
+                :class="{ selected: offer.wantedId === book.id }"
+                role="button"
+                tabindex="0"
+                @click="offer.wantedId = book.id"
+                @keyup.enter="offer.wantedId = book.id"
+              >
+                <div class="swap-book-info">
+                  <strong>{{ book.title }}</strong>
+                  <span>{{ book.author }}</span>
+                </div>
+                <span class="tag tag-green" v-if="offer.wantedId === book.id">✓ {{ t('up.selected') }}</span>
+              </div>
+            </div>
+          </template>
+          <p v-else class="swap-hint">{{ t('up.offerNothing').replace('{name}', profile.name) }}</p>
+
+          <div v-if="offer.error" class="alert alert-danger py-2 px-3 mb-3" role="alert">{{ offer.error }}</div>
+          <div class="d-flex justify-content-end gap-2">
+            <button class="btn btn-outline-secondary" @click="closeOffer">{{ t('up.cancel') }}</button>
+            <button v-if="!offerChoices.length" class="btn btn-primary" @click="goToMessages">{{ t('up.message') }} {{ profile.name }}</button>
+            <button v-else class="btn btn-primary" :disabled="!offer.wantedId || offer.sending" @click="sendOffer">
+              {{ offer.sending ? t('modal.saving') : t('up.offerSend') }}
+            </button>
+          </div>
+        </template>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script>
@@ -159,11 +234,31 @@ export default {
         error: '',
         success: false,
       },
+      offer: { wish: null, wantedId: null, sending: false, error: '', success: false },
     }
   },
 
-  mounted() {
-    this.fetchProfile()
+  computed: {
+    // var mainīties - ielogojies, nav savs profils, nav bloķēts
+    canSwap() {
+      return !!authStore.user && authStore.user.id !== this.profile?.id && !this.isBlocked && !this.theyBlockedMe
+    },
+
+    // viņa grāmatas, ko varu paņemt pretī
+    offerChoices() {
+      return (this.profile?.library ?? []).filter(b => b.status === 'Available' && !b.i_have)
+    },
+  },
+
+  async mounted() {
+    await this.fetchProfile()
+    // no My Library "Piedāvāt" - ?offer=manas grāmatas id
+    const bookId = Number(this.$route.query.offer)
+    const wish = bookId && this.profile?.wishlist?.find(w => w.my_book_id === bookId)
+    if (wish && this.canSwap) {
+      this.$nextTick(() => document.getElementById('wishlist')?.scrollIntoView({ block: 'center' }))
+      this.openOffer(wish)
+    }
   },
 
   methods: {
@@ -227,6 +322,35 @@ export default {
         this.swapModal.error = err.response?.data?.message || this.t('up.swapError')
       } finally {
         this.swapModal.sending = false
+      }
+    },
+
+    openOffer(wish) {
+      this.offer = { wish, wantedId: null, sending: false, error: '', success: false }
+    },
+
+    closeOffer() {
+      this.offer = { wish: null, wantedId: null, sending: false, error: '', success: false }
+      // lai pārlādējot logs neatveras vēlreiz
+      if (this.$route.query.offer) this.$router.replace({ query: {} })
+    },
+
+    async sendOffer() {
+      this.offer.error = ''
+      this.offer.sending = true
+      try {
+        await axios.post('/api/swap-requests', {
+          offered_book_id: this.offer.wish.my_book_id,
+          wanted_book_id: this.offer.wantedId,
+        })
+        // abas grāmatas tagad apmaiņā
+        this.profile.library = this.profile.library.filter(b => b.id !== this.offer.wantedId)
+        this.offer.wish.offered = true
+        this.offer.success = true
+      } catch (err) {
+        this.offer.error = err.response?.data?.message || this.t('up.swapError')
+      } finally {
+        this.offer.sending = false
       }
     },
 

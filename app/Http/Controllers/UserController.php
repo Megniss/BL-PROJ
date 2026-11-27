@@ -104,6 +104,23 @@ class UserController extends Controller
                 ]);
         }
 
+        // vēlmju saraksts tikai ja atļauts. my_book_id - mana pieejamā grāmata, ko varu piedāvāt
+        $wishlist = null;
+        if ($user->show_wishlist) {
+            $myAvailable = $authUser && $authUser->id !== $user->id
+                ? $authUser->books()->where('status', 'Available')->get(['id', 'title', 'author'])
+                    ->keyBy(fn($b) => mb_strtolower($b->title . '|' . $b->author))
+                : collect();
+
+            $wishlist = $user->wishlist()->latest()->get(['id', 'title', 'author'])
+                ->map(fn($w) => [
+                    'id' => $w->id,
+                    'title' => $w->title,
+                    'author' => $w->author,
+                    'my_book_id' => $myAvailable->get(mb_strtolower($w->title . '|' . $w->author))?->id,
+                ]);
+        }
+
         $iBlockedThem = $authUser
             ? $authUser->blocking()->where('blocked_id', $user->id)->exists()
             : false;
@@ -120,6 +137,7 @@ class UserController extends Controller
             'swaps' => $user->show_swaps ? $swapsCount : null,
             'swap_history' => $swapHistory,
             'library' => $books,
+            'wishlist' => $wishlist,
             'is_blocked' => $iBlockedThem,
             'they_blocked_me' => $theyBlockedMe,
             'distance_km' => $authUser && $authUser->id !== $user->id ? Distance::between($authUser, $user) : null,

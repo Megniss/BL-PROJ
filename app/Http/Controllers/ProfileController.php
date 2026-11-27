@@ -48,6 +48,7 @@ class ProfileController extends Controller
             'show_swaps' => $user->show_swaps,
             'show_swap_history' => $user->show_swap_history,
             'show_on_map' => $user->show_on_map,
+            'show_wishlist' => $user->show_wishlist,
             'emails' => $user->emailSettings(),
             'is_admin' => $user->is_admin,
             'is_only_admin' => $user->is_admin && !$this->hasOtherAdmins($user),
@@ -148,6 +149,7 @@ class ProfileController extends Controller
             'show_swaps' => ['required', 'boolean'],
             'show_swap_history' => ['required', 'boolean'],
             'show_on_map' => ['sometimes', 'boolean'],
+            'show_wishlist' => ['sometimes', 'boolean'],
         ]);
 
         $user->show_joined = $data['show_joined'];
@@ -157,6 +159,9 @@ class ProfileController extends Controller
         if (array_key_exists('show_on_map', $data)) {
             $user->show_on_map = $data['show_on_map'];
         }
+        if (array_key_exists('show_wishlist', $data)) {
+            $user->show_wishlist = $data['show_wishlist'];
+        }
         $user->save();
         $user->refresh();
 
@@ -165,6 +170,7 @@ class ProfileController extends Controller
             'show_swaps' => $user->show_swaps,
             'show_swap_history' => $user->show_swap_history,
             'show_on_map' => $user->show_on_map,
+            'show_wishlist' => $user->show_wishlist,
         ]);
     }
 
@@ -253,6 +259,7 @@ class ProfileController extends Controller
 
             // grāmatas paslēpj, lai vēsturē paliek nosaukums
             Book::where('user_id', $user->id)->update(['status' => 'Removed', 'cover_image' => null]);
+            $user->wishlist()->delete();
 
             // sūtītās bildes dzēš, ziņā paliek atzīme
             Message::where('from_user_id', $user->id)
@@ -282,6 +289,7 @@ class ProfileController extends Controller
                 'show_joined' => false,
                 'show_swaps' => false,
                 'show_swap_history' => false,
+                'show_wishlist' => false,
                 'latitude' => null,
                 'longitude' => null,
                 'two_factor_enabled' => false,

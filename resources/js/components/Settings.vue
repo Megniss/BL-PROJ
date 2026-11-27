@@ -70,6 +70,14 @@
             <input type="checkbox" v-model="privacyForm.show_on_map" @change="savePrivacy" />
             <span class="privacy-toggle-switch"></span>
           </label>
+          <label class="privacy-toggle">
+            <span class="privacy-toggle-label">
+              {{ t('wish.showMine') }}
+              <span class="d-block text-muted small">{{ t('wish.showMineText') }}</span>
+            </span>
+            <input type="checkbox" v-model="privacyForm.show_wishlist" @change="savePrivacy" data-testid="privacy-wishlist" />
+            <span class="privacy-toggle-switch"></span>
+          </label>
         </div>
       </div>
 
@@ -226,7 +234,7 @@ export default {
       // jaunais e-pasts, kas vēl nav apstiprināts caur saiti
       pendingEmail: null,
 
-      privacyForm: { show_joined: true, show_swaps: true, show_swap_history: true, show_on_map: true },
+      privacyForm: { show_joined: true, show_swaps: true, show_swap_history: true, show_on_map: true, show_wishlist: true },
 
       // tādā pašā secībā kā App\Support\Digest::TYPES
       emailTypes: ['nearby', 'popular', 'authors', 'rated'],
@@ -262,6 +270,7 @@ export default {
     this.privacyForm.show_swaps = profile.data.show_swaps
     this.privacyForm.show_swap_history = profile.data.show_swap_history
     this.privacyForm.show_on_map = profile.data.show_on_map
+    this.privacyForm.show_wishlist = profile.data.show_wishlist
     this.emails = { ...this.emails, ...profile.data.emails }
     this.isAdmin = profile.data.is_admin
     this.isOnlyAdmin = profile.data.is_only_admin

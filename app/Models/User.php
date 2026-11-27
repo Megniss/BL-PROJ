@@ -13,7 +13,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Sanctum\PersonalAccessToken;
 
-#[Fillable(['name', 'email', 'password', 'show_joined', 'show_swaps', 'show_swap_history', 'show_on_map', 'is_admin', 'is_blocked'])]
+#[Fillable(['name', 'email', 'password', 'show_joined', 'show_swaps', 'show_swap_history', 'show_on_map', 'show_wishlist', 'is_admin', 'is_blocked'])]
 #[Hidden(['password', 'remember_token', 'admin_password', 'latitude', 'longitude'])]
 class User extends Authenticatable
 {
@@ -99,6 +99,7 @@ class User extends Authenticatable
             'two_factor_prompted' => 'boolean',
             'email_prompted' => 'boolean',
             'show_on_map' => 'boolean',
+            'show_wishlist' => 'boolean',
             'latitude' => 'float',
             'longitude' => 'float',
         ];

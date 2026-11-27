@@ -143,4 +143,74 @@ class WishlistTest extends TestCase
         $this->getJson('/api/wishlist')->assertUnauthorized();
         $this->postJson('/api/wishlist', ['title' => 'Bille', 'author' => 'X'])->assertUnauthorized();
     }
+
+    private function wish(User $user, string $title = 'Bille', string $author = 'VizmaBelševica'): Wishlist
+    {
+        return Wishlist::create(['user_id' => $user->id, 'title' => $title, 'author' => $author]);
+    }
+
+    // My Library: cik cilvēku meklē, vārdi tikai publiskajiem
+    public function test_my_books_show_who_is_looking(): void
+    {
+        $owner = User::factory()->create();
+        $this->addBook($owner, 'Bille', 'Vizma Belševica');
+        $this->addBook($owner, 'Dune', 'Frank Herbert');
+
+        $public = User::factory()->create(['name' => 'Anna']);
+        $private = User::factory()->create(['show_wishlist' => false]);
+        $blocked = User::factory()->create();
+        $this->wish($public);
+        $this->wish($private);
+        $this->wish($blocked);
+        Block::create(['blocker_id' => $owner->id, 'blocked_id' => $blocked->id]);
+
+        $books = collect($this->actingAs($owner)->getJson('/api/books')->assertOk()->json())->keyBy('title');
+
+        $this->assertSame(2, $books['Bille']['wanted_count']);
+        $this->assertSame([['id' => $public->id, 'name' => 'Anna']], $books['Bille']['wanted_by']);
+        $this->assertSame(0, $books['Dune']['wanted_count']);
+    }
+
+    public function test_profile_shows_wishlist_and_what_i_can_offer(): void
+    {
+        $anna = User::factory()->create();
+        $me = User::factory()->create();
+        $this->wish($anna);
+        $this->wish($anna, 'Dune', 'FrankHerbert');
+        $bille = $this->addBook($me, 'Bille', 'Vizma Belševica')->json('id');
+
+        $list = collect($this->actingAs($me)->getJson("/api/users/{$anna->id}")->assertOk()->json('wishlist'))->keyBy('title');
+
+        $this->assertSame($bille, $list['Bille']['my_book_id']);
+        $this->assertNull($list['Dune']['my_book_id']);
+    }
+
+    public function test_private_wishlist_is_hidden_on_profile(): void
+    {
+        $anna = User::factory()->create(['show_wishlist' => false]);
+        $this->wish($anna);
+
+        $this->getJson("/api/users/{$anna->id}")->assertOk()->assertJsonPath('wishlist', null);
+    }
+
+    public function test_privacy_switch_saves_show_wishlist(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->patchJson('/api/profile/privacy', [
+            'show_joined' => true, 'show_swaps' => true, 'show_swap_history' => true, 'show_wishlist' => false,
+        ])->assertOk()->assertJsonPath('show_wishlist', false);
+
+        $this->assertFalse($user->fresh()->show_wishlist);
+    }
+
+    public function test_deleting_account_removes_wishlist(): void
+    {
+        $user = User::factory()->create(['password' => 'Password1!']);
+        $this->wish($user);
+
+        $this->actingAs($user)->deleteJson('/api/profile', ['password' => 'Password1!'])->assertSuccessful();
+
+        $this->assertDatabaseCount('wishlists', 0);
+    }
 }

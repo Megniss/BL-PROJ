@@ -299,7 +299,18 @@ class BookController extends Controller
 
     public function index(Request $request)
     {
-        return response()->json($request->user()->books()->latest()->get());
+        $user = $request->user();
+        $books = $user->books()->latest()->get();
+
+        // kas citi meklē šīs grāmatas (no vēlmju sarakstiem)
+        $wanted = WishlistMatcher::wantedBy($user, $books->where('status', '!=', 'Removed'));
+        $books->each(function ($b) use ($wanted) {
+            $w = $wanted[WishlistMatcher::key($b->title, $b->author)] ?? null;
+            $b->wanted_count = $w['count'] ?? 0;
+            $b->wanted_by = $w['users'] ?? [];
+        });
+
+        return response()->json($books);
     }
 
     // pirmie burti lieli, atstarpes ārā
